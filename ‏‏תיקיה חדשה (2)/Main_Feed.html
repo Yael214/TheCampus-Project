@@ -1,0 +1,293 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700&display=swap');
+  .ss2 { 
+    font-family: 'Heebo', sans-serif; 
+    direction: rtl; 
+    background: #F7F8FC; 
+    min-height: 580px; 
+    display: flex; 
+    flex-direction: column; 
+  }
+  .topbar {
+    background: #fff; 
+    border-bottom: 0.5px solid rgba(44,62,122,0.1); padding: 0 24px; height: 56px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+  .search-box { flex: 1; display: flex; align-items: center; background: #F0F2FA; border-radius: 8px; padding: 0 12px; gap: 8px; height: 36px; }
+  .search-box input { border: none; background: transparent; font-family: 'Heebo', sans-serif; font-size: 14px; color: #1A1A2E; outline: none; flex: 1; direction: rtl; }
+  .search-box svg { width: 16px; height: 16px; stroke: #6B7280; flex-shrink: 0; }
+  .bell-btn { width: 36px; height: 36px; border-radius: 8px; background: #F0F2FA; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; flex-shrink: 0; }
+  .bell-btn svg { width: 18px; height: 18px; stroke: #2C3E7A; fill: none; }
+  .bell-dot { position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; background: #EF4444; border-radius: 50%; border: 1.5px solid #fff; }
+  .body { display: flex; flex: 1; align-items: stretch; min-height: 100vh; }
+  .sidebar { width: 240px; background: #F0F2FA; flex-shrink: 0; padding: 20px 16px; display: flex; flex-direction: column; border-left: 0.5px solid rgba(44,62,122,0.1); }
+  .user-row { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
+  .avatar { width: 38px; height: 38px; border-radius: 50%; background: #2C3E7A; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .user-name { font-size: 14px; font-weight: 600; color: #1A1A2E; }
+  .user-sub { font-size: 11px; color: #6B7280; }
+  .sec-title { font-size: 12px; font-weight: 700; color: #6B7280; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 10px; }
+  .forum-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; cursor: pointer; margin-bottom: 2px; }
+  .forum-item:hover { background: rgba(44,62,122,0.07); }
+  .forum-icon { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+  .forum-name { font-size: 13px; color: #1A1A2E; flex: 1; }
+  .badge { background: #4F46E5; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 10px; flex-shrink: 0; }
+  .new-forum-btn { margin-top: auto; display: flex; align-items: center; gap: 6px; color: #4F46E5; font-size: 13px; font-weight: 600; padding: 10px; border-radius: 8px; cursor: pointer; border: 1px dashed rgba(79,70,229,0.4); justify-content: center; }
+  .chat-btn { display: flex; align-items: center; gap: 6px; color: #4F46E5; font-size: 13px; font-weight: 600; padding: 10px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(79,70,229,0.4); justify-content: center; margin-top: 10px; }
+  .partner-btn { display: flex; align-items: center; gap: 6px; color: #4F46E5; font-size: 13px; font-weight: 600; padding: 10px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(79,70,229,0.4); justify-content: center; margin-top: 10px; }
+  .main { flex: 1; padding: 20px 20px; overflow-y: auto; }
+  .feed-title { font-size: 20px; font-weight: 700; color: #1A1A2E; margin-bottom: 16px; }
+  .post-card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 14px; border: 0.5px solid rgba(44,62,122,0.08); cursor: pointer; }
+  .forum-tag { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; margin-bottom: 8px; }
+  .post-title { font-size: 16px; font-weight: 600; color: #1A1A2E; margin-bottom: 5px; line-height: 1.4; }
+  .post-preview { font-size: 13px; color: #6B7280; line-height: 1.55; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .card-footer { display: flex; align-items: center; gap: 12px; }
+  .mini-avatar { width: 24px; height: 24px; border-radius: 50%; font-size: 10px; font-weight: 700; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .author-name { font-size: 12px; color: #6B7280; flex: 1; }
+  .meta-item { display: flex; align-items: center; gap: 4px; font-size: 12px; color: #9CA3AF; }
+  .meta-item svg { width: 14px; height: 14px; stroke: #9CA3AF; fill: none; }
+  .logo { font-size: 18px; font-weight: 700; color: #2C3E7A; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .post-view { display: none; padding: 20px 24px; max-width: 720px; }
+  .post-title4 { font-size: 22px; font-weight: 700; color: #1A1A2E; margin-bottom: 12px; line-height: 1.35; }
+  .author-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .av4 { width: 36px; height: 36px; border-radius: 50%; background: #2C3E7A; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .author-name4 { font-size: 14px; font-weight: 600; color: #1A1A2E; }
+  .author-ts { font-size: 12px; color: #9CA3AF; }
+  .post-body { font-size: 14px; color: #374151; line-height: 1.7; margin-bottom: 16px; }
+  .files-row { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+  .file-chip { display: flex; align-items: center; gap: 6px; background: #FEE2E2; color: #991B1B; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+  .file-chip svg { width: 14px; height: 14px; stroke: #991B1B; fill: none; }
+  .img-thumb { width: 64px; height: 44px; background: #E0E7FF; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .img-thumb svg { width: 20px; height: 20px; stroke: #4F46E5; fill: none; }
+  .action-bar { display: flex; gap: 16px; padding: 12px 0; border-top: 0.5px solid rgba(44,62,122,0.08); border-bottom: 0.5px solid rgba(44,62,122,0.08); margin-bottom: 20px; }
+  .action-btn { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #6B7280; cursor: pointer; padding: 6px 10px; border-radius: 8px; font-weight: 600; border: none; background: transparent; font-family: 'Heebo', sans-serif; }
+  .action-btn:hover { background: #F0F2FA; color: #2C3E7A; }
+  .comments-title { font-size: 15px; font-weight: 700; color: #1A1A2E; margin-bottom: 14px; }
+  .comment-card { display: flex; gap: 10px; margin-bottom: 14px; }
+  .comment-body { background: #fff; border-radius: 10px; padding: 12px 14px; flex: 1; border: 0.5px solid rgba(44,62,122,0.08); }
+  .comment-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .comment-name { font-size: 13px; font-weight: 600; color: #1A1A2E; flex: 1; }
+  .comment-ts { font-size: 11px; color: #9CA3AF; }
+  .comment-text { font-size: 13px; color: #374151; line-height: 1.6; margin-bottom: 6px; }
+  .reply-btn { font-size: 12px; color: #4F46E5; cursor: pointer; font-weight: 600; border: none; background: transparent; font-family: 'Heebo', sans-serif; }
+  .back-btn { display: flex; align-items: center; gap: 6px; color: #4F46E5; font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 20px; }
+  .back-btn svg { width: 16px; height: 16px; stroke: #4F46E5; fill: none; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.42); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 10; }
+  .modal { background: #fff; border-radius: 16px; padding: 24px; width: 100%; max-width: 480px; }
+  .modal-title { font-size: 18px; font-weight: 700; color: #1A1A2E; margin-bottom: 18px; }
+  .m-field { margin-bottom: 13px; }
+  .m-field label { display: block; font-size: 12px; font-weight: 700; color: #6B7280; margin-bottom: 5px; }
+  .m-field select, .m-field input, .m-field textarea { width: 100%; box-sizing: border-box; border: 1px solid rgba(44,62,122,0.2); border-radius: 8px; padding: 9px 12px; font-size: 13px; font-family: 'Heebo', sans-serif; color: #1A1A2E; direction: rtl; outline: none; background: #fff; }
+  .m-field textarea { height: 90px; resize: none; }
+  .attach-row { display: flex; gap: 8px; margin-bottom: 13px; }
+  .attach-chip { display: flex; align-items: center; gap: 5px; background: #F0F2FA; color: #4F46E5; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+  .attach-chip svg { width: 14px; height: 14px; stroke: #4F46E5; fill: none; }
+  .checkbox-row { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; font-size: 13px; color: #374151; }
+  .checkbox-row input { width: 16px; height: 16px; accent-color: #4F46E5; }
+  .modal-btns { display: flex; gap: 10px; justify-content: flex-start; }
+  .btn-cancel { border: 1px solid #4F46E5; background: transparent; color: #4F46E5; border-radius: 8px; padding: 9px 20px; font-size: 14px; font-weight: 600; font-family: 'Heebo', sans-serif; cursor: pointer; }
+  .btn-publish { background: #4F46E5; color: #fff; border: none; border-radius: 8px; padding: 9px 20px; font-size: 14px; font-weight: 600; font-family: 'Heebo', sans-serif; cursor: pointer; }
+</style>
+<div class="ss2">
+  <div class="topbar">
+    <div class="logo" onclick="window.location.href='Main_Feed.html'">הקמפוס 🎓</div>
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35" stroke-linecap="round"/></svg>
+      <input placeholder="חיפוש בפורומים..." />
+    </div>
+    <div class="bell-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V4a2 2 0 10-4 0v1.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+      <span class="bell-dot"></span>
+    </div>
+  </div>
+
+  <div class="body">
+    <div class="sidebar">
+      <div class="user-row">
+        <div class="avatar">יכ</div>
+        <div><div class="user-name">יונית כהן</div><div class="user-sub">מדמ״ח | שנה ג׳</div></div>
+      </div>
+      <button onclick="showNewPostModal()" style="background: #4F46E5; color: #fff; border: none; border-radius: 8px; padding: 10px 20px; font-size: 14px; font-weight: 600; font-family: 'Heebo', sans-serif; cursor: pointer; margin-bottom: 16px;">פוסט חדש</button>
+      <div class="sec-title">הפורומים שלי</div>
+      <div class="forum-item">
+        <div class="forum-icon" style="background:#EEF2FF;">💻</div>
+        <span class="forum-name">מדמח כללי</span>
+        <span class="badge">12</span>
+      </div>
+      <div class="forum-item" onclick="window.location.href='algebra_linear_forum.html'">
+        <div class="forum-icon" style="background:#FEF3C7;">📐</div>
+        <span class="forum-name">אלגברה לינארית</span>
+        <span class="badge">5</span>
+      </div>
+      <div class="forum-item">
+        <div class="forum-icon" style="background:#ECFDF5;">📚</div>
+        <span class="forum-name">השאלת ספרים</span>
+      </div>
+      <div class="forum-item">
+        <div class="forum-icon" style="background:#FDF2F8;">🤝</div>
+        <span class="forum-name">קבוצות למידה - ירושלים</span>
+        <span class="badge">3</span>
+      </div>
+
+      <div class="new-forum-btn">+ פורום חדש</div>
+      <div class="chat-btn" onclick="window.location.href='Chat.html'">💬 צ'אטים</div>
+      <div class="partner-btn" onclick="window.location.href='partner.html'">🤝 שותפים</div>
+    </div>
+
+    <div class="main">
+      <div class="feed">
+        <div class="feed-title">הפיד שלי</div>
+
+        <div class="post-card" onclick="showPost(this)" data-likes="14" data-comments='[{"name":"נועה פרץ", "text":"אני חשבתי שגם! בסוף גיליתי שצריך לנרמל לפני שמציבים בנוסחה. בדוק שוב שלב ב׳.", "ts":"לפני 10 דקות", "avatar":"7C3AED"}, {"name":"אביב בן-דוד", "text":"הפתרון שפורסם בטעות לא כולל את המקרה השולי. זה ידוע — עיין בתדריך הקורס עמ׳ 87.", "ts":"לפני 5 דקות", "avatar":"059669"}]'>
+          <span class="forum-tag" style="background:#EEF2FF;color:#3730A3;">אלגברה לינארית</span>
+          <div class="post-title">מישהו הבין את שאלה 4 בממן 11? — מרגיש שחסר משהו בנוסחה</div>
+          <div class="post-preview">הגעתי לתוצאה שונה מהפתרון שפורסם ולא מבין איפה אני טועה. ניסיתי כמה גישות אבל כולן מביאות לאותה תשובה שגויה לכאורה.</div>
+          <div class="card-footer">
+            <div class="mini-avatar" style="background:#2C3E7A;">רל</div>
+            <span class="author-name">רועי לוי · לפני 23 דקות</span>
+            <div class="meta-item"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke-linecap="round" stroke-linejoin="round"/></svg>2</div>
+            <div class="meta-item"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+        </div>
+
+        <div class="post-card" onclick="showPost(this)" data-likes="6" data-comments='[{"name":"דני כהן", "text":"יש לי את הספר! אוכל להשאיל לך מחר אחר הצהריים.", "ts":"לפני 30 דקות", "avatar":"10B981"}, {"name":"שרה לוי", "text":"גם אני צריכה אותו, אבל אני יכולה לחכות. תקחי קודם.", "ts":"לפני 15 דקות", "avatar":"F59E0B"}]'>
+          <span class="forum-tag" style="background:#ECFDF5;color:#065F46;">השאלת ספרים</span>
+          <div class="post-title">מחפשת "חשבון אינפיניטסימלי א׳" של שטיינברג — מישהו יכול להשאיל?</div>
+          <div class="post-preview">צריכה את הספר לבחינה בעוד שבועיים. אשמח גם לצילום פרקים 3–5 אם אין אפשרות להשאיל את כל הספר.</div>
+          <div class="card-footer">
+            <div class="mini-avatar" style="background:#059669;">אד</div>
+            <span class="author-name">אילנה דרור · לפני שעה</span>
+            <div class="meta-item"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke-linecap="round" stroke-linejoin="round"/></svg>2</div>
+          </div>
+        </div>
+
+        <div class="post-card" onclick="showPost(this)" data-likes="31" data-comments='[{"name":"רחל גולד", "text":"תודה על הסיכום! זה עזר לי להבין את הנושא טוב יותר.", "ts":"לפני שעה", "avatar":"8B5CF6"}, {"name":"יוסי שמעון", "text":"יש טעות בעמוד 5, השורה השנייה. צריך להיות x במקום y.", "ts":"לפני 45 דקות", "avatar":"EF4444"}, {"name":"מיכל אברהם", "text":"אני יכולה לשלוח לך את הסיכום שלי אם אתה רוצה להשוות.", "ts":"לפני 20 דקות", "avatar":"06B6D4"}]'>
+          <span class="forum-tag" style="background:#FEF3C7;color:#92400E;">מדמח כללי</span>
+          <div class="post-title">סיכום המרצה — נושא מבני נתונים, הרצאה 9 (עדכון מלא)</div>
+          <div class="post-preview">העלתי סיכום של הרצאה 9 כולל כל הדוגמאות מהלוח והסברים נוספים שהוספתי. מומלץ להשוות עם הסיכומים הקודמים.</div>
+          <div class="card-footer">
+            <div class="mini-avatar" style="background:#D97706;">אב</div>
+            <span class="author-name">אביב בן-דוד · אתמול</span>
+            <div class="meta-item"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke-linecap="round" stroke-linejoin="round"/></svg>3</div>
+            <div class="meta-item"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+        </div>
+      </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="new-post-modal" style="display:none;">
+    <div class="modal">
+      <div class="modal-title">פוסט חדש</div>
+      <div class="m-field">
+        <label>בחר פורום</label>
+        <select><option>אלגברה לינארית</option><option>מדמח כללי</option><option>השאלת ספרים</option></select>
+      </div>
+      <div class="m-field">
+        <label>כותרת הפוסט</label>
+        <input type="text" placeholder="כותרת ברורה ותמציתית..." />
+      </div>
+      <div class="m-field">
+        <label>תוכן</label>
+        <textarea placeholder="תוכן הפוסט..."></textarea>
+      </div>
+      <div class="attach-row">
+        <div class="attach-chip"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke-linecap="round"/><polyline points="14 2 14 8 20 8"/></svg>PDF</div>
+        <div class="attach-chip"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>תמונה</div>
+        <div class="attach-chip"><svg viewBox="0 0 24 24" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>סרטון</div>
+      </div>
+      <div class="checkbox-row"><input type="checkbox" checked /> שמור בדאטהבייס של הפורום</div>
+      <div class="modal-btns">
+        <button class="btn-publish">פרסם</button>
+        <button class="btn-cancel" onclick="closeNewPostModal()">ביטול</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="post-modal" style="display:none;">
+    <div class="modal">
+      <div class="back-btn" onclick="closeModal()"><svg viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>סגור</div>
+      <div class="post-title4">מישהו הבין את שאלה 4 בתרגיל 7? — מרגיש שחסר משהו בנוסחה</div>
+      <div class="author-row">
+        <div class="av4">רל</div>
+        <div><div class="author-name4">רועי לוי</div><div class="author-ts">לפני 23 דקות</div></div>
+      </div>
+      <div class="post-body">ניסיתי לפתור את השאלה לפי הגישה שדיברנו עליה בתרגול, אבל הגעתי לתוצאה שונה מהפתרון שפורסם. כבר ניסיתי שלוש גישות שונות — כולן מביאות לאותה תשובה. האם מישהו יכול לבדוק אם הנוסחה שמשתמשים בה בשלב השני נכונה? מצרף את ההגדרה מהספר ואת הניסיון שלי.</div>
+      <div class="files-row">
+        <div class="file-chip"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke-linecap="round"/><polyline points="14 2 14 8 20 8"/></svg>תרגיל7_ניסיון.pdf</div>
+        <div class="img-thumb"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+      </div>
+      <div class="action-bar">
+        <button class="action-btn like-btn">👍 לייק (8)</button>
+        <button class="action-btn">💬 תגובה</button>
+        <button class="action-btn">🔖 שמור</button>
+      </div>
+      <div class="comments-title">תגובות (4)</div>
+      <div id="comments-container">
+        <div class="comment-card">
+          <div class="av4" style="background:#7C3AED;width:32px;height:32px;font-size:11px;flex-shrink:0;">נפ</div>
+          <div class="comment-body">
+            <div class="comment-header"><span class="comment-name">נועה פרץ</span><span class="comment-ts">לפני 10 דקות</span></div>
+            <div class="comment-text">אני חשבתי שגם! בסוף גיליתי שצריך לנרמל לפני שמציבים בנוסחה. בדוק שוב שלב ב׳.</div>
+            <button class="reply-btn">↩ הגב</button>
+          </div>
+        </div>
+        <div class="comment-card">
+          <div class="av4" style="background:#059669;width:32px;height:32px;font-size:11px;flex-shrink:0;">אב</div>
+          <div class="comment-body">
+            <div class="comment-header"><span class="comment-name">אביב בן-דוד</span><span class="comment-ts">לפני 5 דקות</span></div>
+            <div class="comment-text">הפתרון שפורסם בטעות לא כולל את המקרה השולי. זה ידוע — עיין בתדריך הקורס עמ׳ 87.</div>
+            <button class="reply-btn">↩ הגב</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function showPost(card) {
+  const title = card.querySelector('.post-title').textContent;
+  const body = card.querySelector('.post-preview').textContent;
+  const authorInfo = card.querySelector('.author-name').textContent;
+  const authorName = authorInfo.split(' · ')[0];
+  const authorTs = authorInfo.split(' · ')[1];
+  const likes = card.getAttribute('data-likes');
+  const comments = JSON.parse(card.getAttribute('data-comments'));
+
+  document.querySelector('.post-title4').textContent = title;
+  document.querySelector('.post-body').textContent = body;
+  document.querySelector('.author-name4').textContent = authorName;
+  document.querySelector('.author-ts').textContent = authorTs;
+  document.querySelector('.like-btn').textContent = `👍 לייק (${likes})`;
+  document.querySelector('.comments-title').textContent = `תגובות (${comments.length})`;
+
+  const container = document.getElementById('comments-container');
+  container.innerHTML = '';
+  comments.forEach(comment => {
+    const commentCard = document.createElement('div');
+    commentCard.className = 'comment-card';
+    commentCard.innerHTML = `
+      <div class="av4" style="background:#${comment.avatar};width:32px;height:32px;font-size:11px;flex-shrink:0;">${comment.name.split(' ')[0][0]}${comment.name.split(' ')[1][0]}</div>
+      <div class="comment-body">
+        <div class="comment-header"><span class="comment-name">${comment.name}</span><span class="comment-ts">${comment.ts}</span></div>
+        <div class="comment-text">${comment.text}</div>
+        <button class="reply-btn">↩ הגב</button>
+      </div>
+    `;
+    container.appendChild(commentCard);
+  });
+
+  document.getElementById('post-modal').style.display = 'flex';
+}
+function closeModal() {
+  document.getElementById('post-modal').style.display = 'none';
+}
+function showNewPostModal() {
+  document.getElementById('new-post-modal').style.display = 'flex';
+}
+function closeNewPostModal() {
+  document.getElementById('new-post-modal').style.display = 'none';
+}
+</script>
+</body>
+</html>
