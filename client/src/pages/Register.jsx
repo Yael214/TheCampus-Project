@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
-function Register() {
-  const navigate = useNavigate();
+function Register({ setScreen }) {
   const [formData, setFormData] = useState({
-    fullName: '', idNumber: '', age: '', gender: '', country: '', city: '',
-    address: '', studyField: '', year: '', profileImage: null, studyApproval: null
+    fullName: '', idNumber: '', email: '', password: '', age: '', gender: '', 
+    country: '', city: '', address: '', studyField: '', year: '', 
+    profileImage: null, studyApproval: null
   });
+
   const [errors, setErrors] = useState({});
 
   const handleInputChange = (e) => {
@@ -18,17 +18,29 @@ function Register() {
     }
   };
 
+  const isPasswordStrong = (pass) => {
+    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(pass);
+  };
+
   const validateRegister = () => {
     let tempErrors = {};
     if (!formData.fullName) tempErrors.fullName = "חובה להזין שם מלא";
-    if (!formData.studyField) tempErrors.studyField = "חובה להזין תחום לימודים";
-    
     if (!formData.idNumber) {
       tempErrors.idNumber = "חובה להזין תעודת זהות";
     } else if (!/^\d+$/.test(formData.idNumber) || formData.idNumber.length !== 9) {
       tempErrors.idNumber = "תעודת זהות חייבת להכיל 9 ספרות בדיוק";
     }
-
+    if (!formData.email) {
+      tempErrors.email = "חובה להזין אימייל";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      tempErrors.email = "כתובת אימייל לא תקינה";
+    }
+    if (!formData.password) {
+      tempErrors.password = "חובה להזין סיסמה";
+    } else if (!isPasswordStrong(formData.password)) {
+      tempErrors.password = "הסיסמה חייבת לכלול לפחות 8 תווים, אות גדולה ומספר";
+    }
+    if (!formData.studyField) tempErrors.studyField = "חובה להזין תחום לימודים";
     if (!formData.studyApproval) tempErrors.studyApproval = "חובה להעלות אישור לימודים";
 
     setErrors(tempErrors);
@@ -38,7 +50,7 @@ function Register() {
   const handleFinalSubmit = (e) => {
     e.preventDefault();
     if (validateRegister()) {
-      navigate('/success');
+      setScreen('success');
     } else {
       window.scrollTo(0, 0); 
     }
@@ -57,6 +69,14 @@ function Register() {
         <label><span className="required">*</span>תעודת זהות</label>
         <input type="text" name="idNumber" maxLength="9" className={errors.idNumber ? 'input-error' : ''} onChange={handleInputChange} />
         {errors.idNumber && <span className="error-msg">{errors.idNumber}</span>}
+
+        <label><span className="required">*</span>אימייל</label>
+        <input type="email" name="email" className={errors.email ? 'input-error' : ''} onChange={handleInputChange} />
+        {errors.email && <span className="error-msg">{errors.email}</span>}
+
+        <label><span className="required">*</span>סיסמה</label>
+        <input type="password" name="password" className={errors.password ? 'input-error' : ''} onChange={handleInputChange} />
+        {errors.password && <span className="error-msg">{errors.password}</span>}
 
         <label>גיל</label>
         <input type="number" name="age" onChange={handleInputChange} />
@@ -87,7 +107,7 @@ function Register() {
 
         <button className="primary-btn" onClick={handleFinalSubmit}>סיום</button>
         <div style={{textAlign: 'center', marginTop: '10px'}}>
-          <a onClick={() => navigate('/')} style={{cursor:'pointer', color:'#6B7280'}}>ביטול</a>
+          <a onClick={() => setScreen('login')} style={{cursor:'pointer', color:'#6B7280'}}>ביטול</a>
         </div>
       </div>
     </div>
