@@ -6,7 +6,7 @@ function Login({ setScreen }) {
     // כאן בעתיד נשלח את המייל והסיסמה לפיירבייס שיבדוק אם הם קיימים במערכת
     setScreen('feed');
   };
-
+  
   return (
     <div className="auth-page">
       <div className="logo">הקמפוס 🎓</div>

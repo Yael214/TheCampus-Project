@@ -8,7 +8,6 @@ import Feed from './Feed.jsx';
 
 function App() {
   const [screen, setScreen] = useState('login');
-
   return (
     <div className="App">
       {screen === 'login' && <Login setScreen={setScreen} />}
