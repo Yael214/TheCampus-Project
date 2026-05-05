@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { doc, getDoc, updateDoc } from 'firebase/firestore'; 
-import { db } from '../firebaseConfig';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { db } from '../firebase/config';
 
 /**
  * Custom hook to manage user profile data and course updates.
@@ -14,8 +14,10 @@ export const useUserData = (userId) => {
   // Effect to fetch initial user data from Firestore on mount or when userId changes
   useEffect(() => {
     const fetchUserData = async () => {
-      if (!userId) return;
-      
+      if (!userId) {
+        setLoading(false);
+        return;
+      }
       try {
         setLoading(true);
         // Reference the specific user document in the 'users' collection
@@ -47,10 +49,10 @@ export const useUserData = (userId) => {
 
     try {
       const userRef = doc(db, "users", userId);
-      
+
       // Create a modified array of courses with the updated status for the target course
-      const updatedCourses = userData.courses.map(course => 
-        course.courseNumber === courseNumber 
+      const updatedCourses = userData.courses.map(course =>
+        course.courseNumber === courseNumber
           ? { ...course, status: newStatus } // Update only the matched course
           : course // Keep other courses unchanged
       );
@@ -62,7 +64,7 @@ export const useUserData = (userId) => {
 
       // Synchronize local state to reflect changes immediately in the UI without refresh
       setUserData({ ...userData, courses: updatedCourses });
-      
+
       return { success: true };
     } catch (err) {
       console.error("Error updating course status:", err);
