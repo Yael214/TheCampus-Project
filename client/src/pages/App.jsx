@@ -10,11 +10,7 @@ import Profile from './Profile.jsx';
 
 function App() {
 
-<<<<<<< HEAD
   const [screen, setScreen] = useState('login');
-=======
-  const [screen, setScreen] = useState('profile');
->>>>>>> 9205fbe (Complete Profile page and Firebase auth setup)
 
   return (
     <div className="App">
