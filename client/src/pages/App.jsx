@@ -9,8 +9,8 @@ import Feed from './Feed.jsx';
 import Profile from './Profile.jsx';
 
 function App() {
-  // הגדרנו שברירת המחדל תהיה הפרופיל שלך
-  const [screen, setScreen] = useState('profile');
+
+  const [screen, setScreen] = useState('login');
 
   return (
     <div className="App">
