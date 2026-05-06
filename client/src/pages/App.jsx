@@ -10,6 +10,7 @@ import Profile from './Profile.jsx';
 
 function App() {
 
+  //const [screen, setScreen] = useState('login');
   const [screen, setScreen] = useState('login');
 
   return (
