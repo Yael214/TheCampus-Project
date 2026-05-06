@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 function Register({ setScreen }) {
+  const { signup } = useAuth();
   const [formData, setFormData] = useState({
     fullName: '', idNumber: '', email: '', password: '', age: '', gender: '', 
     country: '', city: '', address: '', studyField: '', year: '', 
@@ -8,6 +10,7 @@ function Register({ setScreen }) {
   });
 
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value, files } = e.target;
@@ -47,10 +50,33 @@ function Register({ setScreen }) {
     return Object.keys(tempErrors).length === 0;
   };
 
-  const handleFinalSubmit = (e) => {
+  const handleFinalSubmit = async (e) => {
     e.preventDefault();
     if (validateRegister()) {
-      setScreen('success');
+      try{
+        setIsSubmitting(true);
+        await signup(formData.email, formData.password, formData);
+        setScreen('success');
+      } catch (error) {
+        setIsSubmitting(false);
+        let message = "";
+
+        switch (error.code) {
+          case 'auth/email-already-in-use':
+            message = "כתובת האימייל כבר תפוסה.";
+            break;
+          case 'auth/weak-password':
+            message = "הסיסמה חלשה מדי.";
+            break;
+          case 'auth/network-request-failed':
+            message = "בעיית תקשורת, בדקי את החיבור לאינטרנט.";
+            break;
+          default:
+            message = "שגיאה: " + error.message; 
+        }
+        setErrors({ server: message });
+      }
+      
     } else {
       window.scrollTo(0, 0); 
     }
@@ -104,8 +130,9 @@ function Register({ setScreen }) {
         <label><span className="required">*</span>אישור לימודים</label>
         <input type="file" name="studyApproval" className={errors.studyApproval ? 'input-error' : ''} onChange={handleInputChange} />
         {errors.studyApproval && <span className="error-msg">{errors.studyApproval}</span>}
-
-        <button className="primary-btn" onClick={handleFinalSubmit}>סיום</button>
+        
+        {errors.server && <div className="error-msg" style={{textAlign: 'center', marginBottom: '10px'}}>{errors.server}</div>}
+        <button className="primary-btn" onClick={handleFinalSubmit} disabled = {isSubmitting}>{isSubmitting ? 'נרשם...' : 'סיום'}</button>
         <div style={{textAlign: 'center', marginTop: '10px'}}>
           <a onClick={() => setScreen('login')} style={{cursor:'pointer', color:'#6B7280'}}>ביטול</a>
         </div>

@@ -1,10 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
+
+import { useAuth } from '../context/AuthContext';
 
 function Login({ setScreen }) {
-  const handleLoginSubmit = (e) => {
+  const { login } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    // כאן בעתיד נשלח את המייל והסיסמה לפיירבייס שיבדוק אם הם קיימים במערכת
-    setScreen('feed');
+     try{
+      await login(email, password);
+      setScreen('feed');
+     } catch (error) {
+      console.error("Login failed:", error);
+      alert("התחברות נכשלה. אנא בדוק את הפרטים ונסה שוב.");
+     }
+    
   };
 
   return (
@@ -14,10 +26,10 @@ function Login({ setScreen }) {
         <form onSubmit={handleLoginSubmit}>
           <h1>כניסה</h1>
           <label>אימייל</label>
-          <input type="email" placeholder="הקלד/י אימייל" required />
+          <input type="email" placeholder="הקלד/י אימייל" required value={email} onChange={(e) => setEmail(e.target.value)} />
           
           <label>סיסמה</label>
-          <input type="password" placeholder="הקלד/י סיסמה" required />
+          <input type="password" placeholder="הקלד/י סיסמה" required value={password} onChange={(e) => setPassword(e.target.value)} />
 
           <div className="forgot-password">
             <a onClick={() => setScreen('reset')}>לא זוכר את הסיסמה?</a>

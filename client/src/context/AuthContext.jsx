@@ -1,14 +1,14 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import {
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  GoogleAuthProvider,
-  signInWithPopup
-} from "firebase/auth";
+import { 
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signOut,
+    GoogleAuthProvider,
+    signInWithPopup
+ } from "firebase/auth";
 import { auth, db } from "../firebase/config";
-import { getDoc, doc } from "firebase/firestore";
+import { getDoc, doc, setDoc } from "firebase/firestore";
 
 
 const AuthContext = createContext();
@@ -44,11 +44,30 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
-  const signup = (email, password) => {
-    return createUserWithEmailAndPassword(auth, email, password);
+  const signup = async (email, password , additionalData) => {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user
+
+    await setDoc(doc(db, "users", user.uid), {
+    fullName: additionalData.fullName,
+    idNumber: additionalData.idNumber,
+    age: additionalData.age,
+    gender: additionalData.gender,
+    country: additionalData.country,
+    city: additionalData.city,
+    address: additionalData.address,
+    year: additionalData.year,
+    studyField: additionalData.studyField,
+    //profileImage: additionalData.profileImage,
+    //studyApproval: additionalData.studyApproval,
+    role: "user", // הגדרת תפקיד ברירת מחדל
+    createdAt: new Date() 
+    });
+
+    return userCredential;
   };
 
-  const login = (email, password) => {
+  const  login = (email, password) => {
     return signInWithEmailAndPassword(auth, email, password);
   };
 
