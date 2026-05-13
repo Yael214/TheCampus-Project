@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext'; //
 import './App.css';
 
 import Login from './Login.jsx';
@@ -9,8 +10,13 @@ import Feed from './Feed.jsx';
 import Profile from './Profile.jsx';
 
 function App() {
-
+  const { user } = useAuth();
   const [screen, setScreen] = useState('login');
+  useEffect(() => {
+    if (user) {
+      setScreen('feed');
+    }
+  }, [user]);
 
   return (
     <div className="App">

@@ -7,8 +7,9 @@ import {
   GoogleAuthProvider,
   signInWithPopup
 } from "firebase/auth";
-import { auth, db } from "../firebase/config";
-import { getDoc, doc } from "firebase/firestore";
+import { auth, db, storage } from "../firebase/config";
+import { getDoc, doc, setDoc } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 
 const AuthContext = createContext();
@@ -44,8 +45,55 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
-  const signup = (email, password) => {
-    return createUserWithEmailAndPassword(auth, email, password);
+  const uploadFile = async (file, path) => {
+    if (!file) return null;
+    const storageRef = ref(storage, path);
+    await uploadBytes(storageRef, file);
+    return await getDownloadURL(storageRef);
+  };
+
+  const signup = async (email, password, additionalData) => {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user
+    // Get format and upload
+    const getExt = (file) => {
+      return file.name.split('.').pop().toLowerCase();
+    }
+    let profileImageUrl = "";
+    let studyApprovalUrl = "";
+
+    if (additionalData.profileImage) {
+      const ext = getExt(additionalData.profileImage);
+      profileImageUrl = await uploadFile(
+        additionalData.profileImage,
+        `users/${user.uid}/profile.${ext}`
+      );
+    }
+    if (additionalData.studyApproval) {
+      const ext = getExt(additionalData.studyApproval);
+      studyApprovalUrl = await uploadFile(
+        additionalData.studyApproval,
+        `users/${user.uid}/studyApproval.${ext}`
+      );
+    }
+
+    await setDoc(doc(db, "users", user.uid), {
+      fullName: additionalData.fullName,
+      idNumber: additionalData.idNumber,
+      age: additionalData.age,
+      gender: additionalData.gender,
+      country: additionalData.country,
+      city: additionalData.city,
+      address: additionalData.address,
+      year: additionalData.year,
+      studyField: additionalData.studyField,
+      profileImage: profileImageUrl,
+      studyApproval: studyApprovalUrl,
+      role: "user", // הגדרת תפקיד ברירת מחדל
+      createdAt: new Date()
+    });
+
+    return userCredential;
   };
 
   const login = (email, password) => {

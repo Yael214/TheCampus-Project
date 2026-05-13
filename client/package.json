@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --port 5173",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -12,7 +12,9 @@
   "dependencies": {
     "@tailwindcss/postcss": "^4.2.4",
     "@tailwindcss/vite": "^4.2.4",
+    "browser-image-compression": "^2.0.2",
     "firebase": "^12.12.1",
+    "geofire-common": "^6.0.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5"
   },
