@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import './App.css';
+
 import Login from './Login.jsx';
 import Register from './Register.jsx';
 import Reset from './Reset.jsx';
 import Success from './Success.jsx';
 import Feed from './Feed.jsx';
+import Profile from './Profile.jsx';
 
 function App() {
+
+  //const [screen, setScreen] = useState('login');
   const [screen, setScreen] = useState('login');
 
   return (
@@ -16,8 +20,9 @@ function App() {
       {screen === 'reset' && <Reset setScreen={setScreen} />}
       {screen === 'success' && <Success setScreen={setScreen} />}
       {screen === 'feed' && <Feed setScreen={setScreen} />}
+      {screen === 'profile' && <Profile setScreen={setScreen} />}
     </div>
   );
 }
 
-export default App;
+export default App; 
