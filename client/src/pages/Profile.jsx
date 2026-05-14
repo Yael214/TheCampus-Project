@@ -9,10 +9,13 @@ import Topbar from '../components/Topbar';
 
 function Profile({ setScreen }) {
     const { currentUser } = useAuth();
+
+    // chack 5h6hhRoa2Ctg1oWG67fr user ditails
     const TEST_USER_ID = "5h6hhRoa2Ctg1oWG67fr";
-    const targetUserId = currentUser?.uid || TEST_USER_ID;
+    const targetUserId = TEST_USER_ID;
 
     const { userData: cloudData, loading: dataLoading } = useUserData(targetUserId);
+
     const [userData, setUserData] = useState(null);
     const [tempData, setTempData] = useState({});
     const [isEditing, setIsEditing] = useState(false);
@@ -26,100 +29,90 @@ function Profile({ setScreen }) {
     }, [cloudData]);
 
     const handleInputChange = (e) => {
-        const { name, value, files } = e.target;
-        setTempData({ ...tempData, [name]: files ? files[0] : value });
+        const { name, value } = e.target;
+        setTempData({ ...tempData, [name]: value });
     };
 
     const handleSave = async () => {
         try {
             setLoading(true);
             const userRef = doc(db, "users", targetUserId);
-            await updateDoc(userRef, tempData);
+            // עדכון לפי השמות המדויקים בפיירבייס
+            await updateDoc(userRef, {
+                fullName: tempData.fullName,
+                age: tempData.age,
+                gender: tempData.gender,
+                city: tempData.city,
+                studyField: tempData.studyField
+            });
             setUserData(tempData);
             setIsEditing(false);
             alert("הפרופיל עודכן בהצלחה!");
-        } catch (e) {
-            alert("שגיאה בעדכון");
+        } catch (error) {
+            console.error("שגיאה בעדכון:", error);
+            alert("אין הרשאת כתיבה. בדקי את ה-Rules בפיירבייס.");
         } finally {
             setLoading(false);
         }
     };
 
-    if (dataLoading || loading) return <Loader text="טוען פרופיל..." />;
+    if (dataLoading) return <Loader text="מתחבר לנתונים של יעל... 🎓" />;
+
+    if (!userData) {
+        return (
+            <div style={{ textAlign: 'center', padding: '100px' }}>
+                <h2>הגישה לנתונים חסומה</h2>
+                <p>ודאי שביצעת Login או שחוקי ה-Firestore מאפשרים קריאה (Read: if true).</p>
+                <button onClick={() => setScreen('feed')} style={primaryBtn}>חזרה לפיד</button>
+            </div>
+        );
+    }
 
     return (
-        <div className="profile-page" style={{ direction: 'rtl', minHeight: '100vh', backgroundColor: '#f3f4f6' }}>
-
+        <div className="ss2" style={{ direction: 'rtl', minHeight: '100vh', backgroundColor: '#F7F8FC' }}>
             <Topbar setScreen={setScreen} />
 
+            <div style={{ maxWidth: '800px', margin: '40px auto', padding: '20px' }}>
+                <div style={{ background: 'white', borderRadius: '20px', padding: '40px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
 
-            <div style={{ maxWidth: '900px', margin: '0 auto', padding: '30px 20px' }}>
-
-                {/* back click*/}
-                <div onClick={() => setScreen('feed')} style={{ cursor: 'pointer', color: '#6366f1', marginBottom: '20px', fontWeight: '600', display: 'inline-block' }}>
-                    ← חזרה לפיד
-                </div>
-
-                {/* Header \imge and name*/}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '25px', marginBottom: '30px', backgroundColor: 'white', padding: '30px', borderRadius: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
-                    <UserImage
-                        image={userData?.profileImage}
-                        fullName={userData?.fullName}
-                        onImageChange={handleInputChange}
-                    />
-                    <div>
-                        <h1 style={{ fontSize: '32px', margin: 0, color: '#1e1b4b', fontWeight: '800' }}>
-                            {userData?.fullName}
-                        </h1>
-                        <p style={{ margin: '5px 0 0 0', color: '#6366f1', fontWeight: '600' }}>סטודנט/ית בקמפוס</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '40px' }}>
+                        <UserImage
+                            image={userData.profileImage}
+                            fullName={userData.fullName}
+                        />
+                        <h1 style={{ marginTop: '20px', color: '#1A1A2E' }}>{userData.fullName}</h1>
+                        <p style={{ color: '#6B7280' }}>סטודנט/ית שנה {userData.year}</p>
                     </div>
-                </div>
 
-                {/* profile ditails*/}
-                <div style={{ backgroundColor: 'white', padding: '40px', borderRadius: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
                         <div>
                             <label style={labelStyle}>שם מלא</label>
-                            {isEditing ? <input style={inputStyle} name="fullName" value={tempData.fullName || ''} onChange={handleInputChange} />
-                                : <p style={contentStyle}>{userData?.fullName}</p>}
+                            {isEditing ? <input name="fullName" value={tempData.fullName} onChange={handleInputChange} style={inputStyle} /> : <p style={contentStyle}>{userData.fullName}</p>}
                         </div>
-
+                        <div>
+                            <label style={labelStyle}>תחום לימודים</label>
+                            {isEditing ? <input name="studyField" value={tempData.studyField} onChange={handleInputChange} style={inputStyle} /> : <p style={contentStyle}>{userData.studyField}</p>}
+                        </div>
+                        <div>
+                            <label style={labelStyle}>עיר</label>
+                            {isEditing ? <input name="city" value={tempData.city} onChange={handleInputChange} style={inputStyle} /> : <p style={contentStyle}>{userData.city}</p>}
+                        </div>
                         <div>
                             <label style={labelStyle}>גיל</label>
-                            {isEditing ? <input style={inputStyle} type="number" name="age" value={tempData.age || ''} onChange={handleInputChange} />
-                                : <p style={contentStyle}>{userData?.age}</p>}
-                        </div>
-
-                        <div>
-                            <label style={labelStyle}>כתובת (עיר וארץ)</label>
-                            {isEditing ? (
-                                <div style={{ display: 'flex', gap: '10px' }}>
-                                    <input style={inputStyle} name="city" placeholder="עיר" value={tempData.city || ''} onChange={handleInputChange} />
-                                    <input style={inputStyle} name="country" placeholder="ארץ" value={tempData.country || ''} onChange={handleInputChange} />
-                                </div>
-                            ) : <p style={contentStyle}>{userData?.city}, {userData?.country}</p>}
-                        </div>
-
-                        <div>
-                            <label style={labelStyle}>אימייל</label>
-                            <p style={{ ...contentStyle, color: '#9ca3af' }}>{userData?.email}</p>
-                        </div>
-
-                        <div style={{ gridColumn: 'span 2' }}>
-                            <label style={labelStyle}>תחום לימודים</label>
-                            <p style={{ ...contentStyle, color: '#6366f1', fontWeight: '600' }}>{userData?.studyField}</p>
+                            {isEditing ? <input name="age" value={tempData.age} onChange={handleInputChange} style={inputStyle} /> : <p style={contentStyle}>{userData.age}</p>}
                         </div>
                     </div>
 
-                    <div style={{ marginTop: '40px', display: 'flex', gap: '15px' }}>
+                    <div style={{ marginTop: '40px', display: 'flex', gap: '15px', justifyContent: 'center' }}>
                         {isEditing ? (
                             <>
-                                <button onClick={handleSave} style={primaryBtn}>שמור שינויים</button>
+                                <button onClick={handleSave} disabled={loading} style={primaryBtn}>{loading ? "שומר..." : "שמור שינויים"}</button>
                                 <button onClick={() => setIsEditing(false)} style={secondaryBtn}>ביטול</button>
                             </>
                         ) : (
                             <button onClick={() => setIsEditing(true)} style={primaryBtn}>עריכת פרופיל</button>
                         )}
+                        <button onClick={() => setScreen('feed')} style={{ ...secondaryBtn, backgroundColor: '#F0F2FA', color: '#2C3E7A' }}>חזרה לפיד</button>
                     </div>
                 </div>
             </div>
@@ -127,11 +120,10 @@ function Profile({ setScreen }) {
     );
 }
 
-// style
-const labelStyle = { display: 'block', fontSize: '18px', fontWeight: '700', color: '#1e1b4b', marginBottom: '8px' };
-const contentStyle = { fontSize: '18px', color: '#4b5563', fontWeight: '400', margin: 0, padding: '5px 0' };
-const inputStyle = { width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #d1d5db', fontSize: '16px' };
-const primaryBtn = { backgroundColor: '#6366f1', color: 'white', padding: '12px 25px', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '16px' };
-const secondaryBtn = { backgroundColor: '#ef4444', color: 'white', padding: '12px 25px', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '16px' };
+const labelStyle = { display: 'block', fontSize: '14px', fontWeight: '700', color: '#6B7280', marginBottom: '8px' };
+const contentStyle = { fontSize: '18px', color: '#1A1A2E', fontWeight: '500', margin: 0 };
+const inputStyle = { width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #D1D5DB' };
+const primaryBtn = { backgroundColor: '#4F46E5', color: 'white', padding: '12px 30px', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: '700' };
+const secondaryBtn = { backgroundColor: 'white', color: '#4B5563', padding: '12px 30px', border: '1px solid #D1D5DB', borderRadius: '10px', cursor: 'pointer', fontWeight: '700' };
 
 export default Profile;

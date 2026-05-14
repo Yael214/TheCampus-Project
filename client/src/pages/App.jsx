@@ -10,7 +10,8 @@ import Feed from './Feed.jsx';
 import Profile from './Profile.jsx';
 
 function App() {
-  const { user } = useAuth();
+
+  //const [screen, setScreen] = useState('login');
   const [screen, setScreen] = useState('login');
   useEffect(() => {
     if (user) {
