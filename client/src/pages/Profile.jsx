@@ -1,137 +1,233 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useUserData } from '../hooks/useUserData';
-import { db } from '../firebase/config';
+import { db, storage } from '../firebase/config';
 import { doc, updateDoc } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import Loader from '../components/Loader';
 import UserImage from '../components/UserProfile';
 import Topbar from '../components/Topbar';
 
 function Profile({ setScreen }) {
     const { currentUser } = useAuth();
-    const TEST_USER_ID = "5h6hhRoa2Ctg1oWG67fr";
-    const targetUserId = currentUser?.uid || TEST_USER_ID;
-
+    const targetUserId = currentUser?.uid;
     const { userData: cloudData, loading: dataLoading } = useUserData(targetUserId);
-    const [userData, setUserData] = useState(null);
+
     const [tempData, setTempData] = useState({});
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [imageLoading, setImageLoading] = useState(false);
 
-    useEffect(() => {
-        if (cloudData) {
-            setUserData(cloudData);
-            setTempData(cloudData);
-        }
-    }, [cloudData]);
+    const handleStartEdit = () => {
+        setTempData({ ...cloudData });
+        setIsEditing(true);
+    };
 
     const handleInputChange = (e) => {
-        const { name, value, files } = e.target;
-        setTempData({ ...tempData, [name]: files ? files[0] : value });
+        const { name, value } = e.target;
+        setTempData(prev => ({ ...prev, [name]: value }));
     };
 
     const handleSave = async () => {
+        if (!targetUserId) return;
         try {
             setLoading(true);
-            const userRef = doc(db, "users", targetUserId);
-            await updateDoc(userRef, tempData);
-            setUserData(tempData);
+            await updateDoc(doc(db, "users", targetUserId), {
+                age: tempData.age || '',
+                city: tempData.city || '',
+                address: tempData.address || '',
+                year: tempData.year || '',
+                studyField: tempData.studyField || '',
+                about: tempData.about || '',
+            });
             setIsEditing(false);
-            alert("הפרופיל עודכן בהצלחה!");
-        } catch (e) {
-            alert("שגיאה בעדכון");
+        } catch (error) {
+            console.error("שגיאה בעדכון:", error);
+            alert("שגיאה בעדכון הפרופיל.");
         } finally {
             setLoading(false);
         }
     };
 
-    if (dataLoading || loading) return <Loader text="טוען פרופיל..." />;
+    const handleImageChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file || !targetUserId) return;
+        try {
+            setImageLoading(true);
+            const storageRef = ref(storage, `users/${targetUserId}/profile.jpg`);
+            await uploadBytes(storageRef, file);
+            const downloadURL = await getDownloadURL(storageRef);
+            await updateDoc(doc(db, "users", targetUserId), { profileImage: downloadURL });
+        } catch (error) {
+            console.error("שגיאה בהעלאת תמונה:", error);
+            alert("שגיאה בהעלאת התמונה.");
+        } finally {
+            setImageLoading(false);
+        }
+    };
+
+    if (dataLoading) return <Loader text="טוען פרופיל... 🎓" />;
+    if (!cloudData) return (
+        <div style={{ textAlign: 'center', padding: '100px', fontFamily: 'Heebo, sans-serif' }}>
+            <h2>המשתמש לא נמצא</h2>
+            <button onClick={() => setScreen('feed')} style={primaryBtn}>חזרה לפיד</button>
+        </div>
+    );
+
+    const display = isEditing ? tempData : cloudData;
 
     return (
-        <div className="profile-page" style={{ direction: 'rtl', minHeight: '100vh', backgroundColor: '#f3f4f6' }}>
-
+        <div style={{ direction: 'rtl', minHeight: '100vh', backgroundColor: '#F0F2FA', fontFamily: 'Heebo, sans-serif' }}>
             <Topbar setScreen={setScreen} />
 
+            <div style={{ display: 'flex' }}>
 
-            <div style={{ maxWidth: '900px', margin: '0 auto', padding: '30px 20px' }}>
+                {/* Sidebar */}
+                <div style={{
+                    width: '260px', backgroundColor: '#F0F2FA', borderLeft: '1px solid rgba(209,213,219,0.5)',
+                    display: 'flex', flexDirection: 'column', padding: '32px 0', minHeight: 'calc(100vh - 56px)',
+                    flexShrink: 0
+                }}>
+                    <div style={{ padding: '0 24px 28px', display: 'flex', flexDirection: 'column', alignItems: 'center', borderBottom: '1px solid #F3F4F6', marginBottom: '20px', textAlign: 'center' }}>
+                        <UserImage
+                            image={cloudData.profileImage}
+                            fullName={cloudData.fullName}
+                            onImageChange={handleImageChange}
+                        />
+                        {imageLoading && <p style={{ color: '#4F46E5', fontSize: '13px', marginTop: '6px' }}>מעלה תמונה...</p>}
+                        <h3 style={{ fontWeight: '700', color: '#2C3E7A', fontSize: '18px', marginTop: '12px', marginBottom: '4px' }}>
+                            {cloudData.fullName || 'סטודנט/ית'}
+                        </h3>
+                        <p style={{ color: '#4F46E5', fontWeight: '600', opacity: 0.7, fontSize: '13px', margin: 0 }}>
+                            שנה {cloudData.year || 'א\''} • {cloudData.studyField || 'תואר כללי'}
+                        </p>
+                    </div>
 
-                {/* back click*/}
-                <div onClick={() => setScreen('feed')} style={{ cursor: 'pointer', color: '#6366f1', marginBottom: '20px', fontWeight: '600', display: 'inline-block' }}>
-                    ← חזרה לפיד
-                </div>
+                    <nav style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '0 12px' }}>
+                        <div onClick={() => setScreen('feed')} style={navItem}>
+                            <span>🏠</span><span>פיד ראשי</span>
+                        </div>
+                        <div style={navItem}>
+                            <span>📚</span><span>הקורסים שלי</span>
+                        </div>
+                        <div style={navItem}>
+                            <span>👥</span><span>חיפוש שותפים</span>
+                        </div>
+                    </nav>
 
-                {/* Header \imge and name*/}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '25px', marginBottom: '30px', backgroundColor: 'white', padding: '30px', borderRadius: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
-                    <UserImage
-                        image={userData?.profileImage}
-                        fullName={userData?.fullName}
-                        onImageChange={handleInputChange}
-                    />
-                    <div>
-                        <h1 style={{ fontSize: '32px', margin: 0, color: '#1e1b4b', fontWeight: '800' }}>
-                            {userData?.fullName}
-                        </h1>
-                        <p style={{ margin: '5px 0 0 0', color: '#6366f1', fontWeight: '600' }}>סטודנט/ית בקמפוס</p>
+                    <div
+                        onClick={() => setScreen('profile')}
+                        style={{
+                            marginTop: 'auto', margin: '16px', padding: '16px 20px',
+                            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px',
+                            backgroundColor: 'rgba(238,242,255,0.8)', borderRadius: '24px',
+                            border: '1px solid rgba(199,210,254,0.3)'
+                        }}
+                    >
+                        <span>👤</span>
+                        <span style={{ color: '#4F46E5', fontWeight: '700' }}>הפרופיל שלי</span>
                     </div>
                 </div>
 
-                {/* profile ditails*/}
-                <div style={{ backgroundColor: 'white', padding: '40px', borderRadius: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
-                        <div>
-                            <label style={labelStyle}>שם מלא</label>
-                            {isEditing ? <input style={inputStyle} name="fullName" value={tempData.fullName || ''} onChange={handleInputChange} />
-                                : <p style={contentStyle}>{userData?.fullName}</p>}
-                        </div>
+                {/* תוכן ראשי - כרטיס רחב יותר */}
+                <main style={{ flex: 1, padding: '32px 40px', overflowY: 'auto' }}>
+                    <div style={{ maxWidth: '100%' }}>
+                        <div style={card}>
 
-                        <div>
-                            <label style={labelStyle}>גיל</label>
-                            {isEditing ? <input style={inputStyle} type="number" name="age" value={tempData.age || ''} onChange={handleInputChange} />
-                                : <p style={contentStyle}>{userData?.age}</p>}
-                        </div>
+                            <h2 style={{ color: '#2C3E7A', fontSize: '24px', fontWeight: '800', margin: '0 0 28px 0' }}>
+                                הפרופיל שלי
+                            </h2>
 
-                        <div>
-                            <label style={labelStyle}>כתובת (עיר וארץ)</label>
-                            {isEditing ? (
-                                <div style={{ display: 'flex', gap: '10px' }}>
-                                    <input style={inputStyle} name="city" placeholder="עיר" value={tempData.city || ''} onChange={handleInputChange} />
-                                    <input style={inputStyle} name="country" placeholder="ארץ" value={tempData.country || ''} onChange={handleInputChange} />
-                                </div>
-                            ) : <p style={contentStyle}>{userData?.city}, {userData?.country}</p>}
-                        </div>
+                            {/* קצת על עצמי - ראשון */}
+                            <div style={sectionTitle}>קצת על עצמי</div>
+                            <div style={{ marginTop: '12px' }}>
+                                {isEditing ? (
+                                    <textarea
+                                        name="about"
+                                        value={tempData.about || ''}
+                                        onChange={handleInputChange}
+                                        placeholder="תחביבים, תחומי עניין, על מה תרצה/י לשתף..."
+                                        rows={4}
+                                        style={{ ...inputStyle, resize: 'vertical', width: '100%' }}
+                                    />
+                                ) : (
+                                    <p style={{ color: cloudData.about ? '#1A1A2E' : '#9CA3AF', fontSize: '16px', lineHeight: '1.8', margin: 0 }}>
+                                        {cloudData.about || 'לחצ/י על עריכת פרופיל כדי לספר על עצמך...'}
+                                    </p>
+                                )}
+                            </div>
 
-                        <div>
-                            <label style={labelStyle}>אימייל</label>
-                            <p style={{ ...contentStyle, color: '#9ca3af' }}>{userData?.email}</p>
-                        </div>
+                            <div style={divider} />
 
-                        <div style={{ gridColumn: 'span 2' }}>
-                            <label style={labelStyle}>תחום לימודים</label>
-                            <p style={{ ...contentStyle, color: '#6366f1', fontWeight: '600' }}>{userData?.studyField}</p>
+                            {/* פרטים קבועים */}
+                            <div style={grid}>
+                                <Field label="שם מלא" value={cloudData.fullName} />
+                                <Field label="תעודת זהות" value={cloudData.idNumber} />
+                                <Field label="אימייל" value={currentUser?.email} />
+                                <Field label="מגדר" value={cloudData.gender} />
+                            </div>
+
+                            <div style={divider} />
+
+                            {/* פרטים נוספים */}
+                            <div style={sectionTitle}>פרטים נוספים</div>
+                            <div style={{ ...grid, marginTop: '16px' }}>
+                                <EditableField label="גיל" name="age" value={display.age} isEditing={isEditing} onChange={handleInputChange} />
+                                <EditableField label="עיר" name="city" value={display.city} isEditing={isEditing} onChange={handleInputChange} />
+                                <EditableField label="כתובת" name="address" value={display.address} isEditing={isEditing} onChange={handleInputChange} />
+                                <EditableField label="תחום לימודים" name="studyField" value={display.studyField} isEditing={isEditing} onChange={handleInputChange} />
+                                <EditableField label="שנת לימודים" name="year" value={display.year} isEditing={isEditing} onChange={handleInputChange} />
+                            </div>
+
+                            {/* כפתורים בתחתית */}
+                            <div style={{ marginTop: '40px', display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                                {isEditing ? (
+                                    <>
+                                        <button onClick={handleSave} disabled={loading} style={primaryBtn}>
+                                            {loading ? 'שומר...' : 'שמור שינויים'}
+                                        </button>
+                                        <button onClick={() => setIsEditing(false)} style={secondaryBtn}>ביטול</button>
+                                    </>
+                                ) : (
+                                    <button onClick={handleStartEdit} style={primaryBtn}>עריכת פרופיל</button>
+                                )}
+                            </div>
+
                         </div>
                     </div>
-
-                    <div style={{ marginTop: '40px', display: 'flex', gap: '15px' }}>
-                        {isEditing ? (
-                            <>
-                                <button onClick={handleSave} style={primaryBtn}>שמור שינויים</button>
-                                <button onClick={() => setIsEditing(false)} style={secondaryBtn}>ביטול</button>
-                            </>
-                        ) : (
-                            <button onClick={() => setIsEditing(true)} style={primaryBtn}>עריכת פרופיל</button>
-                        )}
-                    </div>
-                </div>
+                </main>
             </div>
         </div>
     );
 }
 
-// style
-const labelStyle = { display: 'block', fontSize: '18px', fontWeight: '700', color: '#1e1b4b', marginBottom: '8px' };
-const contentStyle = { fontSize: '18px', color: '#4b5563', fontWeight: '400', margin: 0, padding: '5px 0' };
-const inputStyle = { width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #d1d5db', fontSize: '16px' };
-const primaryBtn = { backgroundColor: '#6366f1', color: 'white', padding: '12px 25px', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '16px' };
-const secondaryBtn = { backgroundColor: '#ef4444', color: 'white', padding: '12px 25px', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '16px' };
+const Field = ({ label, value }) => (
+    <div>
+        <label style={labelStyle}>{label}</label>
+        <p style={contentStyle}>{value || '—'}</p>
+    </div>
+);
+
+const EditableField = ({ label, name, value, isEditing, onChange }) => (
+    <div>
+        <label style={labelStyle}>{label}</label>
+        {isEditing ? (
+            <input name={name} value={value || ''} onChange={onChange} style={inputStyle} />
+        ) : (
+            <p style={contentStyle}>{value || '—'}</p>
+        )}
+    </div>
+);
+
+const card = { background: 'white', borderRadius: '20px', padding: '40px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' };
+const grid = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' };
+const divider = { height: '1px', backgroundColor: '#F3F4F6', margin: '28px 0' };
+const sectionTitle = { fontSize: '14px', fontWeight: '700', color: '#6B7280' };
+const labelStyle = { display: 'block', fontSize: '13px', fontWeight: '700', color: '#6B7280', marginBottom: '6px' };
+const contentStyle = { fontSize: '16px', color: '#1A1A2E', fontWeight: '500', margin: 0 };
+const inputStyle = { width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #D1D5DB', fontSize: '15px', fontFamily: 'Heebo, sans-serif', boxSizing: 'border-box' };
+const primaryBtn = { backgroundColor: '#4F46E5', color: 'white', padding: '12px 32px', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '15px', fontFamily: 'Heebo, sans-serif' };
+const secondaryBtn = { backgroundColor: 'white', color: '#4B5563', padding: '12px 32px', border: '1px solid #D1D5DB', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '15px', fontFamily: 'Heebo, sans-serif' };
+const navItem = { padding: '11px 18px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', color: '#2C3E7A', borderRadius: '20px', opacity: 0.8, fontSize: '15px' };
 
 export default Profile;
