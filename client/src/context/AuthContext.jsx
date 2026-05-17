@@ -96,17 +96,14 @@ export const AuthProvider = ({ children }) => {
     return userCredential;
   };
 
-  const login = (email, password) => {
+  const  login = (email, password) => {
     return signInWithEmailAndPassword(auth, email, password);
   };
 
-  const loginWithGoogle = async () => {
-    try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-    } catch (error) {
-      console.error("Login failed:", error);
-    }
+  const loginWithGoogle = () => {
+    const provider = new GoogleAuthProvider();
+    return signInWithPopup(auth, provider);
+   
   };
   const logout = () => {
     return signOut(auth);
