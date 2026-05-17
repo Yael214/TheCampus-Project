@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext'; //
 import './App.css';
 import Login from './Login.jsx';
 import Register from './Register.jsx';
@@ -11,6 +12,11 @@ import Sidebar from '../components/Sidebar.jsx';
 
 function App() {
   const [screen, setScreen] = useState('login');
+  useEffect(() => {
+    if (user) {
+      setScreen('feed');
+    }
+  }, [user]);
 
   // Fixed bar
   const appScreens = ['feed', 'profile', 'courses', 'partners'];
