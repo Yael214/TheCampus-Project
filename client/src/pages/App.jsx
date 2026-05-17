@@ -7,6 +7,9 @@ import Reset from './Reset.jsx';
 import Success from './Success.jsx';
 import Feed from './Feed.jsx';
 import Profile from './Profile.jsx';
+import MapPage from './MapPage.jsx';
+
+//<Route path="/map" element={<MapPage />} />
 
 function App() {
 
@@ -20,6 +23,7 @@ function App() {
       {screen === 'success' && <Success setScreen={setScreen} />}
       {screen === 'feed' && <Feed setScreen={setScreen} />}
       {screen === 'profile' && <Profile setScreen={setScreen} />}
+      {screen === 'map' && <MapPage setScreen={setScreen} />}
     </div>
   );
 }
