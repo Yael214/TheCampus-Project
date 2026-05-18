@@ -17,6 +17,16 @@ function Feed() {
           </p>
         </div>
       </div>
+      <div className="main-content" style={{padding: '20px'}}>
+        <h2>הפיד שלי</h2>
+        <button className="primary-btn" style={{width: '150px'}} onClick={() => setScreen('map')}>
+          חפש שותפים ללמידה
+        </button>
+        <h2> </h2>
+        <button className="primary-btn" style={{width: '150px'}} onClick={() => setScreen('login')}>
+          התנתקות
+        </button>
+      </div>
     </main>
   );
 }
