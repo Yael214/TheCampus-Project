@@ -57,7 +57,7 @@ function UserImage({ image, fullName, onImageChange, onImageClick }) {
                 border: '1px solid #e5e7eb'
             }}>
                 ✏️
-                <input type="file" name="profileImage" onChange={onImageChange} style={{ display: 'none' }} />
+                <input type="file" name="profileImage" accept="image/*" onChange={onImageChange} style={{ display: 'none' }} />
             </label>
         </div>
     );

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { collection, query, orderBy, startAt, endAt, getDocs, where } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { db } from '../firebaseConfig';
 import * as geofire from 'geofire-common';
 
 /**
