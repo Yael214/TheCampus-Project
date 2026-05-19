@@ -9,6 +9,7 @@ import Feed from './Feed.jsx';
 import Profile from './Profile.jsx';
 import Topbar from '../components/Topbar.jsx';
 import Sidebar from '../components/Sidebar.jsx';
+import MapPage from './MapPage.jsx';
 
 function App() {
   const { user } = useAuth();
@@ -25,9 +26,7 @@ function App() {
 
   return (
     <div className="App">
-      {screen === 'feed' && <Feed setScreen={setScreen} />}
-      {screen === 'profile' && <Profile setScreen={setScreen} />}
-      {screen === 'map' && <MapPage setScreen={setScreen} />}
+      
       {isAppScreen ? (
         // לייאאוט קבוע - Topbar וSidebar לא זזים
         <div style={{ direction: 'rtl', minHeight: '100vh', backgroundColor: '#F0F2FA', fontFamily: 'Heebo, sans-serif' }}>
@@ -37,6 +36,7 @@ function App() {
             <main style={{ flex: 1, overflowY: 'auto' }}>
               {screen === 'feed' && <Feed />}
               {screen === 'profile' && <Profile />}
+              {screen === 'partners' && <MapPage setScreen={setScreen} />}
             </main>
           </div>
         </div>
@@ -47,6 +47,7 @@ function App() {
           {screen === 'register' && <Register setScreen={setScreen} />}
           {screen === 'reset' && <Reset setScreen={setScreen} />}
           {screen === 'success' && <Success setScreen={setScreen} />}
+          
         </>
       )}
     </div>

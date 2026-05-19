@@ -9,7 +9,7 @@ function Feed() {
           </button>
         </div>
 
-        <div className="bg-white p-24 rounded-[32px] text-center shadow-md border border-white/60">
+        <div className="bg-white p-24 rounded-4xl text-center shadow-md border border-white/60">
           <div className="text-7xl mb-8">🎓</div>
           <h3 className="text-2xl font-bold text-[#2C3E7A] mb-3">ברוכה הבאה לקמפוס!</h3>
           <p className="text-gray-400 text-lg max-w-sm mx-auto">
