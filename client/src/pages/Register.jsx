@@ -5,7 +5,7 @@ import {useImageHandler} from '../hooks/useImageHandler';
 function Register({ setScreen }) {
   const [formData, setFormData] = useState({
     fullName: '', idNumber: '', email: '', password: '', age: '', gender: '',
-    country: '', city: '', address: '', studyField: '', year: '',
+    studyField: '', year: '',
     profileImage: null, studyApproval: null
   });
 
@@ -64,6 +64,7 @@ function Register({ setScreen }) {
       tempErrors.password = "הסיסמה חייבת לכלול לפחות 8 תווים, אות גדולה, אות קטנה ומספר";
     }
     if (!formData.studyField) tempErrors.studyField = "חובה להזין תחום לימודים";
+    if (!formData.year) tempErrors.year = "חובה להזין שנת לימודים";
     if (!formData.studyApproval) {tempErrors.studyApproval = "חובה להעלות אישור לימודים";}
     else {  
       if (formData.studyApproval.type !== "application/pdf")  {tempErrors.studyApproval = "ניתן להעלות רק קובץ PDF";}
@@ -136,15 +137,13 @@ function Register({ setScreen }) {
           <option value="נקבה">נקבה</option>
         </select>
 
-        <label>ארץ</label>
-        <input type="text" name="country" onChange={handleInputChange} />
-
-        <label>עיר</label>
-        <input type="text" name="city" onChange={handleInputChange} />
-
         <label><span className="required">*</span>תחום לימודים</label>
         <input type="text" name="studyField" className={errors.studyField ? 'input-error' : ''} onChange={handleInputChange} />
         {errors.studyField && <span className="error-msg">{errors.studyField}</span>}
+
+        <label><span className="required">*</span>שנת לימודים</label>
+        <input type="text" name="year" className={errors.year ? 'input-error' : ''} onChange={handleInputChange} />
+        {errors.year && <span className="error-msg">{errors.year}</span>}
 
         {/*only image formats*/}
         <label>העלאת תמונת פרופיל</label>
