@@ -25,16 +25,16 @@ function MapPage() {
   });
 
   const handleSearchSubmit = () => {
-    setSearchRadius(tempRadius); // רק עכשיו מתבצעת השליפה בפועל!
+    setSearchRadius(tempRadius); // Update the search radius which will trigger the useNearbyUsers hook to refetch data
   };
 
   const handlePartnerSelect = (partner) => {
     if (!partner) return;
     
-    // מעדכנים את הסטייט של השותף הנבחר
+    // Set the selected partner in state to show the info window on the map and highlight the card in the sidebar
     setSelectedPartner(partner);
 
-    // מוצאים את האלמנט לפי ה-ID הדינמי שלו ומבצעים גלילה חלקה
+    // Scroll the selected partner's card into view in the sidebar
     const element = document.getElementById(`partner-card-${partner.id}`);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -125,9 +125,7 @@ function MapPage() {
                   }}>
                   <PartnerCard 
                     name={partner.fullName} 
-                    // אם יש לכן מרחק אמיתי נציג אותו, אחרת נרשום משהו הגיוני
                     distance={partner.distance.toFixed(2)} 
-                    // מוודא שהתגים (הקורסים) מועברים כמערך, ומטפלים במצב שהשדה ריק
                     tags={partner.tags && partner.tags.length > 0 ? partner.tags : ['אין קורסים משותפים']} 
                   />
                 </div>
