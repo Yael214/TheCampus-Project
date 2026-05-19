@@ -117,7 +117,7 @@ function MapPage() {
                   key={partner.id} onClick={() => setSelectedPartner(partner)} 
                   style={{ 
                     cursor: 'pointer',
-                    // אם כרטיס זה נבחר במפה, תופיע מסגרת כחולה יפה
+                    // Highlight the card if it's the selected partner
                     border: selectedPartner?.id === partner.id ? '2px solid #007bff' : '2px solid transparent',
                     borderRadius: '8px',
                     transition: 'all 0.3s ease',
