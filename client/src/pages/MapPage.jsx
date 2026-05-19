@@ -1,18 +1,46 @@
-import React from 'react';
+import { useState } from 'react';
 import './MapPage.css'; 
 import PartnerCard from './PartnerCard.jsx';
+import MapContainer from '../components/map/MapContainer.jsx';
+import { useNearbyUsers } from '../hooks/useNearbyUsers';
 
-const partnersData = [
-  { id: 1, name: 'נעמה', distance: '1.0', tags: ['אלגברה', 'מבוא לתכנות'] },
-  { id: 2, name: 'גיא לוי', distance: '1.5', tags: ['פיזיקה', 'כימיה'] },
-  { id: 3, name: 'תמר רוזן', distance: '2.0', tags: ['ביולוגיה', 'אלגברה'] },
-  { id: 4, name: 'אורי בר-לב', distance: '2.5', tags: ['מבוא לתכנות'] },
-  { id: 5, name: 'דנה מלכה', distance: '3.0', tags: ['פיזיקה', 'אלגברה'] },
-  { id: 6, name: 'שירה נווה', distance: '4.0', tags: ['ביולוגיה', 'מבוא לתכנות'] },
-  { id: 7, name: 'מיה אדרי', distance: '4.5', tags: ['אלגברה', 'כימיה'] },
-];
+// Default center of the map, can be updated to user's location if available
+const defaultCenter = { lat: 31.788, lng: 35.2112 };
 
 function MapPage() {
+  const [tempRadius, setTempRadius] = useState(10);
+  const [searchRadius, setSearchRadius] = useState(10);
+
+  const [selectedPartner, setSelectedPartner] = useState(null);
+  // const [selectedCourse, setSelectedCourse] = useState('כל הקורסים'); // This state is for future implementation of course filtering
+  const [selectedGender, setSelectedGender] = useState('הכל');
+
+  // The hook to fetch nearby users based on location and radius
+  const { nearbyUsers, loading, error } = useNearbyUsers(defaultCenter, searchRadius); 
+
+  // Filter partners with valid location
+  const filteredPartners = (nearbyUsers || []).filter(partner => {
+    const matchesGender = selectedGender === 'הכל' || partner.gender === selectedGender;
+    return matchesGender;
+  });
+
+  const handleSearchSubmit = () => {
+    setSearchRadius(tempRadius); // רק עכשיו מתבצעת השליפה בפועל!
+  };
+
+  const handlePartnerSelect = (partner) => {
+    if (!partner) return;
+    
+    // מעדכנים את הסטייט של השותף הנבחר
+    setSelectedPartner(partner);
+
+    // מוצאים את האלמנט לפי ה-ID הדינמי שלו ומבצעים גלילה חלקה
+    const element = document.getElementById(`partner-card-${partner.id}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+
   return (
     <div className="page" dir="rtl">
       <header className="header">
@@ -29,7 +57,8 @@ function MapPage() {
             <h2>סינון</h2>
             <p>בחר קורסים, מרחק וזמינות.</p>
             <div className="filters">
-              <div className="field">
+              {/* In the next sprint when we will implement courses... */}
+              {/* <div className="field">
                 <label>בחר קורס</label>
                 <select defaultValue="כל הקורסים">
                   <option>כל הקורסים</option>
@@ -39,7 +68,7 @@ function MapPage() {
                   <option>כימיה</option>
                   <option>ביולוגיה</option>
                 </select>
-              </div>
+              </div> */}
 
               <div className="field">
                 <label>מגדר</label>
@@ -47,7 +76,6 @@ function MapPage() {
                   <option>הכל</option>
                   <option>נקבה</option>
                   <option>זכר</option>
-                  <option>לא בינארי</option>
                 </select>
               </div>
 
@@ -61,14 +89,16 @@ function MapPage() {
                   <option>35+</option>
                 </select>
               </div>
-
+              
               <div className="field">
-                <label>מרחק מקסימלי (ק"מ)</label>
-                <input type="number" placeholder="הכנס מרחק" />
+                <label>רדיוס חיפוש: {tempRadius} ק"מ</label>
+                <input 
+                  type="range" min="1" max="50" value={tempRadius} 
+                  onChange={(e) => setTempRadius(Number(e.target.value))} 
+                />
               </div>
               
-              {/* זה הכפתור החדש שהוספנו */}
-              <button className="btn" style={{ width: '100%', marginTop: '10px', fontSize: '16px' }}>
+              <button className="btn" onClick={handleSearchSubmit} style={{ width: '100%', marginTop: '10px', fontSize: '16px' }}>
                 חפש
               </button>
 
@@ -76,26 +106,44 @@ function MapPage() {
           </div>
 
           <div className="cards">
-            {partnersData.map((partner) => (
-              <PartnerCard 
-                key={partner.id} 
-                name={partner.name} 
-                distance={partner.distance} 
-                tags={partner.tags} 
-              />
-            ))}
+            {loading ? (
+              <p>טוען שותפים...</p>
+            ) : filteredPartners.length === 0 ? (
+              <p>לא נמצאו שותפים מתאימים.</p>
+            ) : (
+              filteredPartners.map((partner) => (
+                <div 
+                  id={`partner-card-${partner.id}`}
+                  key={partner.id} onClick={() => setSelectedPartner(partner)} 
+                  style={{ 
+                    cursor: 'pointer',
+                    // אם כרטיס זה נבחר במפה, תופיע מסגרת כחולה יפה
+                    border: selectedPartner?.id === partner.id ? '2px solid #007bff' : '2px solid transparent',
+                    borderRadius: '8px',
+                    transition: 'all 0.3s ease',
+                    marginBottom: '10px'
+                  }}>
+                  <PartnerCard 
+                    name={partner.fullName} 
+                    // אם יש לכן מרחק אמיתי נציג אותו, אחרת נרשום משהו הגיוני
+                    distance={partner.distance.toFixed(2)} 
+                    // מוודא שהתגים (הקורסים) מועברים כמערך, ומטפלים במצב שהשדה ריק
+                    tags={partner.tags && partner.tags.length > 0 ? partner.tags : ['אין קורסים משותפים']} 
+                  />
+                </div>
+              ))
+            )}
           </div>
         </section>
 
         <aside className="map-panel">
           <div className="map-box">
-            <iframe
-              title="Google Maps"
-              loading="lazy"
-              allowFullScreen
-              referrerPolicy="no-referrer-when-downgrade"
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3390.2749530304213!2d35.197019324918415!3d31.817504532402754!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1502d60f77d5d5b5%3A0xb9d57b41ac3916f4!2z16fXoNeZ15XXnyDXqNee15XXqg!5e0!3m2!1siw!2sil!4v1776183027765!5m2!1siw!2sil"
-            ></iframe>
+            <MapContainer 
+              center={defaultCenter}
+              partners={filteredPartners} 
+              selectedPartner={selectedPartner}
+              onPartnerSelect={setSelectedPartner}
+            />
           </div>
         </aside>
       </div>
