@@ -1,14 +1,16 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { 
-    onAuthStateChanged,
-    signInWithEmailAndPassword,
-    createUserWithEmailAndPassword,
-    signOut,
-    GoogleAuthProvider,
-    signInWithPopup
- } from "firebase/auth";
-import { auth, db } from "../firebase/config";
+import {
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  GoogleAuthProvider,
+  signInWithPopup
+} from "firebase/auth";
+import { auth, db, storage } from "../firebase/config";
 import { getDoc, doc, setDoc } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { useImageHandler } from "../hooks/useImageHandler";
 
 
 const AuthContext = createContext();
@@ -17,7 +19,8 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-
+  const { getFileExtension, uploadFileToStorage } = useImageHandler();
+  
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
@@ -43,25 +46,45 @@ export const AuthProvider = ({ children }) => {
 
     return () => unsubscribe();
   }, []);
+  
 
-  const signup = async (email, password , additionalData) => {
+  const signup = async (email, password, additionalData) => {
+    
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user
+    
+    let profileImageUrl = "";
+    let studyApprovalUrl = "";
+
+    if (additionalData.profileImage) {
+      const ext = getFileExtension(additionalData.profileImage);
+      profileImageUrl = await uploadFileToStorage(
+        additionalData.profileImage,
+        `users/${user.uid}/profile.${ext}`
+      );
+    }
+    if (additionalData.studyApproval) {
+      const ext = getFileExtension(additionalData.studyApproval);
+      studyApprovalUrl = await uploadFileToStorage(
+        additionalData.studyApproval,
+        `users/${user.uid}/studyApproval.${ext}`
+      );
+    }
 
     await setDoc(doc(db, "users", user.uid), {
-    fullName: additionalData.fullName,
-    idNumber: additionalData.idNumber,
-    age: additionalData.age,
-    gender: additionalData.gender,
-    country: additionalData.country,
-    city: additionalData.city,
-    address: additionalData.address,
-    year: additionalData.year,
-    studyField: additionalData.studyField,
-    //profileImage: additionalData.profileImage,
-    //studyApproval: additionalData.studyApproval,
-    role: "user", // הגדרת תפקיד ברירת מחדל
-    createdAt: new Date() 
+      fullName: additionalData.fullName,
+      idNumber: additionalData.idNumber,
+      age: additionalData.age,
+      gender: additionalData.gender,
+      country: additionalData.country,
+      city: additionalData.city,
+      address: additionalData.address,
+      year: additionalData.year,
+      studyField: additionalData.studyField,
+      profileImage: profileImageUrl,
+      studyApproval: studyApprovalUrl,
+      role: "user", // הגדרת תפקיד ברירת מחדל
+      createdAt: new Date()
     });
 
     return userCredential;

@@ -6,26 +6,42 @@ import { useUserData } from '../hooks/useUserData';
 import { db, storage } from '../firebase/config';
 import { doc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { useImageHandler } from '../hooks/useImageHandler';
 
 function Sidebar({ setScreen, currentScreen }) {
     const { currentUser } = useAuth();
     const { userData } = useUserData(currentUser?.uid);
-    const [imageLoading, setImageLoading] = useState(false);
+    const { validateImage, getFileExtension, uploadFileToStorage, loading: imageLoading } = useImageHandler();
 
     const handleImageChange = async (e) => {
         const file = e.target.files[0];
         if (!file || !currentUser?.uid) return;
+
+        // Validate image extension
+        if (!validateImage(file)) {
+            alert("Please select a valid image file (png, jpg, jpeg, webp).");
+            return;
+        }
+
         try {
-            setImageLoading(true);
-            const storageRef = ref(storage, `users/${currentUser.uid}/profile.jpg`);
-            await uploadBytes(storageRef, file);
-            const downloadURL = await getDownloadURL(storageRef);
-            await updateDoc(doc(db, "users", currentUser.uid), { profileImage: downloadURL });
+            
+            
+            // Extract the real file extension to build the correct dynamic path
+            const fileExt = getFileExtension(file);
+            const storagePath = `users/${currentUser.uid}/profile.${fileExt}`;
+            
+            // Upload to storage with cache control
+            const downloadURL = await uploadFileToStorage(file, storagePath);
+
+            if (downloadURL) {
+                // Update Firestore using your preferred field name: profileImage
+                await updateDoc(doc(db, "users", currentUser.uid), { 
+                    profileImage: downloadURL 
+                });
+            }
         } catch (error) {
-            console.error("שגיאה בהעלאת תמונה:", error);
-            alert("שגיאה בהעלאת התמונה.");
-        } finally {
-            setImageLoading(false);
+            console.error("Error updating profile image:", error);
+            alert("Error uploading image.");
         }
     };
 
