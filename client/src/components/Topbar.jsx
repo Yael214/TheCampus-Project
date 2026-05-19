@@ -1,7 +1,9 @@
 
 import Logo from './Logo';
+import { useAuth } from '../context/AuthContext';
 
 function Topbar({ setScreen }) {
+    const { logout } = useAuth();
     return (
         <div className="topbar" style={{
             display: 'flex',
@@ -37,7 +39,7 @@ function Topbar({ setScreen }) {
 
 
             <button
-                onClick={() => setScreen('login')}
+                onClick={async () => { await logout(); setScreen('login'); }}
                 style={{
                     padding: '8px 15px',
                     backgroundColor: '#f3f4f6',
