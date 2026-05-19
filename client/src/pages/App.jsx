@@ -25,6 +25,9 @@ function App() {
 
   return (
     <div className="App">
+      {screen === 'feed' && <Feed setScreen={setScreen} />}
+      {screen === 'profile' && <Profile setScreen={setScreen} />}
+      {screen === 'map' && <MapPage setScreen={setScreen} />}
       {isAppScreen ? (
         // לייאאוט קבוע - Topbar וSidebar לא זזים
         <div style={{ direction: 'rtl', minHeight: '100vh', backgroundColor: '#F0F2FA', fontFamily: 'Heebo, sans-serif' }}>
