@@ -13,9 +13,12 @@ function Profile() {
     const [tempData, setTempData] = useState({});
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [savedData, setSavedData] = useState(null);
+
+    const display = isEditing ? tempData : (savedData || cloudData);
 
     const handleStartEdit = () => {
-        setTempData({ ...cloudData });
+        setTempData({ ...display });
         setIsEditing(true);
     };
 
@@ -36,6 +39,7 @@ function Profile() {
                 studyField: tempData.studyField || '',
                 about: tempData.about || '',
             });
+            setSavedData({ ...cloudData, ...tempData });
             setIsEditing(false);
         } catch (error) {
             console.error("שגיאה בעדכון:", error);
@@ -52,12 +56,9 @@ function Profile() {
         </div>
     );
 
-    const display = isEditing ? tempData : cloudData;
-
     return (
         <main className="flex-1 overflow-y-auto" dir="rtl" style={{ padding: '24px 32px', fontFamily: 'Heebo, sans-serif', backgroundColor: '#F0F2FA' }}>
             <div style={card}>
-                
 
                 <h2 style={{ color: '#2C3E7A', fontSize: '22px', fontWeight: '800', margin: '0 0 20px 0' }}>
                     הפרופיל שלי
@@ -76,15 +77,15 @@ function Profile() {
                             style={{ ...inputStyle, resize: 'vertical', width: '100%' }}
                         />
                     ) : (
-                        <p style={{ color: cloudData.about ? '#1A1A2E' : '#9CA3AF', fontSize: '15px', lineHeight: '1.7', margin: 0 }}>
-                            {cloudData.about || 'לחצ/י על עריכת פרופיל כדי לספר על עצמך...'}
+                        <p style={{ color: display.about ? '#1A1A2E' : '#9CA3AF', fontSize: '15px', lineHeight: '1.7', margin: 0 }}>
+                            {display.about || 'לחצ/י על עריכת פרופיל כדי לספר על עצמך...'}
                         </p>
                     )}
                 </div>
 
                 <div style={divider} />
 
-                {/* Permanent details  */}
+                {/* פרטים קבועים */}
                 <div style={grid}>
                     <Field label="שם מלא" value={cloudData.fullName} />
                     <Field label="תעודת זהות" value={cloudData.idNumber} />
@@ -94,7 +95,7 @@ function Profile() {
 
                 <div style={divider} />
 
-                {/* More details  */}
+                {/* פרטים נוספים */}
                 <div style={sectionTitle}>פרטים נוספים</div>
                 <div style={{ ...grid, marginTop: '12px' }}>
                     <EditableField label="גיל" name="age" value={display.age} isEditing={isEditing} onChange={handleInputChange} />
@@ -104,7 +105,7 @@ function Profile() {
                     <EditableField label="שנת לימודים" name="year" value={display.year} isEditing={isEditing} onChange={handleInputChange} />
                 </div>
 
-                {/* down Buttons  */}
+                {/* כפתורים */}
                 <div style={{ marginTop: '28px', display: 'flex', gap: '12px', justifyContent: 'center' }}>
                     {isEditing ? (
                         <>
