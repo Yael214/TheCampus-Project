@@ -26,14 +26,24 @@ function Login({ setScreen }) {
   const handleGoogleLogin = async () => {
     setError('');
     try {
-      setLoading(true);
-      await loginWithGoogle();
-      setScreen('feed');
+        setLoading(true);
+        const result = await loginWithGoogle();
+        
+        const { getDoc, doc } = await import('firebase/firestore');
+        const { db } = await import('../firebase/config');
+        const userDoc = await getDoc(doc(db, "users", result.user.uid));
+        
+        if (userDoc.exists()) {
+            setScreen('feed');
+        } else {
+            await result.user.delete();
+            setError('not_registered');
+        }
     } catch (err) {
-      setError('שגיאה בכניסה עם גוגל');
-      console.error(err);
+        setError('שגיאה בכניסה עם גוגל');
+        console.error(err);
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
 
@@ -44,7 +54,11 @@ function Login({ setScreen }) {
         <form onSubmit={handleLoginSubmit}>
           <h1>כניסה</h1>
 
-          {error && <span className="error-msg">{error}</span>}
+          {error === 'not_registered' ? (
+          <span className="error-msg">עוד לא נרשמת לקמפוס, יש ליצור חשבון תחילה</span>
+          ) : error ? (
+           <span className="error-msg">{error}</span>
+          ) : null}
 
           <label>אימייל</label>
           <input
