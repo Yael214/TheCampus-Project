@@ -84,7 +84,10 @@ function MapPage() {
       <div className="layout">
         <section className="sidebar">
           <div className="panel">
-            <h2>סינון</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2>סינון</h2>
+              <LocationToggle initialStatus={userData?.isDiscoverable || false} />
+            </div>
             <p>בחר קורסים, מרחק וזמינות.</p>
             <div className="filters">
               {/* In the next sprint when we will implement courses... */}

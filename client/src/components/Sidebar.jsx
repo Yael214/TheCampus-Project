@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import UserImage from './UserProfile';
-import { LocationToggle } from './LocationToggle';
 import { useAuth } from '../context/AuthContext';
 import { useUserData } from '../hooks/useUserData';
 import { db, storage } from '../firebase/config';
@@ -100,6 +99,7 @@ function Sidebar() {
                 {/* Position Switch */}
                 <div className="px-5 py-2">
                     <LocationToggle />
+                    {/*<LocationToggle initialStatus={userData?.isDiscoverable || false} />*/}
                 </div>
 
                 {/* Profile Button */}

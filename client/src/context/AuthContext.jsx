@@ -77,6 +77,10 @@ export const AuthProvider = ({ children }) => {
       age: additionalData.age,
       gender: additionalData.gender,
       isDiscoverable: additionalData.isDiscoverable,
+      address: additionalData.address,
+      // The location map ({ geohash, lat, lng }) is what powers the nearby-users
+      // search via geofire-common. Saved only if the user actually picked an address.
+      location: additionalData.location || null,
       year: additionalData.year,
       studyField: additionalData.studyField,
       profileImage: profileImageUrl,

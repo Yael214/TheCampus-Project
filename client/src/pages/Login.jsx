@@ -29,25 +29,39 @@ function Login() {
   const handleGoogleLogin = async () => {
     setError('');
     try {
-      setLoading(true);
-      await loginWithGoogle();
-      navigate('/feed');
+        setLoading(true);
+        const result = await loginWithGoogle();
+
+        const { getDoc, doc } = await import('firebase/firestore');
+        const { db } = await import('../firebase/config');
+        const userDoc = await getDoc(doc(db, "users", result.user.uid));
+
+        if (userDoc.exists()) {
+            navigate('/feed');
+        } else {
+            await result.user.delete();
+            setError('not_registered');
+        }
     } catch (err) {
-      setError('שגיאה בכניסה עם גוגל');
-      console.error(err);
+        setError('שגיאה בכניסה עם גוגל');
+        console.error(err);
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
   
   return (
     <div className="auth-page">
-      <div className="logo">הקמפוס 🎓</div>
-      <div className="login-container">
+      <div className="logo" style={{ fontSize: '28px', justifyContent: 'flex-start', maxWidth: '500px', marginLeft: 'auto', marginRight: 'auto' }}>הקמפוס 🎓</div>
+      <div className="login-container" style={{ maxWidth: '500px' }}>
         <form onSubmit={handleLoginSubmit}>
           <h1>כניסה</h1>
 
-          {error && <span className="error-msg">{error}</span>}
+          {error === 'not_registered' ? (
+          <span className="error-msg">עוד לא נרשמת לקמפוס, יש ליצור חשבון תחילה</span>
+          ) : error ? (
+           <span className="error-msg">{error}</span>
+          ) : null}
 
           <label>אימייל</label>
           <input
@@ -68,7 +82,7 @@ function Login() {
           />
 
           <div className="forgot-password">
-            <a onClick={() => setScreen('reset')}>שכחת סיסמה?</a>
+            <a onClick={() => navigate('/reset')}>שכחת סיסמה?</a>
           </div>
 
           <button className="primary-btn" type="submit" disabled={loading}>
