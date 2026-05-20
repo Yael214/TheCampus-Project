@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
 
-function Reset() {
+function Reset({ setScreen }) {
   const [codeSent, setCodeSent] = useState(false);
-  const navigate = useNavigate();
+
   return (
     <div className="auth-page">
       <div className="logo">הקמפוס 🎓</div>
@@ -19,7 +18,7 @@ function Reset() {
         <label style={{marginTop: '16px'}}>הכנס/י את קוד האימות שהתקבל</label>
         <input type="text" placeholder="הקלד/י את הקוד" />
         
-        <button className="primary-btn" onClick={() => { navigate('/login'); setCodeSent(false); }}>
+        <button className="primary-btn" onClick={() => { setScreen('login'); setCodeSent(false); }}>
           סיום
         </button>
       </div>
