@@ -76,6 +76,7 @@ export const AuthProvider = ({ children }) => {
       idNumber: additionalData.idNumber,
       age: additionalData.age,
       gender: additionalData.gender,
+      isDiscoverable: additionalData.isDiscoverable,
       year: additionalData.year,
       studyField: additionalData.studyField,
       profileImage: profileImageUrl,

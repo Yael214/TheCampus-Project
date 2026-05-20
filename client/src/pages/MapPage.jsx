@@ -3,11 +3,13 @@ import './MapPage.css';
 import PartnerCard from './PartnerCard.jsx';
 import MapContainer from '../components/map/MapContainer.jsx';
 import { useNearbyUsers } from '../hooks/useNearbyUsers';
-
+import { useAuth } from '../context/AuthContext.jsx';
 // Default center of the map, can be updated to user's location if available
 const defaultCenter = { lat: 31.788, lng: 35.2112 };
 
 function MapPage() {
+  const { currentUser } = useAuth();
+  const isDiscoverable = currentUser?.isDiscoverable ?? false;
   const [tempRadius, setTempRadius] = useState(10);
   const [searchRadius, setSearchRadius] = useState(10);
 
@@ -110,9 +112,26 @@ function MapPage() {
                 />
               </div>
               
-              <button className="btn" onClick={handleSearchSubmit} style={{ width: '100%', marginTop: '10px', fontSize: '16px' }}>
+              <button 
+                className="btn" 
+                onClick={handleSearchSubmit} 
+                disabled={!isDiscoverable}
+                style={{ 
+                  width: '100%', 
+                  marginTop: '10px', 
+                  fontSize: '16px',
+                  backgroundColor: !isDiscoverable ? '#9CA3AF' : '',
+                  cursor: !isDiscoverable ? 'not-allowed' : 'pointer'
+                }}
+              >
                 חפש
               </button>
+
+              {!isDiscoverable && (
+                <p style={{ color: '#DC2626', fontSize: '13px', marginTop: '8px', textAlign: 'center', fontWeight: '500' }}>
+                  ⚠️ כדי לחפש שותפים, יש לאשר שיתוף כתובת .
+                </p>
+              )}
 
             </div>
           </div>
