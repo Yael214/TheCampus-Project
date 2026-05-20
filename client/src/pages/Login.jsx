@@ -49,8 +49,8 @@ function Login({ setScreen }) {
 
   return (
     <div className="auth-page">
-      <div className="logo">הקמפוס 🎓</div>
-      <div className="login-container">
+      <div className="logo" style={{ fontSize: '28px', justifyContent: 'flex-start', maxWidth: '500px', marginLeft: 'auto', marginRight: 'auto' }}>הקמפוס 🎓</div>
+      <div className="login-container" style={{ maxWidth: '500px' }}>
         <form onSubmit={handleLoginSubmit}>
           <h1>כניסה</h1>
 

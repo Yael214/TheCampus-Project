@@ -107,7 +107,7 @@ function Register({ setScreen }) {
 
   return (
     <div className="auth-page">
-      <div className="logo">הקמפוס 🎓</div>
+      <div className="logo" style={{ fontSize: '28px', justifyContent: 'flex-start', maxWidth: '500px', marginLeft: 'auto', marginRight: 'auto' }}>הקמפוס 🎓</div>
       <div className="container" style={{ maxWidth: '500px' }}>
         <h1>יצירת חשבון</h1>
 

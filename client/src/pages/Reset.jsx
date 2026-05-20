@@ -5,8 +5,8 @@ function Reset({ setScreen }) {
 
   return (
     <div className="auth-page">
-      <div className="logo">הקמפוס 🎓</div>
-      <div className="container">
+      <div className="logo" style={{ fontSize: '28px', justifyContent: 'flex-start', maxWidth: '500px', marginLeft: 'auto', marginRight: 'auto' }}>הקמפוס 🎓</div>
+      <div className="container" style={{ maxWidth: '500px' }}>
         <h1>איפוס סיסמה</h1>
         <label>הכנס/י כתובת מייל לקבלת קוד אימות</label>
         <input type="email" placeholder="example@mail.com" />
