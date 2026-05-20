@@ -150,7 +150,7 @@ function MapPage() {
             {!hasSearched && !isDiscoverable ? (
               <p>⚠️ אנא אשר שיתוף מיקום כדי לחפש שותפים.</p>
             ) : !hasSearched ? (
-              <p>לחץ על "חפש" כדי למצוא שותפים בקרבתך.</p>
+              null
             ) : loading ? (
               <p>טוען שותפים...</p>
             ) : filteredPartners.length === 0 ? (
