@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import UserImage from './UserProfile';
-import { LocationToggle } from './LocationToggle';
 import { useAuth } from '../context/AuthContext';
 import { useUserData } from '../hooks/useUserData';
 import { db, storage } from '../firebase/config';

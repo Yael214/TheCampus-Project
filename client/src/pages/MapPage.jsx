@@ -1,8 +1,11 @@
 import { useState } from 'react';
-import './MapPage.css'; 
+import './MapPage.css';
 import PartnerCard from './PartnerCard.jsx';
 import MapContainer from '../components/map/MapContainer.jsx';
 import { useNearbyUsers } from '../hooks/useNearbyUsers';
+import { LocationToggle } from '../components/LocationToggle.jsx';
+import { useAuth } from '../context/AuthContext';
+import { useUserData } from '../hooks/useUserData';
 
 // Default center of the map, can be updated to user's location if available
 const defaultCenter = { lat: 31.788, lng: 35.2112 };
@@ -17,7 +20,11 @@ function MapPage() {
   const [selectedAge, setSelectedAge] = useState('הכל');
 
   // The hook to fetch nearby users based on location and radius
-  const { nearbyUsers, loading, error } = useNearbyUsers(defaultCenter, searchRadius); 
+  const { nearbyUsers, loading, error } = useNearbyUsers(defaultCenter, searchRadius);
+
+  // Get current user's discoverable status for the location toggle
+  const { currentUser } = useAuth();
+  const { userData } = useUserData(currentUser?.uid);
 
   // Filter partners with valid location
   const filteredPartners = (nearbyUsers || []).filter(partner => {
@@ -66,7 +73,10 @@ function MapPage() {
       <div className="layout">
         <section className="sidebar">
           <div className="panel">
-            <h2>סינון</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2>סינון</h2>
+              <LocationToggle initialStatus={userData?.isDiscoverable || false} />
+            </div>
             <p>בחר קורסים, מרחק וזמינות.</p>
             <div className="filters">
               {/* In the next sprint when we will implement courses... */}

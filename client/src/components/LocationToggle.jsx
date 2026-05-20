@@ -12,7 +12,7 @@ export const LocationToggle = ({ initialStatus }) => {
       <span className={`text-sm font-medium transition-colors duration-300 ${
         isDiscoverable ? 'text-black' : 'text-gray-400'
       }`}>
-        מיקום
+        שיתוף מיקום נוכחי
       </span>
       
       <button
