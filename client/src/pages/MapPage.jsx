@@ -7,13 +7,13 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { useUserData } from '../hooks/useUserData';
 import { LocationToggle } from '../components/LocationToggle.jsx';
 
-// Default center of the map, can be updated to user's location if available
-const defaultCenter = { lat: 31.788, lng: 35.2112 };
-
 function MapPage() {
   const { currentUser } = useAuth();
   const { userData } = useUserData(currentUser?.uid);
   const isDiscoverable = userData?.isDiscoverable ?? false;
+  
+  // Get user's location from database, fallback to default if not available
+  const userCenter = userData?.location ? { lat: userData.location.lat, lng: userData.location.lng } : null;
   
   const [tempRadius, setTempRadius] = useState(10);
   const [searchRadius, setSearchRadius] = useState(null); // ← נתחיל עם null
@@ -33,7 +33,7 @@ function MapPage() {
   }, [isDiscoverable]);
   // The hook to fetch nearby users based on location and radius
   // ← רק תרוץ אם searchRadius לא null (כלומר, לאחר לחיצה על חיפוש)
-  const { nearbyUsers, loading, error } = useNearbyUsers(defaultCenter, searchRadius); 
+  const { nearbyUsers, loading, error } = useNearbyUsers(userCenter, searchRadius, currentUser?.uid); 
 
   // Filter partners with valid location
   const filteredPartners = (nearbyUsers || []).filter(partner => {
@@ -187,7 +187,7 @@ function MapPage() {
         <aside className="map-panel">
           <div className="map-box">
             <MapContainer 
-              center={defaultCenter}
+              center={userCenter || { lat: 31.788, lng: 35.2112 }}
               partners={filteredPartners} 
               selectedPartner={selectedPartner}
               onPartnerSelect={setSelectedPartner}
