@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import './MapPage.css'; 
 import PartnerCard from './PartnerCard.jsx';
 import MapContainer from '../components/map/MapContainer.jsx';
@@ -7,14 +7,19 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { useUserData } from '../hooks/useUserData';
 import { LocationToggle } from '../components/LocationToggle.jsx';
 
+const DEFAULT_CENTER = { lat: 31.788, lng: 35.2112 };
+
 function MapPage() {
   const { currentUser } = useAuth();
   const { userData } = useUserData(currentUser?.uid);
   const isDiscoverable = userData?.isDiscoverable ?? false;
   
   // Get user's location from database, fallback to default if not available
-  const userCenter = userData?.location ? { lat: userData.location.lat, lng: userData.location.lng } : null;
-  
+  //const userCenter = userData?.location ? { lat: userData.location.lat, lng: userData.location.lng } : null;
+  const userCenter = useMemo(() => {
+  return userData?.location ? { lat: userData.location.lat, lng: userData.location.lng } : DEFAULT_CENTER;
+}, [userData?.location?.lat, userData?.location?.lng]);
+
   const [tempRadius, setTempRadius] = useState(10);
   const [searchRadius, setSearchRadius] = useState(null); // ← נתחיל עם null
   const [hasSearched, setHasSearched] = useState(false); // ← עקוב אם הפעילו חיפוש
@@ -23,13 +28,18 @@ function MapPage() {
   // const [selectedCourse, setSelectedCourse] = useState('כל הקורסים'); // This state is for future implementation of course filtering
   const [selectedGender, setSelectedGender] = useState('הכל');
   const [selectedAge, setSelectedAge] = useState('הכל');
-  // אפס את החיפוש והתוצאות במידה והמשתמש מכבה את שיתוף המיקום
+  
+  // Track previous isDiscoverable value to detect actual toggles (not just re-renders)
+  const prevIsDiscoverableRef = useRef(isDiscoverable);
+  
+  // אפס את החיפוש והתוצאות רק כשמשתמש בעצם מכבה את שיתוף המיקום (true → false)
   useEffect(() => {
-    if (!isDiscoverable) {
+    if (prevIsDiscoverableRef.current === true && !isDiscoverable) {
       setSearchRadius(null);
       setHasSearched(false);
       setSelectedPartner(null);
     }
+    prevIsDiscoverableRef.current = isDiscoverable;
   }, [isDiscoverable]);
   // The hook to fetch nearby users based on location and radius
   // ← רק תרוץ אם searchRadius לא null (כלומר, לאחר לחיצה על חיפוש)
@@ -187,7 +197,7 @@ function MapPage() {
         <aside className="map-panel">
           <div className="map-box">
             <MapContainer 
-              center={userCenter || { lat: 31.788, lng: 35.2112 }}
+              center={userCenter || DEFAULT_CENTER}
               partners={filteredPartners} 
               selectedPartner={selectedPartner}
               onPartnerSelect={setSelectedPartner}
