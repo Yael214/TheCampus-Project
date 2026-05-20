@@ -1,15 +1,13 @@
 import React from 'react';
-import { useNavigate, Link, Navigate } from 'react-router-dom';
 
-function Success() {
-  const navigate = useNavigate();
+function Success({ setScreen }) {
   return (
     <div className="auth-page">
       <div className="logo">הקמפוס 🎓</div>
       <div className="container" style={{textAlign: 'center'}}>
         <h1>פרטיך נקלטו בהצלחה!</h1>
         <p>ברוך הבא לקמפוס 🙂</p>
-        <button className="primary-btn" onClick={() => navigate('/login')}>
+        <button className="primary-btn" onClick={() => setScreen('login')}>
           חזרה לעמוד הכניסה
         </button>
       </div>
