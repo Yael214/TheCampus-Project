@@ -98,7 +98,7 @@ function Sidebar() {
             <div className="mt-auto flex flex-col gap-2 px-4">
                 {/* Position Switch */}
                 <div className="px-5 py-2">
-                    <LocationToggle />
+
                     {/*<LocationToggle initialStatus={userData?.isDiscoverable || false} />*/}
                 </div>
 

@@ -11,7 +11,7 @@ function Register() {
     address: '', studyField: '', year: '',
     profileImage: null, studyApproval: null
   });
-
+  const navigate = useNavigate();
   // Location object from the picked Google place: { geohash, lat, lng }. Stays null until the
   // user actually selects an address from the dropdown - free-typed text is not a valid location.
   const [location, setLocation] = useState(null);

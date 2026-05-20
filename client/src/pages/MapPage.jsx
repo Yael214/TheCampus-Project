@@ -5,6 +5,8 @@ import MapContainer from '../components/map/MapContainer.jsx';
 import { useNearbyUsers } from '../hooks/useNearbyUsers';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useUserData } from '../hooks/useUserData';
+import { LocationToggle } from '../components/LocationToggle.jsx';
+
 // Default center of the map, can be updated to user's location if available
 const defaultCenter = { lat: 31.788, lng: 35.2112 };
 
