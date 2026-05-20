@@ -63,6 +63,7 @@ function Register({ setScreen }) {
     } else if (!isPasswordStrong(formData.password)) {
       tempErrors.password = "הסיסמה חייבת לכלול לפחות 8 תווים, אות גדולה, אות קטנה ומספר";
     }
+    if (!formData.address) tempErrors.address = "חובה להזין כתובת";
     if (!formData.studyField) tempErrors.studyField = "חובה להזין תחום לימודים";
     if (!formData.studyApproval) {tempErrors.studyApproval = "חובה להעלות אישור לימודים";}
     else {  
@@ -107,7 +108,7 @@ function Register({ setScreen }) {
   return (
     <div className="auth-page">
       <div className="logo">הקמפוס 🎓</div>
-      <div className="container">
+      <div className="container" style={{ maxWidth: '500px' }}>
         <h1>יצירת חשבון</h1>
 
         <label><span className="required">*</span>שם מלא</label>
@@ -136,11 +137,20 @@ function Register({ setScreen }) {
           <option value="נקבה">נקבה</option>
         </select>
 
-        <label>ארץ</label>
-        <input type="text" name="country" onChange={handleInputChange} />
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <div style={{ flex: 1 }}>
+            <label>ארץ</label>
+            <input type="text" name="country" onChange={handleInputChange} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <label>עיר</label>
+            <input type="text" name="city" onChange={handleInputChange} />
+          </div>
+        </div>
 
-        <label>עיר</label>
-        <input type="text" name="city" onChange={handleInputChange} />
+        <label><span className="required">*</span>כתובת (כולל מספר בית)</label>
+        <input type="text" name="address" className={errors.address ? 'input-error' : ''} onChange={handleInputChange} />
+        {errors.address && <span className="error-msg">{errors.address}</span>}
 
         <label><span className="required">*</span>תחום לימודים</label>
         <input type="text" name="studyField" className={errors.studyField ? 'input-error' : ''} onChange={handleInputChange} />

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import UserImage from './UserProfile';
-import { LocationToggle } from './LocationToggle';
 import { useAuth } from '../context/AuthContext';
 import { useUserData } from '../hooks/useUserData';
 import { db, storage } from '../firebase/config';
@@ -92,13 +91,8 @@ function Sidebar({ setScreen, currentScreen }) {
                 ))}
             </nav>
 
-            {/* תחתית - מתג מיקום + פרופיל */}
+            {/* תחתית - פרופיל */}
             <div className="mt-auto flex flex-col gap-2 px-4">
-                {/* מתג מיקום */}
-                <div className="px-5 py-2">
-                <LocationToggle initialStatus={userData?.isDiscoverable || false} />
-                </div>
-
                 {/* כפתור פרופיל */}
                 <div
                     onClick={() => setScreen('profile')}
