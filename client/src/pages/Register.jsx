@@ -116,7 +116,7 @@ function Register() {
           location, // { geohash, lat, lng }
         };
         await signup(formData.email, formData.password, submitData);
-        setScreen('success');
+        navigate('/success');
       } catch (error) {
         console.error(error)
         setIsSubmitting(false);

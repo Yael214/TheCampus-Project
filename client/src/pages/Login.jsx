@@ -37,7 +37,7 @@ function Login() {
         const userDoc = await getDoc(doc(db, "users", result.user.uid));
 
         if (userDoc.exists()) {
-            setScreen('feed');
+            navigate('/feed');
         } else {
             await result.user.delete();
             setError('not_registered');
@@ -82,7 +82,7 @@ function Login() {
           />
 
           <div className="forgot-password">
-            <a onClick={() => setScreen('reset')}>שכחת סיסמה?</a>
+            <a onClick={() => navigate('/reset')}>שכחת סיסמה?</a>
           </div>
 
           <button className="primary-btn" type="submit" disabled={loading}>
