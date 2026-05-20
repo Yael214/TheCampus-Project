@@ -28,11 +28,11 @@ function Login({ setScreen }) {
     try {
         setLoading(true);
         const result = await loginWithGoogle();
-        
+
         const { getDoc, doc } = await import('firebase/firestore');
         const { db } = await import('../firebase/config');
         const userDoc = await getDoc(doc(db, "users", result.user.uid));
-        
+
         if (userDoc.exists()) {
             setScreen('feed');
         } else {

@@ -1,18 +1,42 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {useImageHandler} from '../hooks/useImageHandler';
+import AddressInput from '../components/AddressInput.jsx';
 
 function Register({ setScreen }) {
   const [formData, setFormData] = useState({
     fullName: '', idNumber: '', email: '', password: '', age: '', gender: '',
-    country: '', city: '', address: '', studyField: '', year: '',
+    address: '', studyField: '', year: '',
     profileImage: null, studyApproval: null
   });
+
+  // Location object from the picked Google place: { geohash, lat, lng }. Stays null until the
+  // user actually selects an address from the dropdown - free-typed text is not a valid location.
+  const [location, setLocation] = useState(null);
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { signup } = useAuth();
   const { validateImage } = useImageHandler();
+
+  // Called by AddressInput on every keystroke. We update the displayed text but clear the
+  // saved location, because once the user starts typing again the previous selection is stale.
+  const handleAddressTextChange = (text) => {
+    setFormData(prev => ({ ...prev, address: text }));
+    setLocation(null);
+    if (errors.address) {
+      setErrors(prev => ({ ...prev, address: null }));
+    }
+  };
+
+  // Called by AddressInput when the user picks a valid place from the dropdown.
+  const handleLocationSelected = ({ address, location: loc }) => {
+    setFormData(prev => ({ ...prev, address }));
+    setLocation(loc);
+    if (errors.address) {
+      setErrors(prev => ({ ...prev, address: null }));
+    }
+  };
 
   const handleInputChange = async (e) => {
     const { name, value, files } = e.target;
@@ -28,7 +52,7 @@ function Register({ setScreen }) {
           return;
         }
       }
-      
+
       finalValue = file;
     }
 
@@ -63,10 +87,16 @@ function Register({ setScreen }) {
     } else if (!isPasswordStrong(formData.password)) {
       tempErrors.password = "הסיסמה חייבת לכלול לפחות 8 תווים, אות גדולה, אות קטנה ומספר";
     }
-    if (!formData.address) tempErrors.address = "חובה להזין כתובת";
+    // The address is only valid if the user actually picked a place from the dropdown
+    // (so we have a real location object with geohash + coordinates).
+    if (!location) {
+      tempErrors.address = formData.address
+        ? "יש לבחור כתובת חוקית מתוך הרשימה"
+        : "חובה להזין כתובת";
+    }
     if (!formData.studyField) tempErrors.studyField = "חובה להזין תחום לימודים";
     if (!formData.studyApproval) {tempErrors.studyApproval = "חובה להעלות אישור לימודים";}
-    else {  
+    else {
       if (formData.studyApproval.type !== "application/pdf")  {tempErrors.studyApproval = "ניתן להעלות רק קובץ PDF";}
       else if (formData.studyApproval && formData.studyApproval.size > 2 * 1024 * 1024) {tempErrors.studyApproval = "הקובץ גדול מדי (מקסימום 2MB)";}}
     setErrors(tempErrors);
@@ -77,7 +107,12 @@ function Register({ setScreen }) {
     if (validateRegister()) {
       try {
         setIsSubmitting(true);
-        await signup(formData.email, formData.password, formData);
+        // Send the form data plus the location object (geohash + coordinates) to signup.
+        const submitData = {
+          ...formData,
+          location, // { geohash, lat, lng }
+        };
+        await signup(formData.email, formData.password, submitData);
         setScreen('success');
       } catch (error) {
         console.error(error)
@@ -137,20 +172,15 @@ function Register({ setScreen }) {
           <option value="נקבה">נקבה</option>
         </select>
 
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <div style={{ flex: 1 }}>
-            <label>ארץ</label>
-            <input type="text" name="country" onChange={handleInputChange} />
-          </div>
-          <div style={{ flex: 1 }}>
-            <label>עיר</label>
-            <input type="text" name="city" onChange={handleInputChange} />
-          </div>
-        </div>
-
-        <label><span className="required">*</span>כתובת (כולל מספר בית)</label>
-        <input type="text" name="address" className={errors.address ? 'input-error' : ''} onChange={handleInputChange} />
-        {errors.address && <span className="error-msg">{errors.address}</span>}
+        <label><span className="required">*</span>כתובת</label>
+        <AddressInput
+          name="address"
+          value={formData.address}
+          className={errors.address ? 'input-error' : ''}
+          onTextChange={handleAddressTextChange}
+          onLocationSelected={handleLocationSelected}
+          error={errors.address}
+        />
 
         <label><span className="required">*</span>תחום לימודים</label>
         <input type="text" name="studyField" className={errors.studyField ? 'input-error' : ''} onChange={handleInputChange} />
@@ -159,7 +189,7 @@ function Register({ setScreen }) {
         {/*only image formats*/}
         <label>העלאת תמונת פרופיל</label>
         <input type="file" name="profileImage" accept="image/*" onChange={handleInputChange} />
-        
+
         {/*pdf and image formats*/}
         <label><span className="required">*</span>אישור לימודים</label>
         <input type="file" name="studyApproval" accept=".pdf" className={errors.studyApproval ? 'input-error' : ''} onChange={handleInputChange} />

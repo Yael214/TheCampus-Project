@@ -9,6 +9,10 @@ const containerStyle = {
   borderRadius: '8px'
 };
 
+// Must match the libraries list used in PlacesAutocomplete so the Google Maps script
+// is loaded with consistent options regardless of which screen the user visits first.
+const LIBRARIES = ['places'];
+
 
 function MapContainer({ center, partners, selectedPartner, onPartnerSelect }) {
   const [radius, setRadius] = useState(10); // Radius state in kilometers
@@ -16,7 +20,9 @@ function MapContainer({ center, partners, selectedPartner, onPartnerSelect }) {
   // Load the Google Maps API JavaScript SDK
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "" 
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "",
+    libraries: LIBRARIES,
+    language: 'iw',
   });
 
   if (loadError) return <div>Error loading maps environment</div>;
