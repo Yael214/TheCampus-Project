@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { doc, getDoc, updateDoc } from 'firebase/firestore'; 
+import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore'; 
 import { db } from '../firebase/config';
 import * as geofire from 'geofire-common';
 
 /**
  * Custom hook to manage user profile data and course updates.
  * Provides synchronized state with Firestore for the "The Campus" project.
+ * Uses real-time listeners (onSnapshot) to automatically update when data changes in Firestore.
  */
 export const useUserData = (userId) => {
   const [userData, setUserData] = useState(null);
@@ -13,31 +14,58 @@ export const useUserData = (userId) => {
   const [error, setError] = useState(null);
 
   // Effect to fetch initial user data from Firestore on mount or when userId changes
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (!userId) {
-        setLoading(false);
-        return;
-      }
-      try {
-        setLoading(true);
-        // Reference the specific user document in the 'users' collection
-        const docRef = doc(db, "users", userId);
-        const docSnap = await getDoc(docRef);
+  const fetchUserData = async () => {
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
+    try {
+      setLoading(true);
+      // Reference the specific user document in the 'users' collection
+      const docRef = doc(db, "users", userId);
+      const docSnap = await getDoc(docRef);
 
+      if (docSnap.exists()) {
+        setUserData(docSnap.data()); // Populate state with Firestore data
+      } else {
+        setError("User not found");
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
+
+    // Set up real-time listener with onSnapshot
+    setLoading(true);
+    const docRef = doc(db, "users", userId);
+    const unsubscribe = onSnapshot(
+      docRef,
+      (docSnap) => {
         if (docSnap.exists()) {
-          setUserData(docSnap.data()); // Populate state with Firestore data
+          setUserData(docSnap.data()); // Update state whenever document changes in Firestore
+          setError(null);
         } else {
           setError("User not found");
         }
-      } catch (err) {
+        setLoading(false);
+      },
+      (err) => {
+        console.error("Error listening to user data:", err);
         setError(err.message);
-      } finally {
         setLoading(false);
       }
-    };
+    );
 
-    fetchUserData();
+    // Cleanup: unsubscribe from listener when component unmounts or userId changes
+    return () => unsubscribe();
   }, [userId]);
 
   /**
@@ -144,7 +172,8 @@ export const useUserData = (userId) => {
     }
   };
 
-  // Exporting state and the update function for component use
+  // Exporting state and the update functions
+  // Note: No need for manual refetch anymore since onSnapshot provides real-time updates
   return { 
     userData, loading, error, updateCourseStatus, updateUserVisibility, updateUserLocation };
 };
