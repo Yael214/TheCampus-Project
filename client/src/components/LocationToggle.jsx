@@ -1,10 +1,42 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '../firebase/config';
+import { useAuth } from '../context/AuthContext';
+import { useUserData } from '../hooks/useUserData';
 
 export const LocationToggle = ({ initialStatus }) => {
-  const [isDiscoverable, setIsDiscoverable] = useState(initialStatus);
+  const { currentUser } = useAuth();
+  const { userData } = useUserData(currentUser?.uid);
+  const [isDiscoverable, setIsDiscoverable] = useState(initialStatus ?? false);
+  const [updating, setUpdating] = useState(false);
 
-  const handleToggle = () => {
-    setIsDiscoverable(!isDiscoverable);
+  // עדכן את ה state כשuserData משתנה (זה מתרחש כשמישהו שינה ב Firestore או בעמוד אחר)
+  useEffect(() => {
+    if (userData?.isDiscoverable !== undefined) {
+      setIsDiscoverable(userData.isDiscoverable);
+    }
+  }, [userData?.isDiscoverable]);
+
+  const handleToggle = async () => {
+    if (!currentUser?.uid || updating) return;
+
+    const newStatus = !isDiscoverable;
+    setIsDiscoverable(newStatus);
+    setUpdating(true);
+
+    try {
+      // עדכן את Firestore
+      await updateDoc(doc(db, "users", currentUser.uid), {
+        isDiscoverable: newStatus
+      });
+      // onSnapshot listener will automatically update all components listening to this user
+    } catch (error) {
+      console.error("Error updating isDiscoverable:", error);
+      // חזור לסטטוס הקודם במקרה שגיאה
+      setIsDiscoverable(!newStatus);
+    } finally {
+      setUpdating(false);
+    }
   };
 
   return (
@@ -12,7 +44,7 @@ export const LocationToggle = ({ initialStatus }) => {
       <span className={`text-sm font-medium transition-colors duration-300 ${
         isDiscoverable ? 'text-black' : 'text-gray-400'
       }`}>
-        שיתוף מיקום נוכחי
+        שתף מיקום
       </span>
       
       <button

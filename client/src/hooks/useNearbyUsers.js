@@ -16,7 +16,9 @@ export const useNearbyUsers = (center, radiusInKm) => {
   useEffect(() => {
     const fetchNearbyUsers = async () => {
       // Don't run the search if we don't have a starting point or radius
-      if (!center || !center.lat || !center.lng || !radiusInKm) return;
+      if (!center || !center.lat || !center.lng || !radiusInKm) 
+      
+        return;
 
       try {
         setLoading(true);

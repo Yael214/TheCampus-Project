@@ -1,30 +1,37 @@
-import { useState } from 'react';
-import './MapPage.css';
+import { useState, useEffect } from 'react';
+import './MapPage.css'; 
 import PartnerCard from './PartnerCard.jsx';
 import MapContainer from '../components/map/MapContainer.jsx';
 import { useNearbyUsers } from '../hooks/useNearbyUsers';
-import { LocationToggle } from '../components/LocationToggle.jsx';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext.jsx';
 import { useUserData } from '../hooks/useUserData';
-
 // Default center of the map, can be updated to user's location if available
 const defaultCenter = { lat: 31.788, lng: 35.2112 };
 
 function MapPage() {
+  const { currentUser } = useAuth();
+  const { userData } = useUserData(currentUser?.uid);
+  const isDiscoverable = userData?.isDiscoverable ?? false;
+  
   const [tempRadius, setTempRadius] = useState(10);
-  const [searchRadius, setSearchRadius] = useState(10);
+  const [searchRadius, setSearchRadius] = useState(null); // ← נתחיל עם null
+  const [hasSearched, setHasSearched] = useState(false); // ← עקוב אם הפעילו חיפוש
 
   const [selectedPartner, setSelectedPartner] = useState(null);
   // const [selectedCourse, setSelectedCourse] = useState('כל הקורסים'); // This state is for future implementation of course filtering
   const [selectedGender, setSelectedGender] = useState('הכל');
   const [selectedAge, setSelectedAge] = useState('הכל');
-
+  // אפס את החיפוש והתוצאות במידה והמשתמש מכבה את שיתוף המיקום
+  useEffect(() => {
+    if (!isDiscoverable) {
+      setSearchRadius(null);
+      setHasSearched(false);
+      setSelectedPartner(null);
+    }
+  }, [isDiscoverable]);
   // The hook to fetch nearby users based on location and radius
-  const { nearbyUsers, loading, error } = useNearbyUsers(defaultCenter, searchRadius);
-
-  // Get current user's discoverable status for the location toggle
-  const { currentUser } = useAuth();
-  const { userData } = useUserData(currentUser?.uid);
+  // ← רק תרוץ אם searchRadius לא null (כלומר, לאחר לחיצה על חיפוש)
+  const { nearbyUsers, loading, error } = useNearbyUsers(defaultCenter, searchRadius); 
 
   // Filter partners with valid location
   const filteredPartners = (nearbyUsers || []).filter(partner => {
@@ -44,7 +51,11 @@ function MapPage() {
   });
 
   const handleSearchSubmit = () => {
+    if (!isDiscoverable) {
+      return; // לא תן לחפש אם לא אישרו מיקום
+    }
     setSearchRadius(tempRadius); // Update the search radius which will trigger the useNearbyUsers hook to refetch data
+    setHasSearched(true); // סמן שהפעילו חיפוש
   };
 
   const handlePartnerSelect = (partner) => {
@@ -120,7 +131,18 @@ function MapPage() {
                 />
               </div>
               
-              <button className="btn" onClick={handleSearchSubmit} style={{ width: '100%', marginTop: '10px', fontSize: '16px' }}>
+              <button 
+                className="btn" 
+                onClick={handleSearchSubmit} 
+                disabled={!isDiscoverable}
+                style={{ 
+                  width: '100%', 
+                  marginTop: '10px', 
+                  fontSize: '16px',
+                  backgroundColor: !isDiscoverable ? '#9CA3AF' : '',
+                  cursor: !isDiscoverable ? 'not-allowed' : 'pointer'
+                }}
+              >
                 חפש
               </button>
 
@@ -128,7 +150,11 @@ function MapPage() {
           </div>
 
           <div className="cards">
-            {loading ? (
+            {!hasSearched && !isDiscoverable ? (
+              <p>⚠️ אנא אשר שיתוף מיקום כדי לחפש שותפים.</p>
+            ) : !hasSearched ? (
+              null
+            ) : loading ? (
               <p>טוען שותפים...</p>
             ) : filteredPartners.length === 0 ? (
               <p>לא נמצאו שותפים מתאימים.</p>

@@ -7,6 +7,7 @@ import { useNavigate, Link } from 'react-router-dom';
 function Register() {
   const [formData, setFormData] = useState({
     fullName: '', idNumber: '', email: '', password: '', age: '', gender: '',
+    isDiscoverable: false,
     address: '', studyField: '', year: '',
     profileImage: null, studyApproval: null
   });
@@ -40,8 +41,8 @@ function Register() {
   };
 
   const handleInputChange = async (e) => {
-    const { name, value, files } = e.target;
-    let finalValue = value;
+    const { name, value, files, type, checked } = e.target;
+    let finalValue = type === 'checkbox' ? checked : value;
 
     // Handling file inputs (Profile Image or Study Approval)
     if (files && files[0]) {
@@ -174,7 +175,7 @@ function Register() {
           <option value="זכר">זכר</option>
           <option value="נקבה">נקבה</option>
         </select>
-
+          
         <label><span className="required">*</span>כתובת</label>
         <AddressInput
           name="address"
@@ -184,6 +185,26 @@ function Register() {
           onLocationSelected={handleLocationSelected}
           error={errors.address}
         />
+            
+        <div style={{ width: '100%', marginBottom: '15px', direction: 'rtl', textAlign: 'right', display: 'block' }}>
+          <div style={{ textAlign: 'right', width: '100%', display: 'block' }}>
+            <input 
+              type="checkbox" 
+              name="isDiscoverable" 
+              id="isDiscoverable" 
+              checked={formData.isDiscoverable} 
+              onChange={handleInputChange} 
+              style={{ cursor: 'pointer', margin: '0 0 0 8px', display: 'inline-block', width: 'auto', verticalAlign: 'middle' }}
+            />
+            <label htmlFor="isDiscoverable" style={{ margin: 0, padding: 0, cursor: 'pointer', display: 'inline-block', width: 'auto', fontWeight: 'normal', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
+              אישור שיתוף הכתובת שלי
+            </label>
+          </div>
+          <small style={{ display: 'block', color: '#666', marginTop: '5px', fontSize: '12px', paddingRight: '22px', textAlign: 'right' }}>
+            ניתן לשנות הגדרה זו בכל עת בעמוד חיפוש שותפים
+          </small>
+        </div>
+        
 
         <label><span className="required">*</span>תחום לימודים</label>
         <input type="text" name="studyField" className={errors.studyField ? 'input-error' : ''} onChange={handleInputChange} />
