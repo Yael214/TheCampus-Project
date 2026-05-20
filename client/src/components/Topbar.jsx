@@ -1,9 +1,11 @@
-
 import Logo from './Logo';
 import { useAuth } from '../context/AuthContext';
+import { NavLink, useNavigate } from 'react-router-dom';
 
-function Topbar({ setScreen }) {
+function Topbar() {
     const { logout } = useAuth();
+    const navigate = useNavigate();
+
     return (
         <div className="topbar" style={{
             display: 'flex',
@@ -16,7 +18,7 @@ function Topbar({ setScreen }) {
         }}>
 
 
-            <div onClick={() => setScreen('feed')} style={{ cursor: 'pointer' }}>
+            <div onClick={() => navigate('/feed')} style={{ cursor: 'pointer' }}>
                 <Logo />
             </div>
 
@@ -39,7 +41,7 @@ function Topbar({ setScreen }) {
 
 
             <button
-                onClick={async () => { await logout(); setScreen('login'); }}
+                onClick={async () => { await logout(); navigate('/login'); }}
                 style={{
                     padding: '8px 15px',
                     backgroundColor: '#f3f4f6',
