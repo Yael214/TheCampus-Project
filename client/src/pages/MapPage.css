@@ -1,0 +1,169 @@
+:root {
+  --main: #2C3E7A;
+  --accent: #5B8DEF;
+  --cta: #4F46E5;
+  --bg: #F7F8FC;
+  --card: #FFFFFF;
+  --text-main: #1A1A2E;
+  --text-muted: #6B7280;
+}
+
+* { box-sizing: border-box; }
+
+.page {
+  height: 100vh; /* נועל את העמוד לגובה המסך בדיוק */
+  padding: 24px;
+  background: var(--bg);
+  color: var(--text-main);
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* מעלים את פס הגלילה החיצוני והמעצבן */
+}
+
+.logo {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2C3E7A;
+  display: inline-flex; /* מונע תפיסה של כל השורה */
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.header { 
+  margin-bottom: 24px; 
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* בגלל שהגדרנו כיוון RTL, זה ידחוף הכל לימין */
+  text-align: right;
+  flex-shrink: 0; 
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1A1A2E;
+  margin: 0;
+  text-align: right; /* הכרחת יישור לימין */
+  width: 100%;
+}
+
+.subtitle {
+  margin-top: 10px;
+  color: var(--text-muted);
+  font-size: 14px;
+  text-align: right; /* הכרחת יישור לימין */
+  width: 100%;
+}
+
+.layout {
+  display: flex;
+  gap: 16px;
+  flex: 1; /* נותן לאזור התחתון לתפוס את כל השטח שנשאר */
+  overflow: hidden; /* מונע פריצה של התוכן החוצה */
+}
+
+.sidebar {
+  flex: 0 0 42%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%; /* מתאים בדיוק לגובה החלון */
+  overflow-y: auto; /* משאיר רק את פס הגלילה הזה */
+  padding-right: 8px;
+}
+
+.sidebar::-webkit-scrollbar { width: 8px; }
+.sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(200,200,200,0.12);
+  border-radius: 999px;
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.map-panel {
+  flex: 1 1 58%;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.panel {
+  background: var(--card);
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.panel h2 { margin: 0; font-size: 18px; color: var(--main); }
+.panel p { margin: 10px 0 0; color: var(--text-muted); font-size: 14px; }
+
+.filters { margin-top: 20px; display: grid; gap: 14px; }
+.field label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 600; }
+.field select, .field input {
+  width: 100%; border: 1px solid #E5E7EB; border-radius: 10px;
+  padding: 12px 14px; font-size: 14px; outline: none;
+}
+
+.card {
+  background: var(--card); border-radius: 12px; padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.card-row {
+  display: flex; 
+  gap: 12px; 
+  flex-direction: row-reverse;
+  justify-content: space-between;
+  align-items: flex-start; /* השורה הזו מונעת מהכפתור להימתח לגובה */
+}
+
+.btn {
+  background: var(--cta); 
+  color: white; 
+  border: none; 
+  border-radius: 12px;
+  padding: 12px 18px; 
+  font-size: 14px; 
+  cursor: pointer;
+  white-space: nowrap; /* השורה הזו שומרת שהטקסט בכפתור לא יישבר */
+}
+
+.card-avatar {
+  width: 48px; height: 48px; border-radius: 50%; background: #EEF2FF;
+  display: grid; place-items: center;
+}
+
+.card-avatar svg { width: 28px; height: 28px; color: var(--main); }
+.card-content { flex: 1; }
+.card-title { display: flex; justify-content: space-between; align-items: center; }
+.card-title h3 { margin: 0; font-size: 16px; }
+.card-distance { color: var(--text-muted); font-size: 12px; }
+
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.tag {
+  background: #EEF2FF; color: var(--main); font-size: 12px;
+  padding: 6px 10px; border-radius: 999px;
+}
+
+.map-box {
+  border-radius: 18px; overflow: hidden; height: 100%;
+  min-height: 320px; background: #E5E7EB;
+}
+
+.map-box iframe { width: 100%; height: 100%; border: 0; }
+
+@media (max-width: 900px) {
+  .layout { flex-direction: column; overflow: visible; height: auto; }
+  .page { height: auto; overflow: visible; }
+  .sidebar { height: auto; overflow: visible; }
+  .map-box { height: 55vh; }
+}
