@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {useImageHandler} from '../hooks/useImageHandler';
 import AddressInput from '../components/AddressInput.jsx';
+import { useNavigate, Link } from 'react-router-dom';
 
-function Register({ setScreen }) {
+function Register() {
   const [formData, setFormData] = useState({
     fullName: '', idNumber: '', email: '', password: '', age: '', gender: '',
     address: '', studyField: '', year: '',
@@ -95,6 +96,7 @@ function Register({ setScreen }) {
         : "חובה להזין כתובת";
     }
     if (!formData.studyField) tempErrors.studyField = "חובה להזין תחום לימודים";
+    if (!formData.year) tempErrors.year = "חובה להזין שנת לימודים";
     if (!formData.studyApproval) {tempErrors.studyApproval = "חובה להעלות אישור לימודים";}
     else {
       if (formData.studyApproval.type !== "application/pdf")  {tempErrors.studyApproval = "ניתן להעלות רק קובץ PDF";}
@@ -102,6 +104,7 @@ function Register({ setScreen }) {
     setErrors(tempErrors);
     return Object.keys(tempErrors).length === 0;
   };
+
   const handleFinalSubmit = async (e) => {
     e.preventDefault();
     if (validateRegister()) {
@@ -186,6 +189,10 @@ function Register({ setScreen }) {
         <input type="text" name="studyField" className={errors.studyField ? 'input-error' : ''} onChange={handleInputChange} />
         {errors.studyField && <span className="error-msg">{errors.studyField}</span>}
 
+        <label><span className="required">*</span>שנת לימודים</label>
+        <input type="text" name="year" className={errors.year ? 'input-error' : ''} onChange={handleInputChange} />
+        {errors.year && <span className="error-msg">{errors.year}</span>}
+
         {/*only image formats*/}
         <label>העלאת תמונת פרופיל</label>
         <input type="file" name="profileImage" accept="image/*" onChange={handleInputChange} />
@@ -198,7 +205,7 @@ function Register({ setScreen }) {
         {errors.server && <div className="error-msg" style={{ textAlign: 'center', marginBottom: '10px' }}>{errors.server}</div>}
         <button className="primary-btn" onClick={handleFinalSubmit} disabled={isSubmitting}>{isSubmitting ? 'נרשם...' : 'סיום'}</button>
         <div style={{ textAlign: 'center', marginTop: '10px' }}>
-          <a onClick={() => setScreen('login')} style={{ cursor: 'pointer', color: '#6B7280' }}>ביטול</a>
+          <Link to='/login' style={{ cursor: 'pointer', color: '#6B7280' }}>ביטול</Link>
         </div>
       </div>
     </div>

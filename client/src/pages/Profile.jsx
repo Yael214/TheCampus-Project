@@ -33,8 +33,6 @@ function Profile() {
             setLoading(true);
             await updateDoc(doc(db, "users", targetUserId), {
                 age: tempData.age || '',
-                city: tempData.city || '',
-                address: tempData.address || '',
                 year: tempData.year || '',
                 studyField: tempData.studyField || '',
                 about: tempData.about || '',
@@ -99,8 +97,6 @@ function Profile() {
                 <div style={sectionTitle}>פרטים נוספים</div>
                 <div style={{ ...grid, marginTop: '12px' }}>
                     <EditableField label="גיל" name="age" value={display.age} isEditing={isEditing} onChange={handleInputChange} />
-                    <EditableField label="עיר" name="city" value={display.city} isEditing={isEditing} onChange={handleInputChange} />
-                    <EditableField label="כתובת" name="address" value={display.address} isEditing={isEditing} onChange={handleInputChange} />
                     <EditableField label="תחום לימודים" name="studyField" value={display.studyField} isEditing={isEditing} onChange={handleInputChange} />
                     <EditableField label="שנת לימודים" name="year" value={display.year} isEditing={isEditing} onChange={handleInputChange} />
                 </div>

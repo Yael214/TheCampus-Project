@@ -17,6 +17,7 @@ function MapPage() {
   const [selectedPartner, setSelectedPartner] = useState(null);
   // const [selectedCourse, setSelectedCourse] = useState('כל הקורסים'); // This state is for future implementation of course filtering
   const [selectedGender, setSelectedGender] = useState('הכל');
+  const [selectedAge, setSelectedAge] = useState('הכל');
 
   // The hook to fetch nearby users based on location and radius
   const { nearbyUsers, loading, error } = useNearbyUsers(defaultCenter, searchRadius);
@@ -28,7 +29,18 @@ function MapPage() {
   // Filter partners with valid location
   const filteredPartners = (nearbyUsers || []).filter(partner => {
     const matchesGender = selectedGender === 'הכל' || partner.gender === selectedGender;
-    return matchesGender;
+    
+    // Age filtering logic
+    let matchesAge = true;
+    if (selectedAge !== 'הכל' && partner.age) {
+      const age = partner.age;
+      if (selectedAge === 'עד 18') matchesAge = age <= 18;
+      else if (selectedAge === '18-24') matchesAge = age >= 18 && age <= 24;
+      else if (selectedAge === '25-34') matchesAge = age >= 25 && age <= 34;
+      else if (selectedAge === '35+') matchesAge = age >= 35;
+    }
+    
+    return matchesGender && matchesAge;
   });
 
   const handleSearchSubmit = () => {
@@ -82,7 +94,7 @@ function MapPage() {
 
               <div className="field">
                 <label>מגדר</label>
-                <select defaultValue="הכל">
+                <select value={selectedGender} onChange={(e) => setSelectedGender(e.target.value)}>
                   <option>הכל</option>
                   <option>נקבה</option>
                   <option>זכר</option>
@@ -91,7 +103,7 @@ function MapPage() {
 
               <div className="field">
                 <label>טווח גילאים</label>
-                <select defaultValue="הכל">
+                <select value={selectedAge} onChange={(e) => setSelectedAge(e.target.value)}>
                   <option>הכל</option>
                   <option>עד 18</option>
                   <option>18-24</option>
