@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {useImageHandler} from '../hooks/useImageHandler';
+import { useNavigate, Link } from 'react-router-dom';
 
-function Register({ setScreen }) {
+function Register() {
   const [formData, setFormData] = useState({
     fullName: '', idNumber: '', email: '', password: '', age: '', gender: '',
     studyField: '', year: '',
     profileImage: null, studyApproval: null
   });
 
+  const navigate = useNavigate();
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { signup } = useAuth();
@@ -72,13 +74,14 @@ function Register({ setScreen }) {
     setErrors(tempErrors);
     return Object.keys(tempErrors).length === 0;
   };
+
   const handleFinalSubmit = async (e) => {
     e.preventDefault();
     if (validateRegister()) {
       try {
         setIsSubmitting(true);
         await signup(formData.email, formData.password, formData);
-        setScreen('success');
+        navigate('/success');
       } catch (error) {
         console.error(error)
         setIsSubmitting(false);
@@ -157,7 +160,7 @@ function Register({ setScreen }) {
         {errors.server && <div className="error-msg" style={{ textAlign: 'center', marginBottom: '10px' }}>{errors.server}</div>}
         <button className="primary-btn" onClick={handleFinalSubmit} disabled={isSubmitting}>{isSubmitting ? 'נרשם...' : 'סיום'}</button>
         <div style={{ textAlign: 'center', marginTop: '10px' }}>
-          <a onClick={() => setScreen('login')} style={{ cursor: 'pointer', color: '#6B7280' }}>ביטול</a>
+          <Link to='/login' style={{ cursor: 'pointer', color: '#6B7280' }}>ביטול</Link>
         </div>
       </div>
     </div>

@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate, Link } from 'react-router-dom';
 
-function Login({ setScreen }) {
+function Login() {
   const { login, loginWithGoogle } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const navigate = useNavigate();
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
@@ -14,7 +17,7 @@ function Login({ setScreen }) {
     try {
       setLoading(true);
       await login(email, password);
-      setScreen('feed');
+      navigate('/feed');
     } catch (err) {
       setError('אימייל או סיסמה שגויים');
       console.error(err);
@@ -28,7 +31,7 @@ function Login({ setScreen }) {
     try {
       setLoading(true);
       await loginWithGoogle();
-      setScreen('feed');
+      navigate('/feed');
     } catch (err) {
       setError('שגיאה בכניסה עם גוגל');
       console.error(err);
@@ -36,7 +39,7 @@ function Login({ setScreen }) {
       setLoading(false);
     }
   };
-
+  
   return (
     <div className="auth-page">
       <div className="logo">הקמפוס 🎓</div>
@@ -90,11 +93,11 @@ function Login({ setScreen }) {
         </button>
 
         <div className="secondary-text" style={{ marginTop: '16px', textAlign: 'center' }}>
-          סטודנט חדש? <a onClick={() => setScreen('register')}>צור חשבון</a>
+          סטודנט חדש? <Link to="/register">צור חשבון</Link>
         </div>
 
         <div className="guest-link" style={{ textAlign: 'center', marginTop: '8px' }}>
-          <a onClick={() => setScreen('feed')}>כניסה כאורח/ת</a>
+          <Link to='/feed'>כניסה כאורח/ת</Link>
         </div>
       </div>
     </div>
