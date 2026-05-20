@@ -86,7 +86,7 @@ export default function AddressInput({
                     className={className}
                 />
                 <span style={helpStyle}>
-                    * הכנס כתובת שאנשים אחרים יוכלו לראות ולמצוא אותך שם, הכתובת המדוייקת לא תוצג למשתמשים האחרים
+                    * הכנס כתובת בה אנשים אחרים יוכלו לראות ולמצוא אותך 
                 </span>
                 {error && <span className="error-msg">{error}</span>}
             </>
