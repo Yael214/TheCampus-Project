@@ -7,8 +7,9 @@ import * as geofire from 'geofire-common';
  * Custom hook to fetch nearby users based on a geographic radius.
  * @param {Object} center - The center coordinates { lat, lng } (usually the current user's location).
  * @param {number} radiusInKm - The search radius in kilometers.
+ * @param {string} currentUserId - The ID of the current user (to exclude from results).
  */
-export const useNearbyUsers = (center, radiusInKm) => {
+export const useNearbyUsers = (center, radiusInKm, currentUserId) => {
   const [nearbyUsers, setNearbyUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -57,6 +58,11 @@ export const useNearbyUsers = (center, radiusInKm) => {
           for (const doc of snap.docs) {
             const user = doc.data();
             
+            // Skip the current user to avoid showing themselves
+            if (doc.id === currentUserId) {
+              continue;
+            }
+            
             // Safety check: ensure the user has a valid location object
             if (user.location && user.location.lat && user.location.lng) {
               
@@ -87,7 +93,7 @@ export const useNearbyUsers = (center, radiusInKm) => {
     };
 
     fetchNearbyUsers();
-  }, [center, radiusInKm]); // Re-run whenever the center location or radius changes
+  }, [center, radiusInKm, currentUserId]); // Re-run whenever the center location or radius changes
 
   return { nearbyUsers, loading, error };
 };

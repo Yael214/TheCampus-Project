@@ -110,9 +110,9 @@ export default function AddressInput({
                     autoComplete="off"
                 />
             </Autocomplete>
-            <span style={helpStyle}>
+            {/*<span style={helpStyle}>
                 * הכנס כתובת שאנשים אחרים יוכלו לראות ולמצוא אותך שם, הכתובת המדוייקת לא תוצג למשתמשים האחרים
-            </span>
+            </span>*/}
             {error && <span className="error-msg">{error}</span>}
         </>
     );
