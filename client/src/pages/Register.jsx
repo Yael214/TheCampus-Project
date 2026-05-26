@@ -8,7 +8,7 @@ function Register() {
   const [formData, setFormData] = useState({
     fullName: '', idNumber: '', email: '', password: '', age: '', gender: '',
     isDiscoverable: false,
-    address: '', studyField: '', year: '',
+    address: '', studyField: '', year: '', phone: '',
     profileImage: null, studyApproval: null
   });
   const navigate = useNavigate();
@@ -96,6 +96,11 @@ function Register() {
         ? "יש לבחור כתובת חוקית מתוך הרשימה"
         : "חובה להזין כתובת";
     }
+    if (!formData.phone) {
+      tempErrors.phone = "חובה להזין מספר פלאפון";
+    } else if (!/^0\d{9}$/.test(formData.phone)) {
+      tempErrors.phone = "מספר פלאפון לא תקין (לדוגמה: 0501234567)";
+    }
     if (!formData.studyField) tempErrors.studyField = "חובה להזין תחום לימודים";
     if (!formData.year) tempErrors.year = "חובה להזין שנת לימודים";
     if (!formData.studyApproval) {tempErrors.studyApproval = "חובה להעלות אישור לימודים";}
@@ -168,6 +173,10 @@ function Register() {
 
         <label>גיל</label>
         <input type="number" name="age" onChange={handleInputChange} />
+
+        <label><span className="required">*</span>מספר פלאפון</label>
+        <input type="tel" name="phone" className={errors.phone ? 'input-error' : ''} onChange={handleInputChange} placeholder="לדוגמה: 0501234567" />
+        {errors.phone && <span className="error-msg">{errors.phone}</span>}
 
         <label>מגדר</label>
         <select name="gender" onChange={handleInputChange}>
