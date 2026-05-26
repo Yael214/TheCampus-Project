@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useUserData } from '../hooks/useUserData';
-import { doc, updateDoc } from "firebase/firestore";
-import { db } from '../firebase/config';
+import { doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { db, storage } from '../firebase/config';
+import { ref, deleteObject } from 'firebase/storage';
+import { useNavigate } from 'react-router-dom';
 import Loader from '../components/Loader';
 import AddressInput from '../components/AddressInput';
 
@@ -10,6 +12,7 @@ function Profile() {
     const { currentUser } = useAuth();
     const targetUserId = currentUser?.uid;
     const { userData: cloudData, loading: dataLoading } = useUserData(targetUserId);
+    const navigate = useNavigate();
 
     const [tempData, setTempData] = useState({});
     const [isEditing, setIsEditing] = useState(false);
@@ -20,11 +23,16 @@ function Profile() {
     const [addressLocation, setAddressLocation] = useState(null);
     const [addressError, setAddressError] = useState('');
 
+    // Delete account state
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false);
+    const [deleteError, setDeleteError] = useState('');
+    const [deleteSuccess, setDeleteSuccess] = useState(false);
+
     const display = isEditing ? tempData : (savedData || cloudData);
 
     const handleStartEdit = () => {
         setTempData({ ...display });
-        // Keep the existing location as valid so user can save without touching the address
         setAddressLocation((savedData || cloudData)?.location || null);
         setAddressError('');
         setIsEditing(true);
@@ -35,14 +43,12 @@ function Profile() {
         setTempData(prev => ({ ...prev, [name]: value }));
     };
 
-    // Called on every keystroke in the address field — invalidates the saved location
     const handleAddressTextChange = (text) => {
         setTempData(prev => ({ ...prev, address: text }));
         setAddressLocation(null);
         if (addressError) setAddressError('');
     };
 
-    // Called when the user picks a valid place from the Google dropdown
     const handleLocationSelected = ({ address, location }) => {
         setTempData(prev => ({ ...prev, address }));
         setAddressLocation(location);
@@ -52,7 +58,6 @@ function Profile() {
     const handleSave = async () => {
         if (!targetUserId) return;
 
-        // Validate address: if user typed something but didn't pick from dropdown
         if (tempData.address && !addressLocation) {
             setAddressError('יש לבחור כתובת חוקית מתוך הרשימה');
             return;
@@ -68,7 +73,6 @@ function Profile() {
                 phone: tempData.phone || '',
                 address: tempData.address || '',
             };
-            // Only update location if the user picked a new one
             if (addressLocation) {
                 updates.location = addressLocation;
             }
@@ -88,6 +92,38 @@ function Profile() {
         setAddressError('');
     };
 
+    const handleDeleteAccount = async () => {
+        if (!currentUser || !cloudData) return;
+        setDeleteLoading(true);
+        setDeleteError('');
+        try {
+            
+            const fileUrls = [cloudData.profileImage, cloudData.studyApproval].filter(Boolean);
+            await Promise.allSettled(
+                fileUrls.map(url => deleteObject(ref(storage, url)))
+            );
+
+            // delete document from Firestore 
+            await deleteDoc(doc(db, "users", currentUser.uid));
+
+            // delete accunt from Firebase Auth 
+            await currentUser.delete();
+
+            setDeleteSuccess(true);
+            setTimeout(() => navigate('/login'), 2500);
+        } catch (error) {
+            if (error.code === 'auth/requires-recent-login') {
+                setDeleteError('לצורך אבטחה, יש להתנתק ולהתחבר מחדש לפני מחיקת החשבון.');
+            } else {
+                setDeleteError('אירעה שגיאה במחיקת החשבון. נסה/י שוב.');
+                console.error(error);
+            }
+        } finally {
+            setDeleteLoading(false);
+            setShowDeleteConfirm(false);
+        }
+    };
+
     if (dataLoading) return <Loader text="טוען פרופיל... 🎓" />;
     if (!cloudData) return (
         <div style={{ textAlign: 'center', padding: '60px', fontFamily: 'Heebo, sans-serif' }}>
@@ -103,7 +139,7 @@ function Profile() {
                     הפרופיל שלי
                 </h2>
 
-                {/* קצת על עצמי */}
+                {/* about */}
                 <div style={sectionTitle}>קצת על עצמי</div>
                 <div style={{ marginTop: '10px' }}>
                     {isEditing ? (
@@ -124,7 +160,7 @@ function Profile() {
 
                 <div style={divider} />
 
-                {/* פרטים קבועים */}
+                {/* Permanent details */}
                 <div style={grid}>
                     <Field label="שם מלא" value={cloudData.fullName} />
                     <Field label="תעודת זהות" value={cloudData.idNumber} />
@@ -134,7 +170,7 @@ function Profile() {
 
                 <div style={divider} />
 
-                {/* פרטים נוספים */}
+                {/* Additional details */}
                 <div style={sectionTitle}>פרטים נוספים</div>
                 <div style={{ ...grid, marginTop: '12px' }}>
                     <EditableField label="גיל" name="age" value={display?.age} isEditing={isEditing} onChange={handleInputChange} />
@@ -145,7 +181,7 @@ function Profile() {
 
                 <div style={divider} />
 
-                {/* כתובת */}
+                {/* Address */}
                 <div style={sectionTitle}>כתובת</div>
                 <div style={{ marginTop: '12px' }}>
                     {isEditing ? (
@@ -163,21 +199,73 @@ function Profile() {
                     )}
                 </div>
 
-                {/* כפתורים */}
-                <div style={{ marginTop: '28px', display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                {/* Buttons */}
+                <div style={{ marginTop: '28px', position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                     {isEditing ? (
                         <>
                             <button onClick={handleSave} disabled={loading} style={primaryBtn}>
                                 {loading ? 'שומר...' : 'שמור שינויים'}
                             </button>
-                            <button onClick={handleCancel} style={secondaryBtn}>ביטול</button>
+                            <button onClick={handleCancel} style={{ ...secondaryBtn, marginRight: '12px' }}>ביטול</button>
                         </>
                     ) : (
-                        <button onClick={handleStartEdit} style={primaryBtn}>עריכת פרופיל</button>
+                        <>
+                            <button onClick={handleStartEdit} style={primaryBtn}>עריכת פרופיל</button>
+                            <button
+                                onClick={() => { setShowDeleteConfirm(true); setDeleteError(''); }}
+                                style={{ ...deleteBtn, position: 'absolute', left: 0 }}
+                            >
+                                מחיקת חשבון
+                            </button>
+                        </>
                     )}
                 </div>
 
+                {deleteError && (
+                    <p style={{ color: '#DC2626', fontSize: '13px', textAlign: 'center', marginTop: '10px' }}>{deleteError}</p>
+                )}
+
             </div>
+
+            {/* Popup success */}
+            {deleteSuccess && (
+                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+                    <div style={{ background: 'white', borderRadius: '16px', padding: '32px', maxWidth: '400px', width: '90%', textAlign: 'center', fontFamily: 'Heebo, sans-serif' }} dir="rtl">
+                        <div style={{ fontSize: '36px', marginBottom: '12px' }}>✅</div>
+                        <h3 style={{ color: '#1A1A2E', fontSize: '18px', fontWeight: '800', margin: '0 0 8px 0' }}>חשבונך נמחק בהצלחה</h3>
+                        <p style={{ color: '#6B7280', fontSize: '14px', margin: 0 }}>מועבר/ת לדף הכניסה...</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Popup Delete confirmation*/}
+            {showDeleteConfirm && (
+                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+                    <div style={{ background: 'white', borderRadius: '16px', padding: '32px', maxWidth: '400px', width: '90%', textAlign: 'center', fontFamily: 'Heebo, sans-serif' }} dir="rtl">
+                        <div style={{ fontSize: '36px', marginBottom: '12px' }}>⚠️</div>
+                        <h3 style={{ color: '#1A1A2E', fontSize: '18px', fontWeight: '800', margin: '0 0 12px 0' }}>מחיקת חשבון לצמיתות</h3>
+                        <p style={{ color: '#6B7280', fontSize: '14px', lineHeight: '1.6', margin: '0 0 24px 0' }}>
+                            האם את/ה בטוח/ה? פעולה זו תמחק את החשבון שלך לצמיתות ולא ניתן לשחזרה.
+                        </p>
+                        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                            <button
+                                onClick={handleDeleteAccount}
+                                disabled={deleteLoading}
+                                style={{ backgroundColor: '#DC2626', color: 'white', padding: '10px 24px', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '14px', fontFamily: 'Heebo, sans-serif' }}
+                            >
+                                {deleteLoading ? 'מוחק...' : 'כן, מחק את החשבון'}
+                            </button>
+                            <button
+                                onClick={() => { setShowDeleteConfirm(false); setDeleteError(''); }}
+                                style={secondaryBtn}
+                            >
+                                ביטול
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </main>
     );
 }
@@ -209,5 +297,6 @@ const contentStyle = { fontSize: '15px', color: '#1A1A2E', fontWeight: '500', ma
 const inputStyle = { width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #D1D5DB', fontSize: '14px', fontFamily: 'Heebo, sans-serif', boxSizing: 'border-box' };
 const primaryBtn = { backgroundColor: '#4F46E5', color: 'white', padding: '10px 28px', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '14px', fontFamily: 'Heebo, sans-serif' };
 const secondaryBtn = { backgroundColor: 'white', color: '#4B5563', padding: '10px 28px', border: '1px solid #D1D5DB', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '14px', fontFamily: 'Heebo, sans-serif' };
+const deleteBtn = { backgroundColor: '#FEF2F2', color: '#DC2626', padding: '8px 18px', border: '1px solid #FECACA', borderRadius: '10px', cursor: 'pointer', fontWeight: '600', fontSize: '12px', fontFamily: 'Heebo, sans-serif' };
 
 export default Profile;
