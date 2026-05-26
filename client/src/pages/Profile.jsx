@@ -4,7 +4,6 @@ import { useUserData } from '../hooks/useUserData';
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from '../firebase/config';
 import Loader from '../components/Loader';
-import AddressInput from '../components/AddressInput';
 
 function Profile() {
     const { currentUser } = useAuth();
@@ -16,17 +15,10 @@ function Profile() {
     const [loading, setLoading] = useState(false);
     const [savedData, setSavedData] = useState(null);
 
-    // Address-specific state for edit mode
-    const [addressLocation, setAddressLocation] = useState(null);
-    const [addressError, setAddressError] = useState('');
-
     const display = isEditing ? tempData : (savedData || cloudData);
 
     const handleStartEdit = () => {
         setTempData({ ...display });
-        // Keep the existing location as valid so user can save without touching the address
-        setAddressLocation((savedData || cloudData)?.location || null);
-        setAddressError('');
         setIsEditing(true);
     };
 
@@ -35,45 +27,17 @@ function Profile() {
         setTempData(prev => ({ ...prev, [name]: value }));
     };
 
-    // Called on every keystroke in the address field — invalidates the saved location
-    const handleAddressTextChange = (text) => {
-        setTempData(prev => ({ ...prev, address: text }));
-        setAddressLocation(null);
-        if (addressError) setAddressError('');
-    };
-
-    // Called when the user picks a valid place from the Google dropdown
-    const handleLocationSelected = ({ address, location }) => {
-        setTempData(prev => ({ ...prev, address }));
-        setAddressLocation(location);
-        if (addressError) setAddressError('');
-    };
-
     const handleSave = async () => {
         if (!targetUserId) return;
-
-        // Validate address: if user typed something but didn't pick from dropdown
-        if (tempData.address && !addressLocation) {
-            setAddressError('יש לבחור כתובת חוקית מתוך הרשימה');
-            return;
-        }
-
         try {
             setLoading(true);
-            const updates = {
+            await updateDoc(doc(db, "users", targetUserId), {
                 age: tempData.age || '',
                 year: tempData.year || '',
                 studyField: tempData.studyField || '',
                 about: tempData.about || '',
-                phone: tempData.phone || '',
-                address: tempData.address || '',
-            };
-            // Only update location if the user picked a new one
-            if (addressLocation) {
-                updates.location = addressLocation;
-            }
-            await updateDoc(doc(db, "users", targetUserId), updates);
-            setSavedData({ ...cloudData, ...tempData, ...(addressLocation ? { location: addressLocation } : {}) });
+            });
+            setSavedData({ ...cloudData, ...tempData });
             setIsEditing(false);
         } catch (error) {
             console.error("שגיאה בעדכון:", error);
@@ -81,11 +45,6 @@ function Profile() {
         } finally {
             setLoading(false);
         }
-    };
-
-    const handleCancel = () => {
-        setIsEditing(false);
-        setAddressError('');
     };
 
     if (dataLoading) return <Loader text="טוען פרופיל... 🎓" />;
@@ -116,8 +75,8 @@ function Profile() {
                             style={{ ...inputStyle, resize: 'vertical', width: '100%' }}
                         />
                     ) : (
-                        <p style={{ color: display?.about ? '#1A1A2E' : '#9CA3AF', fontSize: '15px', lineHeight: '1.7', margin: 0 }}>
-                            {display?.about || 'לחצ/י על עריכת פרופיל כדי לספר על עצמך...'}
+                        <p style={{ color: display.about ? '#1A1A2E' : '#9CA3AF', fontSize: '15px', lineHeight: '1.7', margin: 0 }}>
+                            {display.about || 'לחצ/י על עריכת פרופיל כדי לספר על עצמך...'}
                         </p>
                     )}
                 </div>
@@ -137,30 +96,9 @@ function Profile() {
                 {/* פרטים נוספים */}
                 <div style={sectionTitle}>פרטים נוספים</div>
                 <div style={{ ...grid, marginTop: '12px' }}>
-                    <EditableField label="גיל" name="age" value={display?.age} isEditing={isEditing} onChange={handleInputChange} />
-                    <EditableField label="תחום לימודים" name="studyField" value={display?.studyField} isEditing={isEditing} onChange={handleInputChange} />
-                    <EditableField label="שנת לימודים" name="year" value={display?.year} isEditing={isEditing} onChange={handleInputChange} />
-                    <EditableField label="טלפון" name="phone" value={display?.phone} isEditing={isEditing} onChange={handleInputChange} />
-                </div>
-
-                <div style={divider} />
-
-                {/* כתובת */}
-                <div style={sectionTitle}>כתובת</div>
-                <div style={{ marginTop: '12px' }}>
-                    {isEditing ? (
-                        <AddressInput
-                            name="address"
-                            value={tempData.address || ''}
-                            onTextChange={handleAddressTextChange}
-                            onLocationSelected={handleLocationSelected}
-                            error={addressError}
-                        />
-                    ) : (
-                        <p style={{ color: display?.address ? '#1A1A2E' : '#9CA3AF', fontSize: '15px', margin: 0 }}>
-                            {display?.address || '—'}
-                        </p>
-                    )}
+                    <EditableField label="גיל" name="age" value={display.age} isEditing={isEditing} onChange={handleInputChange} />
+                    <EditableField label="תחום לימודים" name="studyField" value={display.studyField} isEditing={isEditing} onChange={handleInputChange} />
+                    <EditableField label="שנת לימודים" name="year" value={display.year} isEditing={isEditing} onChange={handleInputChange} />
                 </div>
 
                 {/* כפתורים */}
@@ -170,7 +108,7 @@ function Profile() {
                             <button onClick={handleSave} disabled={loading} style={primaryBtn}>
                                 {loading ? 'שומר...' : 'שמור שינויים'}
                             </button>
-                            <button onClick={handleCancel} style={secondaryBtn}>ביטול</button>
+                            <button onClick={() => setIsEditing(false)} style={secondaryBtn}>ביטול</button>
                         </>
                     ) : (
                         <button onClick={handleStartEdit} style={primaryBtn}>עריכת פרופיל</button>

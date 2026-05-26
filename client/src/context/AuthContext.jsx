@@ -76,7 +76,6 @@ export const AuthProvider = ({ children }) => {
       idNumber: additionalData.idNumber,
       age: additionalData.age,
       gender: additionalData.gender,
-      phone: additionalData.phone || '',
       isDiscoverable: additionalData.isDiscoverable,
       address: additionalData.address,
       // The location map ({ geohash, lat, lng }) is what powers the nearby-users

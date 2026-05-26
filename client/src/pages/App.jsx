@@ -16,7 +16,7 @@ import Topbar from '../components/Topbar.jsx';
 import Sidebar from '../components/Sidebar.jsx';
 
 function ProtectedLayout() {
-  const { currentUser } = useAuth();
+  const {user} = useAuth();
 
   return (
     <div style={{ direction: 'rtl', minHeight: '100vh', backgroundColor: '#F0F2FA', fontFamily: 'Heebo, sans-serif' }}>
@@ -38,7 +38,7 @@ function ProtectedLayout() {
 }
 
 function App() {
-  const { currentUser } = useAuth();
+  const { user } = useAuth();
   
   // If user is logged in, the default layout with the Topbar and Sidebar is displayed.
   return (
@@ -46,8 +46,8 @@ function App() {
       <Routes>
         {/* Public paths (only for those who are not logged in) */}
         {/* If a logged in user tries to log in, we will send them straight to Lapid. */}
-        <Route path="/login" element={currentUser ? <Navigate to="/feed" replace /> : <Login />} />
-        <Route path="/register" element={currentUser ? <Navigate to="/feed" replace /> : <Register />} />
+        <Route path="/login" element={user ? <Navigate to="/feed" replace /> : <Login />} />
+        <Route path="/register" element={user ? <Navigate to="/feed" replace /> : <Register />} />
         <Route path="/reset" element={<Reset />} />
         <Route path="/success" element={<Success />} />
 
