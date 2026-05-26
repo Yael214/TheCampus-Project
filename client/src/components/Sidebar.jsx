@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import UserImage from './UserProfile';
-import { LocationToggle } from './LocationToggle';
 import { useAuth } from '../context/AuthContext';
 import { useUserData } from '../hooks/useUserData';
-import { db } from '../firebase/config';
+import { db, storage } from '../firebase/config';
 import { doc, updateDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useImageHandler } from '../hooks/useImageHandler';
 import { NavLink, useNavigate } from 'react-router-dom';
 
