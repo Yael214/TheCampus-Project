@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useUserData } from '../hooks/useUserData';
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from '../firebase/config';
 import Loader from '../components/Loader';
+import AddressInput from '../components/AddressInput.jsx'; 
 
 function Profile() {
     const { currentUser } = useAuth();
@@ -11,14 +12,18 @@ function Profile() {
     const { userData: cloudData, loading: dataLoading } = useUserData(targetUserId);
 
     const [tempData, setTempData] = useState({});
+    const [tempLocation, setTempLocation] = useState(null); //save the new location
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(false);
     const [savedData, setSavedData] = useState(null);
+    const [addressError, setAddressError] = useState(null); 
 
     const display = isEditing ? tempData : (savedData || cloudData);
 
     const handleStartEdit = () => {
         setTempData({ ...display });
+        setTempLocation(display.location || null); 
+        setAddressError(null);
         setIsEditing(true);
     };
 
@@ -27,17 +32,48 @@ function Profile() {
         setTempData(prev => ({ ...prev, [name]: value }));
     };
 
+    // valid location edit
+    const handleAddressTextChange = (text) => {
+        setTempData(prev => ({ ...prev, address: text }));
+        setTempLocation(null); 
+        setAddressError(null);
+    };
+
+    
+    const handleLocationSelected = ({ address, location: loc }) => {
+        setTempData(prev => ({ ...prev, address }));
+        setTempLocation(loc); // { geohash, lat, lng }
+        setAddressError(null);
+    };
+
     const handleSave = async () => {
         if (!targetUserId) return;
+
+       
+        if (tempData.address && !tempLocation) {
+            setAddressError("יש לבחור כתובת חוקית מתוך הרשימה");
+            return;
+        }
+
         try {
             setLoading(true);
+            
+            // update firestore
             await updateDoc(doc(db, "users", targetUserId), {
                 age: tempData.age || '',
                 year: tempData.year || '',
                 studyField: tempData.studyField || '',
                 about: tempData.about || '',
+                phone: tempData.phone || '', // שמירת הטלפון החדש
+                address: tempData.address || '', // שמירת הכתובת החדשה בתור טקסט
+                location: tempLocation || null // שמירת המפה הגיאוגרפית (powers nearby-users)
             });
-            setSavedData({ ...cloudData, ...tempData });
+
+            setSavedData({ 
+                ...cloudData, 
+                ...tempData, 
+                location: tempLocation 
+            });
             setIsEditing(false);
         } catch (error) {
             console.error("שגיאה בעדכון:", error);
@@ -62,7 +98,7 @@ function Profile() {
                     הפרופיל שלי
                 </h2>
 
-                {/* קצת על עצמי */}
+                {/* about */}
                 <div style={sectionTitle}>קצת על עצמי</div>
                 <div style={{ marginTop: '10px' }}>
                     {isEditing ? (
@@ -83,7 +119,7 @@ function Profile() {
 
                 <div style={divider} />
 
-                {/* פרטים קבועים */}
+                {/* details */}
                 <div style={grid}>
                     <Field label="שם מלא" value={cloudData.fullName} />
                     <Field label="תעודת זהות" value={cloudData.idNumber} />
@@ -93,15 +129,35 @@ function Profile() {
 
                 <div style={divider} />
 
-                {/* פרטים נוספים */}
+                {/* Additional details  */}
                 <div style={sectionTitle}>פרטים נוספים</div>
                 <div style={{ ...grid, marginTop: '12px' }}>
                     <EditableField label="גיל" name="age" value={display.age} isEditing={isEditing} onChange={handleInputChange} />
                     <EditableField label="תחום לימודים" name="studyField" value={display.studyField} isEditing={isEditing} onChange={handleInputChange} />
                     <EditableField label="שנת לימודים" name="year" value={display.year} isEditing={isEditing} onChange={handleInputChange} />
+                    
+                    {/* phone */}
+                    <EditableField label="מספר טלפון" name="phone" value={display.phone} isEditing={isEditing} onChange={handleInputChange} type="tel" />
+                    
+                    {/* address by Google Places */}
+                    <div>
+                        <label style={labelStyle}>כתובת</label>
+                        {isEditing ? (
+                            <AddressInput
+                                name="address"
+                                value={tempData.address}
+                                className={inputStyle}
+                                onTextChange={handleAddressTextChange}
+                                onLocationSelected={handleLocationSelected}
+                                error={addressError}
+                            />
+                        ) : (
+                            <p style={contentStyle}>{display.address || '—'}</p>
+                        )}
+                    </div>
                 </div>
 
-                {/* כפתורים */}
+                {/* Buttons */}
                 <div style={{ marginTop: '28px', display: 'flex', gap: '12px', justifyContent: 'center' }}>
                     {isEditing ? (
                         <>
@@ -127,11 +183,11 @@ const Field = ({ label, value }) => (
     </div>
 );
 
-const EditableField = ({ label, name, value, isEditing, onChange }) => (
+const EditableField = ({ label, name, value, isEditing, onChange, type = "text" }) => (
     <div>
         <label style={labelStyle}>{label}</label>
         {isEditing ? (
-            <input name={name} value={value || ''} onChange={onChange} style={inputStyle} />
+            <input type={type} name={name} value={value || ''} onChange={onChange} style={inputStyle} />
         ) : (
             <p style={contentStyle}>{value || '—'}</p>
         )}
