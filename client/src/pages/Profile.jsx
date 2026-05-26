@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useUserData } from '../hooks/useUserData';
+import { useForums } from '../hooks/useForums';
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from '../firebase/config';
 import Loader from '../components/Loader';
@@ -9,6 +10,9 @@ function Profile() {
     const { currentUser } = useAuth();
     const targetUserId = currentUser?.uid;
     const { userData: cloudData, loading: dataLoading } = useUserData(targetUserId);
+
+    const { forums, isLoading: forumsLoading, toggleFollowForum } = useForums(targetUserId);
+    const followedForums = cloudData?.followedForums || [];
 
     const [tempData, setTempData] = useState({});
     const [isEditing, setIsEditing] = useState(false);
@@ -101,6 +105,42 @@ function Profile() {
                     <EditableField label="שנת לימודים" name="year" value={display.year} isEditing={isEditing} onChange={handleInputChange} />
                 </div>
 
+                <div style={divider} />
+                <div style={sectionTitle}>הפורומים שלי</div>
+                <p style={{ fontSize: '13px', color: '#6B7280', margin: '4px 0 16px 0' }}>
+                    סמנ/י את הפורומים שברצונך לעקוב אחריהם בפיד:
+                </p>
+
+                {forumsLoading ? (
+                    <p style={contentStyle}>טוען פורומים...</p>
+                ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {forums.map((forum) => {
+                            const isFollowing = followedForums.includes(forum.id);
+                            return (
+                                <div key={forum.id} style={forumRowStyle}>
+                                    <input
+                                        type="checkbox"
+                                        id={forum.id}
+                                        checked={isFollowing}
+                                        onChange={() => toggleFollowForum(forum.id, isFollowing)}
+                                        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                                    />
+                                    <div style={{ marginRight: '12px', textAlign: 'right' }}>
+                                        <label htmlFor={forum.id} style={{ fontWeight: '700', color: '#1A1A2E', fontSize: '14px', cursor: 'pointer' }}>
+                                            {forum.title}
+                                        </label>
+                                        <p style={{ color: '#6B7280', fontSize: '13px', margin: '2px 0 0 0' }}>
+                                            {forum.description}
+                                        </p>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+
+
                 {/* כפתורים */}
                 <div style={{ marginTop: '28px', display: 'flex', gap: '12px', justifyContent: 'center' }}>
                     {isEditing ? (
@@ -147,5 +187,5 @@ const contentStyle = { fontSize: '15px', color: '#1A1A2E', fontWeight: '500', ma
 const inputStyle = { width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #D1D5DB', fontSize: '14px', fontFamily: 'Heebo, sans-serif', boxSizing: 'border-box' };
 const primaryBtn = { backgroundColor: '#4F46E5', color: 'white', padding: '10px 28px', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '14px', fontFamily: 'Heebo, sans-serif' };
 const secondaryBtn = { backgroundColor: 'white', color: '#4B5563', padding: '10px 28px', border: '1px solid #D1D5DB', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '14px', fontFamily: 'Heebo, sans-serif' };
-
+const forumRowStyle = { display: 'flex', alignItems: 'center', padding: '12px 16px', backgroundColor: '#F9FAFB', borderRadius: '10px', border: '1px solid #E5E7EB' };
 export default Profile;
