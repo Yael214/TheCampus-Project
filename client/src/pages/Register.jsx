@@ -6,7 +6,7 @@ import { useNavigate, Link } from 'react-router-dom';
 
 function Register() {
   const [formData, setFormData] = useState({
-    fullName: '', idNumber: '', email: '', password: '', age: '', gender: '',
+    fullName: '', idNumber: '', email: '', password: '', phone: '', age: '', gender: '',
     isDiscoverable: false,
     address: '', studyField: '', year: '',
     profileImage: null, studyApproval: null
@@ -89,6 +89,14 @@ function Register() {
     } else if (!isPasswordStrong(formData.password)) {
       tempErrors.password = "הסיסמה חייבת לכלול לפחות 8 תווים, אות גדולה, אות קטנה ומספר";
     }
+    
+    // valid phone number check
+    if (!formData.phone) {
+      tempErrors.phone = "חובה להזין מספר טלפון";
+    } else if (!/^\d{9,10}$/.test(formData.phone.replace(/[-]/g, ''))) {
+      tempErrors.phone = "מספר טלפון לא תקין (צריך להכיל 9 או 10 ספרות)";
+    }
+
     // The address is only valid if the user actually picked a place from the dropdown
     // (so we have a real location object with geohash + coordinates).
     if (!location) {
@@ -124,7 +132,7 @@ function Register() {
         let message = "";
 
         switch (error.code) {
-          case 'auth/email-already-in-use':
+                    case 'auth/email-already-in-use':
             message = "כתובת האימייל כבר תפוסה.";
             break;
           case 'auth/weak-password':
@@ -165,6 +173,11 @@ function Register() {
         <label><span className="required">*</span>סיסמה</label>
         <input type="password" name="password" className={errors.password ? 'input-error' : ''} onChange={handleInputChange} />
         {errors.password && <span className="error-msg">{errors.password}</span>}
+
+        {/* שדה טלפון החדש שהוספנו */}
+        <label><span className="required">*</span>מספר טלפון</label>
+        <input type="tel" name="phone" placeholder="דוגמה: 0501234567" className={errors.phone ? 'input-error' : ''} onChange={handleInputChange} />
+        {errors.phone && <span className="error-msg">{errors.phone}</span>}
 
         <label>גיל</label>
         <input type="number" name="age" onChange={handleInputChange} />
