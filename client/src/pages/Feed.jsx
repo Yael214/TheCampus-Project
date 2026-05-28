@@ -1,3 +1,5 @@
+import PostContainer from "../components/PostContainer";
+
 function Feed() {
   return (
     <main className="flex-1 p-10 overflow-y-auto" dir="rtl">
