@@ -1,134 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useUserData } from '../hooks/useUserData';
-import { doc, updateDoc, deleteDoc, collection, onSnapshot } from "firebase/firestore";
+import { doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { useForums } from '../hooks/useForums';
-
 import { ref, deleteObject } from 'firebase/storage';
 import { db, storage } from '../firebase/config';
 import { useNavigate } from 'react-router-dom';
 import Loader from '../components/Loader';
 import AddressInput from '../components/AddressInput.jsx'; 
-
-// Sub-component handling the multi-course lookup catalog and mapping modifications
-function CourseSelectionModal({ isOpen, onClose, initialSelectedForums, onSave }) {
-    const [allForums, setAllForums] = useState([]);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [selectedMap, setSelectedMap] = useState({});
-
-    // Pull full, raw dictionary files directly from the master 'forums' collection
-    useEffect(() => {
-        if (!isOpen) return;
-
-        const forumsCollectionRef = collection(db, 'forums');
-        const unsubscribe = onSnapshot(forumsCollectionRef, (snapshot) => {
-            const fetched = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            // Alphabetical sort descending according to central DB title descriptors
-            const sorted = fetched.sort((a, b) => (a.titel || '').localeCompare(b.titel || '', 'he'));
-            setAllForums(sorted);
-        }, (err) => {
-            console.error("Error fetching master catalog: ", err);
-        });
-
-        return () => unsubscribe();
-    }, [isOpen]);
-
-    // Track dynamic changes over active lookup assignments locally
-    useEffect(() => {
-        if (isOpen && initialSelectedForums) {
-            const currentSelected = {};
-            Object.values(initialSelectedForums).forEach(forum => {
-                if (forum.forumId) {
-                    currentSelected[forum.forumId] = forum.forumName;
-                }
-            });
-            setSelectedMap(currentSelected);
-        }
-    }, [isOpen, initialSelectedForums]);
-
-    if (!isOpen) return null;
-
-    const handleToggleCourse = (forum) => {
-        setSelectedMap(prev => {
-            const updated = { ...prev };
-            if (updated[forum.id]) {
-                delete updated[forum.id]; // Remove if checked
-            } else {
-                updated[forum.id] = forum.titel || forum.name || 'קורס ללא שם'; // Assign value
-            }
-            return updated;
-        });
-    };
-
-    const handleConfirmSelection = () => {
-        // Map selected inputs cleanly back to the 'followedForums' map specification
-        const finalFollowedMap = {};
-        Object.entries(selectedMap).forEach(([id, name], index) => {
-            finalFollowedMap[`course${index + 1}`] = {
-                forumId: id,
-                forumName: name
-            };
-        });
-        onSave(finalFollowedMap);
-        onClose();
-    };
-
-    const filteredForums = allForums.filter(forum => 
-        (forum.titel || '').toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
-    return (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, backdropFilter: 'blur(4px)' }}>
-            <div style={{ background: 'white', borderRadius: '20px', padding: '32px', maxWidth: '500px', width: '90%', textAlign: 'right', fontFamily: 'Heebo, sans-serif', display: 'flex', flexDirection: 'column', maxHeight: '80vh' }} dir="rtl">
-                <h3 style={{ color: '#2C3E7A', fontSize: '20px', fontWeight: '800', margin: '0 0 16px 0' }}>ניהול ועריכת קורסים</h3>
-                
-                {/* Search Bar Input */}
-                <div style={{ position: 'relative', marginBottom: '16px' }}>
-                    <input 
-                        type="text"
-                        placeholder="חפש קורס מתוך המאגר..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        style={{ ...inputStyle, width: '100%', padding: '10px 12px' }}
-                    />
-                </div>
-
-                {/* Checklist Catalog Selection box with internal custom scrollbar tracking */}
-                <div style={{ overflowY: 'auto', flex: 1, border: '1px solid #E5E7EB', borderRadius: '12px', padding: '12px', marginBottom: '24px', minHeight: '200px', maxHeight: '350px' }}>
-                    {filteredForums.map((forum) => (
-                        <label 
-                            key={forum.id} 
-                            style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 8px', borderRadius: '8px', cursor: 'pointer', transition: 'background 0.2s' }}
-                            className="hover:bg-gray-50"
-                        >
-                            <input 
-                                type="checkbox"
-                                checked={!!selectedMap[forum.id]}
-                                onChange={() => handleToggleCourse(forum)}
-                                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                            />
-                            <span style={{ fontSize: '15px', color: '#1A1A2E', fontWeight: '500' }}>
-                                {forum.titel || forum.name || forum.id}
-                            </span>
-                        </label>
-                    ))}
-                    {filteredForums.length === 0 && (
-                        <p style={{ textAlign: 'center', color: '#9CA3AF', fontSize: '14px', margin: '20px 0' }}>לא נמצאו קורסים תואמים במאגר</p>
-                    )}
-                </div>
-
-                {/* Modal actions panel layout */}
-                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-start' }}>
-                    <button onClick={handleConfirmSelection} style={primaryBtn}>שמור קורסים</button>
-                    <button onClick={onClose} style={secondaryBtn}>ביטול</button>
-                </div>
-            </div>
-        </div>
-    );
-}
 
 function Profile() {
     const { currentUser } = useAuth();
@@ -136,8 +15,10 @@ function Profile() {
     const { userData: cloudData, loading: dataLoading } = useUserData(targetUserId);
     const navigate = useNavigate();
 
+    // Central subscription tracking hook built by Shani
     const { forums, isLoading: forumsLoading, toggleFollowForum } = useForums(targetUserId);
-    const followedForums = cloudData?.followedForums || [];
+    const rawFollowed = Array.isArray(cloudData?.followedForums) ? cloudData.followedForums : [];
+    const followedForums = rawFollowed.map(f => typeof f === 'object' ? f.forumId : f);
 
     const [tempData, setTempData] = useState({});
     const [tempLocation, setTempLocation] = useState(null); 
@@ -146,10 +27,7 @@ function Profile() {
     const [savedData, setSavedData] = useState(null);
     const [addressError, setAddressError] = useState(null); 
 
-    // Custom state layer parameters managing the explicit dynamic course lookup selectors
-    const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
-
-    //state for delete account
+    // Account deletion workflow states
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [deleteLoading, setDeleteLoading] = useState(false);
     const [deleteError, setDeleteError] = useState('');
@@ -169,7 +47,6 @@ function Profile() {
         setTempData(prev => ({ ...prev, [name]: value }));
     };
 
-    // valid address editing
     const handleAddressTextChange = (text) => {
         setTempData(prev => ({ ...prev, address: text }));
         setTempLocation(null); 
@@ -178,21 +55,8 @@ function Profile() {
 
     const handleLocationSelected = ({ address, location: loc }) => {
         setTempData(prev => ({ ...prev, address }));
-        setTempLocation(loc); // { geohash, lat, lng }
+        setTempLocation(loc); 
         setAddressError(null);
-    };
-
-    // Intermediate handler linking course selections inside editing buffers
-    const handleCoursesUpdated = (newFollowedForumsMap) => {
-        if (isEditing) {
-            setTempData(prev => ({ ...prev, followedForums: newFollowedForumsMap }));
-        } else {
-            // Direct write option if updated immediately when profile editing layout is closed
-            if (!targetUserId) return;
-            updateDoc(doc(db, "users", targetUserId), {
-                followedForums: newFollowedForumsMap
-            }).catch(err => console.error("Error syncing courses: ", err));
-        }
     };
 
     const handleSave = async () => {
@@ -213,9 +77,7 @@ function Profile() {
                 about: tempData.about || '',
                 phone: tempData.phone || '', 
                 address: tempData.address || '', 
-                location: tempLocation || null,
-                // Appending followedForums map verification to standard document updates
-                followedForums: tempData.followedForums || cloudData.followedForums || {}
+                location: tempLocation || null
             });
 
             setSavedData({ 
@@ -225,36 +87,31 @@ function Profile() {
             });
             setIsEditing(false);
         } catch (error) {
-            console.error("שגיאה בעדכון:", error);
+            console.error("Error updating profile baseline document:", error);
             alert("שגיאה בעדכון הפרופיל.");
         } finally {
             setLoading(false);
         }
     };
 
-    // delete account function
     const handleDeleteAccount = async () => {
         if (!currentUser || !cloudData) return;
         setDeleteLoading(true);
         setDeleteError('');
         
         try {
-            // delete image and fils from Storage 
             const fileUrls = [cloudData.profileImage, cloudData.studyApproval].filter(Boolean);
             await Promise.allSettled(
                 fileUrls.map(url => deleteObject(ref(storage, url)))
             );
 
-            // delete user details from Firestore
             await deleteDoc(doc(db, "users", currentUser.uid));
-
-            // delete user from Firebase Auth
             await currentUser.delete();
 
             setDeleteSuccess(true);
             setTimeout(() => navigate('/login'), 2500);
         } catch (error) {
-            console.error("שגיאה במחיקת החשבון:", error);
+            console.error("Error executing account purge sequence:", error);
             if (error.code === 'auth/requires-recent-login') {
                 setDeleteError('לצורך אבטחה, יש להתנתק, להתחבר מחדש ולבצע את המחיקה.');
             } else {
@@ -273,9 +130,6 @@ function Profile() {
         </div>
     );
 
-    // Extract printable course labels to safely populate read-only layouts
-    const currentFollowedCourses = Object.values(display?.followedForums || {});
-
     return (
         <main className="flex-1 overflow-y-auto" dir="rtl" style={{ padding: '24px 32px', fontFamily: 'Heebo, sans-serif', backgroundColor: '#F0F2FA' }}>
             <div style={card}>
@@ -284,7 +138,7 @@ function Profile() {
                     הפרופיל שלי
                 </h2>
 
-                {/* about */}
+                {/* About Section */}
                 <div style={sectionTitle}>קצת על עצמי</div>
                 <div style={{ marginTop: '10px' }}>
                     {isEditing ? (
@@ -305,7 +159,7 @@ function Profile() {
 
                 <div style={divider} />
 
-                {/* user details */}
+                {/* Core User Details */}
                 <div style={grid}>
                     <Field label="שם מלא" value={cloudData.fullName} />
                     <Field label="תעודת זהות" value={cloudData.idNumber} />
@@ -315,7 +169,7 @@ function Profile() {
 
                 <div style={divider} />
 
-                {/* Additional details */}
+                {/* Additional Profile Parameters */}
                 <div style={sectionTitle}>פרטים נוספים</div>
                 <div style={{ ...grid, marginTop: '12px' }}>
                     <EditableField label="גיל" name="age" value={display.age} isEditing={isEditing} onChange={handleInputChange} />
@@ -323,7 +177,7 @@ function Profile() {
                     <EditableField label="שנת לימודים" name="year" value={display.year} isEditing={isEditing} onChange={handleInputChange} />
                     <EditableField label="מספר טלפון" name="phone" value={display.phone} isEditing={isEditing} onChange={handleInputChange} type="tel" />
                     
-                    {/* address by Google Places */}
+                    {/* Address Autocomplete Selection Block */}
                     <div>
                         <label style={labelStyle}>כתובת</label>
                         {isEditing ? (
@@ -339,36 +193,11 @@ function Profile() {
                             <p style={contentStyle}>{display.address || '—'}</p>
                         )}
                     </div>
-
-                    {/* Integrated custom Courses selector column slot parallel with Address layout */}
-                    <div>
-                        <label style={labelStyle}>הקורסים שלי</label>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '8px' }}>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                                {currentFollowedCourses.map((course, idx) => (
-                                    <span key={idx} style={{ backgroundColor: 'white', color: '#4F46E5', fontSize: '13px', fontWeight: '700', padding: '4px 10px', border: '1px solid #4F46E5', borderRadius: '12px', display: 'inline-block' }}>
-                                        📖 {course.forumName}
-                                    </span>
-                                ))}
-                                {currentFollowedCourses.length === 0 && (
-                                    <span style={{ color: '#9CA3AF', fontSize: '14px', fontStyle: 'italic' }}>טרם נבחרו קורסים במערכת</span>
-                                )}
-                            </div>
-                            
-                            {/* Toggle button enabling changes either during explicit inline layout forms editing or as a fast action overlay */}
-                            <button 
-                                type="button"
-                                onClick={() => setIsCourseModalOpen(true)}
-                                style={{ background: 'none', border: 'none', color: '#4F46E5', fontWeight: '700', fontSize: '13px', cursor: 'pointer', padding: '4px 0', textDecoration: 'underline' }}
-                            >
-                                עריכה/שינוי הקורסים
-                            </button>
-                        </div>
-                    </div>
-
                 </div>
 
                 <div style={divider} />
+                
+                {/* Unified Courses Catalog Subsection built by Shani */}
                 <div style={sectionTitle}>הפורומים שלי</div>
                 <p style={{ fontSize: '13px', color: '#6B7280', margin: '4px 0 16px 0' }}>
                     סמנ/י את הפורומים שברצונך לעקוב אחריהם בפיד:
@@ -386,12 +215,12 @@ function Profile() {
                                         type="checkbox"
                                         id={forum.id}
                                         checked={isFollowing}
-                                        onChange={() => toggleFollowForum(forum.id, isFollowing)}
+                                        onChange={() => toggleFollowForum(forum.id, forum.title || forum.titel || forum.id, isFollowing)}
                                         style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                                     />
                                     <div style={{ marginRight: '12px', textAlign: 'right' }}>
                                         <label htmlFor={forum.id} style={{ fontWeight: '700', color: '#1A1A2E', fontSize: '14px', cursor: 'pointer' }}>
-                                            {forum.title}
+                                            {forum.title || forum.titel || forum.id}
                                         </label>
                                         <p style={{ color: '#6B7280', fontSize: '13px', margin: '2px 0 0 0' }}>
                                             {forum.description}
@@ -403,8 +232,7 @@ function Profile() {
                     </div>
                 )}
 
-
-                {/* button */}
+                {/* Form Action Controls Section */}
                 <div style={{ marginTop: '36px', position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px' }}>
                     {isEditing ? (
                         <>
@@ -416,7 +244,6 @@ function Profile() {
                     ) : (
                         <>
                             <button onClick={handleStartEdit} style={primaryBtn}>עריכת פרופיל</button>
-                            
                             <button
                                 onClick={() => { setShowDeleteConfirm(true); setDeleteError(''); }}
                                 style={{ ...deleteBtn, position: 'absolute', left: 0 }}
@@ -427,7 +254,6 @@ function Profile() {
                     )}
                 </div>
 
-                {/* Show deletion errors */}
                 {deleteError && (
                     <p style={{ color: '#DC2626', fontSize: '13px', textAlign: 'center', marginTop: '16px', fontWeight: '600' }}>
                         {deleteError}
@@ -436,7 +262,7 @@ function Profile() {
 
             </div>
 
-            {/* Confirmation popup */}
+            {/* Deletion Confirmation Modal Dialog */}
             {showDeleteConfirm && (
                 <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justify: 'center', zIndex: 1000 }}>
                     <div style={{ background: 'white', borderRadius: '16px', padding: '32px', maxWidth: '400px', width: '90%', textAlign: 'center', fontFamily: 'Heebo, sans-serif' }} dir="rtl">
@@ -464,7 +290,7 @@ function Profile() {
                 </div>
             )}
 
-            {/* Success popup */}
+            {/* Account Purged Success Popover */}
             {deleteSuccess && (
                 <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justify: 'center', zIndex: 1000 }}>
                     <div style={{ background: 'white', borderRadius: '16px', padding: '32px', maxWidth: '400px', width: '90%', textAlign: 'center', fontFamily: 'Heebo, sans-serif' }} dir="rtl">
@@ -474,14 +300,6 @@ function Profile() {
                     </div>
                 </div>
             )}
-
-            {/* Injected Course Selection Overlay Modal Portal Anchor */}
-            <CourseSelectionModal 
-                isOpen={isCourseModalOpen}
-                onClose={() => setIsCourseModalOpen(false)}
-                initialSelectedForums={display?.followedForums || {}}
-                onSave={handleCoursesUpdated}
-            />
 
         </main>
     );
@@ -505,7 +323,6 @@ const EditableField = ({ label, name, value, isEditing, onChange, type = "text" 
     </div>
 );
 
-// עיצובים
 const card = { background: 'white', borderRadius: '20px', padding: '32px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' };
 const grid = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' };
 const divider = { height: '1px', backgroundColor: '#F3F4F6', margin: '20px 0' };

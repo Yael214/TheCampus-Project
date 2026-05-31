@@ -6,48 +6,14 @@ import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 // Importing our shared modal and Shani's post container component
 import NewPostModal from '../components/NewPostModal';
 import PostContainer from '../components/PostContainer';
+import Loader from '../components/Loader';
 
 function Feed() {
     const { currentUser } = useAuth();
     const [isPostModalOpen, setIsPostModalOpen] = useState(false);
     const [loading, setLoading] = useState(true);
 
-    // Seed local context immediately with mock data structures matching Shani's post schema
-    const [posts, setPosts] = useState([
-        {
-            id: 'mock-1',
-            title: 'מישהו הבין את שאלה 4 בממן 11? — מרגיש שחסר משהו בנוסחה',
-            content: 'הגעתי לתוצאה שונה מהפתרון שפורסם ולא מבין איפה אני טועה. ניסיתי כמה גישות אבל כולן מביאות לאותה תשובה שגויה לכאורה.',
-            forumId: 'linear-algebra',
-            forumName: 'אלגברה ליניארית',
-            authorName: 'רועי לוי',
-            likes: 2,
-            commentsCount: 3,
-            likedBy: []
-        },
-        {
-            id: 'mock-2',
-            title: 'מחפשת "חשבון אינפיניטסימלי א" של שטיינברג — מישהו יכול להשאיל?',
-            content: 'צריכה את הספר לבחינה בעוד שבועיים. אשמח גם לצילום פרקים 3–5 אם אין אפשרות להשאיל את כל הספר.',
-            forumId: 'infinitesimal',
-            forumName: 'השאלת ספרים',
-            authorName: 'אילנה דרור',
-            likes: 0,
-            commentsCount: 2,
-            likedBy: []
-        },
-        {
-            id: 'mock-3',
-            title: 'סיקור המרצה — נושא מבני נתונים, הרצאה 9 (עדכון מלא)',
-            content: 'העליתי סיכום של הרצאה 9 כולל כל הדוגמאות מהלוח וההסברים שהוספתי. מומלץ להשוות עם הסיכומים הקודמים.',
-            forumId: 'data-structures',
-            forumName: 'מבני נתונים',
-            authorName: 'אביב בן-דוד',
-            likes: 5,
-            commentsCount: 0,
-            likedBy: []
-        }
-    ]);
+    const [posts, setPosts] = useState([]);
 
     const { forums: userCourses } = useUserForums();
 
@@ -72,6 +38,11 @@ function Feed() {
         return () => unsubscribe();
     }, []);
 
+    // Render loading spinner while fetching data
+    if (loading) {
+        return <Loader text="טוען את הפיד שלך... 🎓" />;
+    }
+
     return (
         <main className="flex-1 p-8 bg-[#F3F5FA] overflow-hidden flex flex-col items-start justify-start text-right h-[calc(100vh-56px)]" dir="rtl">
             <div className="w-full max-w-4xl mx-auto flex flex-col h-full">
@@ -90,14 +61,18 @@ function Feed() {
 
                 {/* Timeline rendering layout viewport */}
                 <div className="flex-1 overflow-y-auto space-y-5 pl-2 pb-6 w-full">
-                    {posts.map(post => (
-                        /* Directly passing down iterated objects onto Shani's container layout element */
-                        <PostContainer 
-                            key={post.id} 
-                            post={post} 
-                            showForumLink={true} 
-                        />
-                    ))}
+                    {posts.length === 0 ? (
+                        <div className="text-center text-gray-500 mt-10 font-medium">אין עדיין פוסטים להצגה בפיד.</div>
+                    ) : (
+                        posts.map(post => (
+                            /* Directly passing down iterated objects onto Shani's container layout element */
+                            <PostContainer 
+                                key={post.id} 
+                                post={post} 
+                                showForumLink={true} 
+                            />
+                        ))
+                    )}
                 </div>
             </div>
 
