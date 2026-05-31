@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useUserData } from '../hooks/useUserData';
-import { useForums } from '../hooks/useForums';
 import { doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { useForums } from '../hooks/useForums';
 import { ref, deleteObject } from 'firebase/storage';
 import { db, storage } from '../firebase/config';
 import { useNavigate } from 'react-router-dom';
@@ -15,8 +15,10 @@ function Profile() {
     const { userData: cloudData, loading: dataLoading } = useUserData(targetUserId);
     const navigate = useNavigate();
 
+    // Central subscription tracking hook built by Shani
     const { forums, isLoading: forumsLoading, toggleFollowForum } = useForums(targetUserId);
-    const followedForums = cloudData?.followedForums || [];
+    const rawFollowed = Array.isArray(cloudData?.followedForums) ? cloudData.followedForums : [];
+    const followedForums = rawFollowed.map(f => typeof f === 'object' ? f.forumId : f);
 
     const [tempData, setTempData] = useState({});
     const [tempLocation, setTempLocation] = useState(null); 
@@ -25,7 +27,7 @@ function Profile() {
     const [savedData, setSavedData] = useState(null);
     const [addressError, setAddressError] = useState(null); 
 
-    //state for delete account
+    // Account deletion workflow states
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [deleteLoading, setDeleteLoading] = useState(false);
     const [deleteError, setDeleteError] = useState('');
@@ -45,7 +47,6 @@ function Profile() {
         setTempData(prev => ({ ...prev, [name]: value }));
     };
 
-    // valid address editing
     const handleAddressTextChange = (text) => {
         setTempData(prev => ({ ...prev, address: text }));
         setTempLocation(null); 
@@ -54,7 +55,7 @@ function Profile() {
 
     const handleLocationSelected = ({ address, location: loc }) => {
         setTempData(prev => ({ ...prev, address }));
-        setTempLocation(loc); // { geohash, lat, lng }
+        setTempLocation(loc); 
         setAddressError(null);
     };
 
@@ -76,7 +77,7 @@ function Profile() {
                 about: tempData.about || '',
                 phone: tempData.phone || '', 
                 address: tempData.address || '', 
-                location: tempLocation || null 
+                location: tempLocation || null
             });
 
             setSavedData({ 
@@ -86,36 +87,31 @@ function Profile() {
             });
             setIsEditing(false);
         } catch (error) {
-            console.error("שגיאה בעדכון:", error);
+            console.error("Error updating profile baseline document:", error);
             alert("שגיאה בעדכון הפרופיל.");
         } finally {
             setLoading(false);
         }
     };
 
-    // delete account function
     const handleDeleteAccount = async () => {
         if (!currentUser || !cloudData) return;
         setDeleteLoading(true);
         setDeleteError('');
         
         try {
-            // delete image and fils from Storage 
             const fileUrls = [cloudData.profileImage, cloudData.studyApproval].filter(Boolean);
             await Promise.allSettled(
                 fileUrls.map(url => deleteObject(ref(storage, url)))
             );
 
-            // delete user details from Firestore
             await deleteDoc(doc(db, "users", currentUser.uid));
-
-            // delete user from Firebase Auth
             await currentUser.delete();
 
             setDeleteSuccess(true);
             setTimeout(() => navigate('/login'), 2500);
         } catch (error) {
-            console.error("שגיאה במחיקת החשבון:", error);
+            console.error("Error executing account purge sequence:", error);
             if (error.code === 'auth/requires-recent-login') {
                 setDeleteError('לצורך אבטחה, יש להתנתק, להתחבר מחדש ולבצע את המחיקה.');
             } else {
@@ -142,7 +138,7 @@ function Profile() {
                     הפרופיל שלי
                 </h2>
 
-                {/* about */}
+                {/* About Section */}
                 <div style={sectionTitle}>קצת על עצמי</div>
                 <div style={{ marginTop: '10px' }}>
                     {isEditing ? (
@@ -163,7 +159,7 @@ function Profile() {
 
                 <div style={divider} />
 
-                {/* user details */}
+                {/* Core User Details */}
                 <div style={grid}>
                     <Field label="שם מלא" value={cloudData.fullName} />
                     <Field label="תעודת זהות" value={cloudData.idNumber} />
@@ -173,7 +169,7 @@ function Profile() {
 
                 <div style={divider} />
 
-                {/* Additional details */}
+                {/* Additional Profile Parameters */}
                 <div style={sectionTitle}>פרטים נוספים</div>
                 <div style={{ ...grid, marginTop: '12px' }}>
                     <EditableField label="גיל" name="age" value={display.age} isEditing={isEditing} onChange={handleInputChange} />
@@ -181,7 +177,7 @@ function Profile() {
                     <EditableField label="שנת לימודים" name="year" value={display.year} isEditing={isEditing} onChange={handleInputChange} />
                     <EditableField label="מספר טלפון" name="phone" value={display.phone} isEditing={isEditing} onChange={handleInputChange} type="tel" />
                     
-                    {/* address by Google Places */}
+                    {/* Address Autocomplete Selection Block */}
                     <div>
                         <label style={labelStyle}>כתובת</label>
                         {isEditing ? (
@@ -200,6 +196,8 @@ function Profile() {
                 </div>
 
                 <div style={divider} />
+                
+                {/* Unified Courses Catalog Subsection built by Shani */}
                 <div style={sectionTitle}>הפורומים שלי</div>
                 <p style={{ fontSize: '13px', color: '#6B7280', margin: '4px 0 16px 0' }}>
                     סמנ/י את הפורומים שברצונך לעקוב אחריהם בפיד:
@@ -217,12 +215,12 @@ function Profile() {
                                         type="checkbox"
                                         id={forum.id}
                                         checked={isFollowing}
-                                        onChange={() => toggleFollowForum(forum.id, isFollowing)}
+                                        onChange={() => toggleFollowForum(forum.id, forum.title || forum.titel || forum.id, isFollowing)}
                                         style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                                     />
                                     <div style={{ marginRight: '12px', textAlign: 'right' }}>
                                         <label htmlFor={forum.id} style={{ fontWeight: '700', color: '#1A1A2E', fontSize: '14px', cursor: 'pointer' }}>
-                                            {forum.title}
+                                            {forum.title || forum.titel || forum.id}
                                         </label>
                                         <p style={{ color: '#6B7280', fontSize: '13px', margin: '2px 0 0 0' }}>
                                             {forum.description}
@@ -234,8 +232,7 @@ function Profile() {
                     </div>
                 )}
 
-
-                {/* button */}
+                {/* Form Action Controls Section */}
                 <div style={{ marginTop: '36px', position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px' }}>
                     {isEditing ? (
                         <>
@@ -247,7 +244,6 @@ function Profile() {
                     ) : (
                         <>
                             <button onClick={handleStartEdit} style={primaryBtn}>עריכת פרופיל</button>
-                            
                             <button
                                 onClick={() => { setShowDeleteConfirm(true); setDeleteError(''); }}
                                 style={{ ...deleteBtn, position: 'absolute', left: 0 }}
@@ -258,7 +254,6 @@ function Profile() {
                     )}
                 </div>
 
-                {/* Show deletion errors */}
                 {deleteError && (
                     <p style={{ color: '#DC2626', fontSize: '13px', textAlign: 'center', marginTop: '16px', fontWeight: '600' }}>
                         {deleteError}
@@ -267,9 +262,9 @@ function Profile() {
 
             </div>
 
-            {/* Confirmation popup */}
+            {/* Deletion Confirmation Modal Dialog */}
             {showDeleteConfirm && (
-                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justify: 'center', zIndex: 1000 }}>
                     <div style={{ background: 'white', borderRadius: '16px', padding: '32px', maxWidth: '400px', width: '90%', textAlign: 'center', fontFamily: 'Heebo, sans-serif' }} dir="rtl">
                         <div style={{ fontSize: '36px', marginBottom: '12px' }}>⚠️</div>
                         <h3 style={{ color: '#1A1A2E', fontSize: '18px', fontWeight: '800', margin: '0 0 12px 0' }}>מחיקת חשבון לצמיתות</h3>
@@ -295,9 +290,9 @@ function Profile() {
                 </div>
             )}
 
-            {/* Success popup */}
+            {/* Account Purged Success Popover */}
             {deleteSuccess && (
-                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justify: 'center', zIndex: 1000 }}>
                     <div style={{ background: 'white', borderRadius: '16px', padding: '32px', maxWidth: '400px', width: '90%', textAlign: 'center', fontFamily: 'Heebo, sans-serif' }} dir="rtl">
                         <div style={{ fontSize: '36px', marginBottom: '12px' }}>✅</div>
                         <h3 style={{ color: '#1A1A2E', fontSize: '18px', fontWeight: '800', margin: '0 0 8px 0' }}>חשבונך נמחק בהצלחה</h3>
@@ -328,7 +323,6 @@ const EditableField = ({ label, name, value, isEditing, onChange, type = "text" 
     </div>
 );
 
-// עיצובים
 const card = { background: 'white', borderRadius: '20px', padding: '32px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' };
 const grid = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' };
 const divider = { height: '1px', backgroundColor: '#F3F4F6', margin: '20px 0' };

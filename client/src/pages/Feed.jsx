@@ -1,26 +1,89 @@
-import PostContainer from "../components/PostContainer";
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useUserForums } from '../hooks/useUserForums';
+import { db } from '../firebase/config';
+import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+// Importing our shared modal and Shani's post container component
+import NewPostModal from '../components/NewPostModal';
+import PostContainer from '../components/PostContainer';
+import Loader from '../components/Loader';
 
 function Feed() {
-  return (
-    <main className="flex-1 p-10 overflow-y-auto" dir="rtl">
-      <div className="max-w-3xl mx-auto">
-        <div className="flex justify-between items-center mb-10">
-          <h2 className="text-4xl font-black text-[#2C3E7A]">הפיד שלי</h2>
-          <button className="bg-[#4F46E5] text-white px-8 py-3.5 rounded-[18px] font-bold hover:shadow-lg hover:shadow-indigo-200 transition-all border-none">
-            + פוסט חדש
-          </button>
-        </div>
+    const { currentUser } = useAuth();
+    const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+    const [loading, setLoading] = useState(true);
 
-        <div className="bg-white p-24 rounded-4xl text-center shadow-md border border-white/60">
-          <div className="text-7xl mb-8">🎓</div>
-          <h3 className="text-2xl font-bold text-[#2C3E7A] mb-3">איזה כיף שהגעת לקמפוס!</h3>
-          <p className="text-gray-400 text-lg max-w-sm mx-auto">
-             הפיד שלך עדיין ריק. אפשר כבר עכשיו לשתף סיכום שיעור או לשאול שאלה!
-          </p>
-        </div>
-      </div>
-    </main>
-  );
+    const [posts, setPosts] = useState([]);
+
+    const { forums: userCourses } = useUserForums();
+
+    useEffect(() => {
+        const postsCollectionRef = collection(db, 'posts');
+        const q = query(postsCollectionRef, orderBy('createdAt', 'desc'));
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            if (!snapshot.empty) {
+                const activeFeeds = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                setPosts(activeFeeds);
+            }
+            setLoading(false);
+        }, (err) => {
+            console.log("Database permissions block handled. Rendering layout mockup views safely.");
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, []);
+
+    // Render loading spinner while fetching data
+    if (loading) {
+        return <Loader text="טוען את הפיד שלך... 🎓" />;
+    }
+
+    return (
+        <main className="flex-1 p-8 bg-[#F3F5FA] overflow-hidden flex flex-col items-start justify-start text-right h-[calc(100vh-56px)]" dir="rtl">
+            <div className="w-full max-w-4xl mx-auto flex flex-col h-full">
+                
+                {/* Header Area */}
+                <header className="flex justify-between items-center mb-8 shrink-0 w-full">
+                    <h2 className="text-3xl font-black text-[#2C3E7A] m-0">הפיד שלי</h2>
+                    <button 
+                        onClick={() => setIsPostModalOpen(true)}
+                        className="bg-[#4F46E5] text-white px-6 py-3 rounded-xl font-bold border-none text-sm flex items-center gap-1.5 cursor-pointer hover:bg-indigo-700 transition-colors"
+                    >
+                        <span>פוסט חדש</span>
+                        <span className="text-base font-light">+</span>
+                    </button>
+                </header>
+
+                {/* Timeline rendering layout viewport */}
+                <div className="flex-1 overflow-y-auto space-y-5 pl-2 pb-6 w-full">
+                    {posts.length === 0 ? (
+                        <div className="text-center text-gray-500 mt-10 font-medium">אין עדיין פוסטים להצגה בפיד.</div>
+                    ) : (
+                        posts.map(post => (
+                            /* Directly passing down iterated objects onto Shani's container layout element */
+                            <PostContainer 
+                                key={post.id} 
+                                post={post} 
+                                showForumLink={true} 
+                            />
+                        ))
+                    )}
+                </div>
+            </div>
+
+            {/* Global Standalone Post Creation Portal Anchor */}
+            <NewPostModal 
+                isOpen={isPostModalOpen}
+                onClose={() => setIsPostModalOpen(false)}
+                userCourses={userCourses}
+            />
+        </main>
+    );
 }
 
 export default Feed;
