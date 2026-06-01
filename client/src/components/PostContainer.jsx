@@ -51,7 +51,8 @@ function PostContainer({ post, showForumLink=true}) {
           {post.authorName ? post.authorName.slice(0, 2) : 'ק'}
         </div>
         <p className="text-xs text-slate-500 flex-1 overflow-hidden whitespace-nowrap text-ellipsis">
-          {post.authorName}{post.createdAt ? ` · ${post.createdAt}` : ''}
+          {post.authorName}
+          {post.createdAt ? ` · ${formatTimeAgo(post.createdAt)}` : ''}
         </p>
         <div className="inline-flex items-center gap-3 text-xs text-slate-400">
           <span className="inline-flex items-center gap-1">
@@ -107,3 +108,57 @@ function PostContainer({ post, showForumLink=true}) {
 }
 
 export default PostContainer;
+
+
+function formatTimeAgo(dateInput) {
+  if (!dateInput) return '';
+
+  let date;
+
+  // check if it's a Firestore Timestamp object
+  if (dateInput && typeof dateInput.toDate === 'function') {
+    date = dateInput.toDate();
+  } else if (dateInput && dateInput.seconds) {
+    date = new Date(dateInput.seconds * 1000);
+  } else {
+    // if it's a regular date string or Date object
+    date = new Date(dateInput);
+  }
+
+  // Invalid Date check
+  if (isNaN(date.getTime())) return '';
+
+  const now = new Date();
+  const diffInSeconds = Math.floor((now - date) / 1000);
+
+  // if the date is in the future or in another edge case, we can just say "just now"
+  if (diffInSeconds < 0) return 'ממש עכשיו';
+
+  // calculate different time units
+  const minutes = Math.floor(diffInSeconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  const weeks = Math.floor(days / 7);
+  const months = Math.floor(days / 30);
+  const years = Math.floor(days / 365);
+
+  if (diffInSeconds < 60) {
+    return 'ממש עכשיו';
+  }
+  if (minutes < 60) {
+    return minutes === 1 ? 'לפני דקה' : minutes === 2 ? 'לפני שתי דקות' : `לפני ${minutes} דקות`;
+  }
+  if (hours < 24) {
+    return hours === 1 ? 'לפני שעה' : hours === 2 ? 'לפני שעתיים' : `לפני ${hours} שעות`;
+  }
+  if (days < 7) {
+    return days === 1 ? 'אתמול' : days === 2 ? 'לפני יומיים' : `לפני ${days} ימים`;
+  }
+  if (weeks < 4) {
+    return weeks === 1 ? 'לפני שבוע' : weeks === 2 ? 'לפני שבועיים' : `לפני ${weeks} שבועות`;
+  }
+  if (months < 12) {
+    return months === 1 ? 'לפני חודש' : months === 2 ? 'לפני חודשיים' : `לפני ${months} חודשים`;
+  }
+  return years === 1 ? 'לפני שנה' : years === 2 ? 'לפני שנתיים' : `לפני ${years} שנים`;
+}
