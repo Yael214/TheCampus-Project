@@ -23,10 +23,12 @@ function Sidebar() {
     const { forums, loading: forumsLoading } = useUserForums() || { forums: [], loading: false };
 
     // Alphabetical sorting and real-time query filtering for the courses dropdown
-    const sortedForums = [...(forums || [])].sort((a, b) => a.name.localeCompare(b, 'he'));
+    const sortedForums = [...(forums || [])].sort((a, b) => a.forumName.localeCompare(b, 'he'));
+
     const filteredForums = sortedForums.filter(forum => 
-        forum.name.toLowerCase().includes(courseSearch.toLowerCase())
+        forum?.forumName?.toLowerCase().includes(courseSearch.toLowerCase())
     );
+    
 
     const handleImageChange = async (e) => {
         const file = e.target.files[0];
@@ -149,7 +151,7 @@ function Sidebar() {
                                             }`}
                                     >
                                         <span>📖</span>
-                                        <span className="truncate">{forum.name}</span>
+                                        <span className="truncate">{forum.forumName}</span>
                                     </NavLink>
                                 ))}
 

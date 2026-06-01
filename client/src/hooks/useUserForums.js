@@ -27,7 +27,7 @@ export function useUserForums() {
             const rawForumsMap = userData.followedForums || {};
             const processedForums = Object.values(rawForumsMap).map((forum) => ({
             id: forum.forumId,
-            name: forum.forumName,
+            forumName: forum.forumName,
             //linkTo: `/forum/${forum.forumId}` // הוספת הכתובת לנתב כבר כאן
             }));
             setForums(processedForums);
