@@ -21,7 +21,7 @@ function PostContainer({ post, showForumLink=true}) {
     setLikesCount(post.likesCount || 0);
   }, [isLiked, post.likesCount]);
 
-  const { comments, loading, addComment } = useComments(post.id, isOpen);
+  const { comments, loading, addComment } = useComments(post.postId, isOpen);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -40,7 +40,7 @@ function PostContainer({ post, showForumLink=true}) {
     setLikesCount(prev => newLikedStatus ? prev + 1 : prev - 1);
 
     try {
-      await useLikes(post.id, user.uid, newLikedStatus);
+      await useLikes(post.postId, user.uid, newLikedStatus);
       console.log("Database updated successfully");
     } catch (error) {
       // Revert states if database operation fails
@@ -54,7 +54,7 @@ function PostContainer({ post, showForumLink=true}) {
   const rootComments = comments.filter(c => !c.parentId);
   const replies = comments.filter(c => c.parentId);
   const forumTagClass = 'bg-slate-100 text-slate-800';
-  const commentCount = comments.length || post.commentsCount || 0;
+  const commentCount = comments.length || 0;
 
   return (
     <div className="bg-white rounded-[14px] border border-slate-200/80 p-4 mb-4 shadow-sm transition hover:shadow-md" dir="rtl">
@@ -118,6 +118,7 @@ function PostContainer({ post, showForumLink=true}) {
           {rootComments.map(comment => (
             <CommentItem 
                 key={comment.commentId}
+                user={user}
                 comment={comment}
                 allComments={comments}
                 currentUser={user}

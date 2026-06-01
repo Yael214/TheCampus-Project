@@ -24,7 +24,7 @@ function Feed() {
         const unsubscribe = onSnapshot(q, (snapshot) => {
             if (!snapshot.empty) {
                 const activeFeeds = snapshot.docs.map(doc => ({
-                    id: doc.id,
+                    postId: doc.id,
                     ...doc.data()
                 }));
                 setPosts(activeFeeds);
@@ -67,7 +67,7 @@ function Feed() {
                         posts.map(post => (
                             /* Directly passing down iterated objects onto Shani's container layout element */
                             <PostContainer 
-                                key={post.id} 
+                                key={post.postId} 
                                 post={post} 
                                 showForumLink={true} 
                             />

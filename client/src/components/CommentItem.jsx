@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-function CommentItem({ comment, allComments, onAddComment, currentUser, depth = 0 }) {
+function CommentItem({ user, comment, allComments, onAddComment, currentUser, depth = 0 }) {
   const [isReplying, setIsReplying] = useState(false);
   const [replyText, setReplyText] = useState('');
 
@@ -10,9 +10,10 @@ function CommentItem({ comment, allComments, onAddComment, currentUser, depth = 
 
   const handleReplySubmit = async (e) => {
     e.preventDefault();
-    if (!replyText.trim()) return;
+    if (!replyText.trim()) 
+      return;
     
-    await onAddComment(replyText, comment.commentId);
+    await onAddComment(replyText, comment.commentId, user);
     setReplyText('');
     setIsReplying(false);
   };
@@ -37,6 +38,7 @@ function CommentItem({ comment, allComments, onAddComment, currentUser, depth = 
               comment={reply}
               allComments={allComments}
               onAddComment={onAddComment}
+              user={user}
               currentUser={currentUser}
               depth={depth + 1}
             />
