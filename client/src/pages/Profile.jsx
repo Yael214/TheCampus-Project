@@ -17,9 +17,8 @@ function Profile() {
 
     // Central subscription tracking hook built by Shani
     const { forums, isLoading: forumsLoading, toggleFollowForum } = useForums(targetUserId);
-    const rawFollowed = Array.isArray(cloudData?.followedForums) ? cloudData.followedForums : [];
-    const followedForums = rawFollowed.map(f => typeof f === 'object' ? f.forumId : f);
-
+    const followedForums = cloudData?.followedForums || {};
+    
     const [tempData, setTempData] = useState({});
     const [tempLocation, setTempLocation] = useState(null); 
     const [isEditing, setIsEditing] = useState(false);
@@ -208,7 +207,7 @@ function Profile() {
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         {forums.map((forum) => {
-                            const isFollowing = followedForums.includes(forum.id);
+                            const isFollowing = followedForums[forum.id] !== undefined;
                             return (
                                 <div key={forum.id} style={forumRowStyle}>
                                     <input
