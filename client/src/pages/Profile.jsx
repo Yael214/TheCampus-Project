@@ -215,12 +215,12 @@ function Profile() {
                                         type="checkbox"
                                         id={forum.id}
                                         checked={isFollowing}
-                                        onChange={() => toggleFollowForum(forum.id, forum.title || forum.titel || forum.id, isFollowing)}
+                                        onChange={() => toggleFollowForum(forum.id, forum.forumName || forum.id, isFollowing)}
                                         style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                                     />
                                     <div style={{ marginRight: '12px', textAlign: 'right' }}>
                                         <label htmlFor={forum.id} style={{ fontWeight: '700', color: '#1A1A2E', fontSize: '14px', cursor: 'pointer' }}>
-                                            {forum.title || forum.titel || forum.id}
+                                            {forum.forumName || forum.id}
                                         </label>
                                         <p style={{ color: '#6B7280', fontSize: '13px', margin: '2px 0 0 0' }}>
                                             {forum.description}

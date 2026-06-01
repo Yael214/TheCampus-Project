@@ -24,7 +24,7 @@ export const useComments = (postId) => {
         commentId: doc.id, // include the document ID as commentId for easier reference when adding replies
         ...doc.data()
       }));
-      
+
       setComments(fetchedComments);
       setLoading(false);
     }, (error) => {
@@ -38,18 +38,23 @@ export const useComments = (postId) => {
 
   // 5. addComment function to add a new comment to the Firestore collection. It takes the content of the comment, the user object (to get the author's info), and an optional parentId for replies.
   const addComment = async (content, user, parentId = null) => {
-    if (!content.trim() || !user) return;
+    if (!user) {
+      alert("You must be logged in to comment.");
+      return;
+    }
+    if (!content.trim()) 
+      return;
 
     try {
       const commentsRef = collection(db, 'posts', postId, 'comments');
       
       const newComment = {
         authorId: user.uid,              // user ID of the commenter
-        authorName: user.displayName || 'סטודנט/ית', // the name of the commenter
+        authorName: user.fullName || 'אנונימי/ת', // the name of the commenter
         content: content,                // the text content of the comment
         createdAt: serverTimestamp(),     // a timestamp of when the comment was created
       };
-
+      
       // parentId is only added to the comment document if it's a reply to another comment. This allows us to later query and display comments in a nested manner if needed.
       if (parentId) {
         newComment.parentId = parentId;

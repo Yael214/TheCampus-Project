@@ -27,7 +27,7 @@ export const useForums = (userId) => {
         // Map through the documents and construct an array of forum objects
         const forumsList = querySnapshot.docs.map(doc => ({
           id: doc.id,       // The Primary Key / Document ID (e.g., 'react-programming')
-          ...doc.data()     // Destructure all internal fields (title, description, category, etc.)
+          ...doc.data()     // Destructure all internal fields (forumName, description, category, etc.)
         }));
         
         setForums(forumsList);
