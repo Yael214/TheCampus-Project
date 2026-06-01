@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, getDocs, doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, deleteField, getDoc } from 'firebase/firestore';
 import { db } from '../firebase/config'; 
 
 /**
@@ -48,7 +48,7 @@ export const useForums = (userId) => {
    * @param {string} forumId - The ID of the target forum.
    * @param {boolean} isCurrentlyFollowing - True if the user is currently subscribed, false otherwise.
    */
-  const toggleFollowForum = async (forumId, isCurrentlyFollowing) => {
+  const toggleFollowForum = async (forumId,forumName, isCurrentlyFollowing) => {
     // Safety Guard: Ensure there is an authenticated user before making cloud changes
     if (!userId) {
       console.warn("Cannot toggle forum subscription: No authenticated userId provided.");
@@ -59,12 +59,18 @@ export const useForums = (userId) => {
     const userDocRef = doc(db, 'users', userId);
 
     try {
-      // Use atomic field updates to prevent data overwrites across different screens
-      await updateDoc(userDocRef, {
-        followedForums: isCurrentlyFollowing 
-          ? arrayRemove(forumId) // If already following, atomically remove the forum ID
-          : arrayUnion(forumId)  // If not following, atomically append the forum ID
-      });
+      if (isCurrentlyFollowing) {
+        await updateDoc(userDocRef, {
+          [`followedForums.${forumId}`]: deleteField()
+        });
+      } else {
+        await updateDoc(userDocRef, {
+          [`followedForums.${forumId}`]: {
+            forumId: forumId,
+            forumName: forumName
+          }
+        });
+      }
       
     } catch (err) {
       console.error(`Error updating forum subscription for user ${userId}:`, err);
