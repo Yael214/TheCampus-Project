@@ -3,12 +3,23 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import CommentItem from './CommentItem';
 import { useComments } from '../hooks/useComments';
+import { useLikes } from '../hooks/useLikes';
 
 // Get the post from fid/ forum page
 function PostContainer({ post, showForumLink=true}) {
-  const { user } = useAuth();
+  const { currentUser: user } = useAuth();
   const [isOpen, setIsOpen] = useState(false); // does the post's comment section is open or closed
   const [rootCommentText, setRootCommentText] = useState('');
+
+  const isLiked = user && post.likedBy?.includes(user.uid);
+
+  const [liked, setLiked] = useState(isLiked);
+  const [likesCount, setLikesCount] = useState(post.likesCount || 0);
+
+  useEffect(() => {
+    setLiked(isLiked);
+    setLikesCount(post.likesCount || 0);
+  }, [isLiked, post.likesCount]);
 
   const { comments, loading, addComment } = useComments(post.id, isOpen);
 
@@ -16,6 +27,27 @@ function PostContainer({ post, showForumLink=true}) {
     e.preventDefault();
     await addComment(rootCommentText, user);
     setRootCommentText('');
+  };
+
+  const handleLikeClick = async () => {
+    if (!user) {
+      alert("היכנס לחשבון כדי לתת לייק");
+      return;
+    }
+    // Optimistic UI updates
+    const newLikedStatus = !liked;
+    setLiked(newLikedStatus);
+    setLikesCount(prev => newLikedStatus ? prev + 1 : prev - 1);
+
+    try {
+      await useLikes(post.id, user.uid, newLikedStatus);
+      console.log("Database updated successfully");
+    } catch (error) {
+      // Revert states if database operation fails
+      setLiked(!newLikedStatus);
+      setLikesCount(prev => !newLikedStatus ? prev + 1 : prev - 1);
+      console.error("Failed to update like in database", error);
+    }
   };
 
   // logic to separate root comments from replies (for simple nested display)
@@ -59,12 +91,18 @@ function PostContainer({ post, showForumLink=true}) {
             <span>💬</span>
             <span>{commentCount}</span>
           </span>
-          {post.likes != null && (
-            <span className="inline-flex items-center gap-1">
-              <span>👍🏼</span>
-              <span>{post.likes}</span>
-            </span>
-          )}
+          {/* Like button with dynamic styling based on liked status */}
+          <button 
+            onClick={handleLikeClick}
+            className={`inline-flex items-center gap-1 transition-all duration-200 active:scale-110 cursor-pointer ${
+              liked 
+                ? 'text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded-full' 
+                : 'hover:text-slate-600'
+            }`}
+          >
+            <span>{liked ? '👍' : '👍🏼'}</span>
+            <span>{likesCount}</span>
+          </button>
         </div>
       </div>
 
