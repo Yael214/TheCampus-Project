@@ -62,7 +62,7 @@ function NewPostModal({ isOpen, onClose, lockedForumId = null }) {
                 forumId: targetForumId,
                 forumName: chosenForum?.name || 'פורום קורס',
                 authorId: currentUser?.uid || 'anonymous-user',
-                authorName: currentUser?.displayName || 'סטודנט/ית',
+                authorName: currentUser?.fullName || 'סטודנט/ית',
                 createdAt: new Date(),
                 likesCount: 0,
                 commentsCount: 0,

@@ -8,22 +8,36 @@ import {
   signInWithPopup
 } from "firebase/auth";
 import { auth, db, storage } from "../firebase/config";
-import { getDoc, doc, setDoc } from "firebase/firestore";
+import { getDoc, doc, setDoc, updateDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useImageHandler } from "../hooks/useImageHandler";
+import { useUserData } from "../hooks/useUserData";
 
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [authUser, setAuthUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const { getFileExtension, uploadFileToStorage } = useImageHandler();
   
+  // Unified real-time user data listener from Firestore using custom hook
+  const { userData, loading: userDataLoading, error: userDataError, updateCourseStatus, updateUserVisibility, updateUserLocation } = useUserData(authUser?.uid);
+
+  // Merge auth data with Firestore user data into single object
+  const currentUser = authUser && userData 
+    ? { ...authUser, ...userData }
+    : authUser 
+    ? authUser 
+    : null;
+
+  // Combined loading state: includes both auth and Firestore data loading
+  const loading = authLoading || (authUser && userDataLoading);
+  
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setCurrentUser(user);
+      setAuthUser(user);
 
       if (user) {
         try {
@@ -41,7 +55,7 @@ export const AuthProvider = ({ children }) => {
       } else {
         setIsAdmin(false);
       }
-      setLoading(false);
+      setAuthLoading(false);
     });
 
     return () => unsubscribe();
@@ -102,11 +116,14 @@ export const AuthProvider = ({ children }) => {
     return signInWithPopup(auth, provider);
    
   };
-  const logout = () => {
+  const logout = async () => {
+    // Reset state immediately to null before signOut completes
+    // This ensures useUserData's cleanup effect unsubscribes from Firestore listener
+    setAuthUser(null);
     return signOut(auth);
   };
 
-  const value = { currentUser, loading, loginWithGoogle, isAdmin, signup, login, logout };
+  const value = { currentUser, loading, loginWithGoogle, isAdmin, signup, login, logout, updateCourseStatus, updateUserVisibility, updateUserLocation };
 
   return (
     <AuthContext.Provider value={value}>

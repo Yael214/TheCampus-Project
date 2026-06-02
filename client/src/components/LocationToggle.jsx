@@ -1,21 +1,17 @@
 import { useState, useEffect } from 'react';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
-import { useUserData } from '../hooks/useUserData';
 
 export const LocationToggle = ({ initialStatus }) => {
-  const { currentUser } = useAuth();
-  const { userData } = useUserData(currentUser?.uid);
+  const { currentUser, updateUserVisibility } = useAuth();
   const [isDiscoverable, setIsDiscoverable] = useState(initialStatus ?? false);
   const [updating, setUpdating] = useState(false);
 
-  // עדכן את ה state כשuserData משתנה (זה מתרחש כשמישהו שינה ב Firestore או בעמוד אחר)
+  // Sync local state with currentUser when Firestore data changes
   useEffect(() => {
-    if (userData?.isDiscoverable !== undefined) {
-      setIsDiscoverable(userData.isDiscoverable);
+    if (currentUser?.isDiscoverable !== undefined) {
+      setIsDiscoverable(currentUser.isDiscoverable);
     }
-  }, [userData?.isDiscoverable]);
+  }, [currentUser?.isDiscoverable]);
 
   const handleToggle = async () => {
     if (!currentUser?.uid || updating) return;
@@ -25,14 +21,12 @@ export const LocationToggle = ({ initialStatus }) => {
     setUpdating(true);
 
     try {
-      // עדכן את Firestore
-      await updateDoc(doc(db, "users", currentUser.uid), {
-        isDiscoverable: newStatus
-      });
-      // onSnapshot listener will automatically update all components listening to this user
+      // Call updateUserVisibility from context to sync with Firestore
+      await updateUserVisibility(newStatus);
+      // Real-time listener automatically updates all subscribed components
     } catch (error) {
       console.error("Error updating isDiscoverable:", error);
-      // חזור לסטטוס הקודם במקרה שגיאה
+      // Rollback on error
       setIsDiscoverable(!newStatus);
     } finally {
       setUpdating(false);
