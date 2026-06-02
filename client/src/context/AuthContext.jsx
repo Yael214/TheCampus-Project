@@ -127,11 +127,11 @@ export const AuthProvider = ({ children }) => {
     const userDataForDeletion = userData;
 
     try {
-      // STEP 1: Delete from Auth first as a security barrier
-      // If this fails with auth/requires-recent-login, user needs to re-authenticate
-      await authUser.delete();
+      // STEP 1: Pre-verification - check if session is valid/fresh
+      // This throws auth/requires-recent-login early if re-authentication is needed
+      await authUser.getIdToken(true);
 
-      // STEP 2: If auth deletion succeeded, delete uploaded files from Storage
+      // STEP 2: Delete uploaded files from Storage while still authenticated
       if (userDataForDeletion?.profileImage || userDataForDeletion?.studyApproval) {
         const fileUrls = [userDataForDeletion.profileImage, userDataForDeletion.studyApproval].filter(Boolean);
         await Promise.allSettled(
@@ -139,8 +139,11 @@ export const AuthProvider = ({ children }) => {
         );
       }
 
-      // STEP 3: Finally, delete the Firestore user document
+      // STEP 3: Delete Firestore user document while still authenticated
       await deleteDoc(doc(db, "users", userId));
+
+      // STEP 4: Finally delete from Auth as the last step
+      await authUser.delete();
 
       // Reset auth state to trigger cleanup in useUserData hook
       setAuthUser(null);

@@ -97,7 +97,7 @@ function Profile() {
         
         try {
             // Call centralized deletion function from context
-            // This handles auth deletion first as a security barrier, then storage and firestore
+            // Execution order: verify session → delete storage → delete firestore → delete auth
             await deleteAccountComplete();
             
             setDeleteSuccess(true);
@@ -106,7 +106,7 @@ function Profile() {
         } catch (error) {
             console.error("Error executing account deletion:", error);
             
-            // Handle specific Firebase auth errors
+            // Handle specific Firebase auth errors early detection
             if (error.code === 'auth/requires-recent-login') {
                 setDeleteError('For security, please log out, sign in again, and retry deletion.');
             } else {
