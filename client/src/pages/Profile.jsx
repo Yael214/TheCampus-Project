@@ -1,16 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { doc, updateDoc } from "firebase/firestore";
 import { useForums } from '../hooks/useForums';
-import { ref, deleteObject } from 'firebase/storage';
-import { db, storage } from '../firebase/config';
+import { db } from '../firebase/config';
 import { useNavigate } from 'react-router-dom';
 import Loader from '../components/Loader';
 import AddressInput from '../components/AddressInput.jsx'; 
 
 function Profile() {
     // Get unified currentUser from context (includes auth + Firestore data)
-    const { currentUser, loading: authLoading } = useAuth();
+    const { currentUser, loading: authLoading, deleteAccountComplete } = useAuth();
     const targetUserId = currentUser?.uid;
     const navigate = useNavigate();
 
@@ -93,30 +92,25 @@ function Profile() {
     };
 
     const handleDeleteAccount = async () => {
-        if (!currentUser) return;
         setDeleteLoading(true);
         setDeleteError('');
         
         try {
-            // Delete uploaded files from storage
-            const fileUrls = [currentUser.profileImage, currentUser.studyApproval].filter(Boolean);
-            await Promise.allSettled(
-                fileUrls.map(url => deleteObject(ref(storage, url)))
-            );
-
-            // Delete user document from Firestore
-            await deleteDoc(doc(db, "users", currentUser.uid));
-            // Delete auth account
-            await currentUser.delete();
-
+            // Call centralized deletion function from context
+            // This handles auth deletion first as a security barrier, then storage and firestore
+            await deleteAccountComplete();
+            
             setDeleteSuccess(true);
+            // Redirect to login after success
             setTimeout(() => navigate('/login'), 2500);
         } catch (error) {
-            console.error("Error executing account purge sequence:", error);
+            console.error("Error executing account deletion:", error);
+            
+            // Handle specific Firebase auth errors
             if (error.code === 'auth/requires-recent-login') {
-                setDeleteError('לצורך אבטחה, יש להתנתק, להתחבר מחדש ולבצע את המחיקה.');
+                setDeleteError('For security, please log out, sign in again, and retry deletion.');
             } else {
-                setDeleteError('אירעה שגיאה במחיקת החשבון. נסה/י שוב.');
+                setDeleteError(error.message || 'An error occurred while deleting your account. Please try again.');
             }
             setShowDeleteConfirm(false); 
         } finally {
