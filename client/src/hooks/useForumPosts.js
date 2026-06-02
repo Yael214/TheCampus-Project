@@ -1,14 +1,13 @@
-import {useEffect, useState} from 'react';
-import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
+import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { useAuth } from '../context/AuthContext.jsx';
 
 export function useForumPosts(forumId) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [posts, setPosts] = useState([]);
-    const {currentUser} = useAuth();
 
+    // --- 1. קריאת פוסטים ---
     useEffect(() => {
         if (!forumId) {
             setPosts([]);
@@ -16,8 +15,13 @@ export function useForumPosts(forumId) {
             return;
         }
         setLoading(true);
-        const postsCollectionRef = collection(db, 'posts');
-        const q = query(postsCollectionRef, where('forumId', '==', forumId) ,orderBy('createdAt', 'desc'));
+        
+        // 🚨 שינוי 1: ניתוב לתת-קולקשן הנכון!
+        const postsCollectionRef = collection(db, 'forums', forumId, 'posts');
+        
+        // 🚨 שינוי 2: הסרנו את פקודת ה-where
+        const q = query(postsCollectionRef, orderBy('createdAt', 'desc'));
+        
         const unsubscribe = onSnapshot(q, (snapshot) => {
             if (snapshot.empty) {
                 setPosts([]);
@@ -41,5 +45,6 @@ export function useForumPosts(forumId) {
         return () => unsubscribe();
     }, [forumId]);
 
+    // החזר רק את קריאת הפוסטים - יצירת פוסט הועברה להוק נפרד
     return { posts, loading, error };
 }
