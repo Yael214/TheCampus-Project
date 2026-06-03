@@ -76,7 +76,7 @@ function Sidebar() {
                         {currentUser?.fullName || 'Student'}
                     </h3>
                     <p className="text-[#4F46E5] font-semibold opacity-70 text-sm">
-                        Year {currentUser?.year || 'A'} • {currentUser?.studyField || 'General Degree'}
+                        שנה {currentUser?.year || 'A'} • {currentUser?.studyField || 'General Degree'}
                     </p>
                 </div>
             </div>
