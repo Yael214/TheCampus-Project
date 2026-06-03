@@ -9,7 +9,7 @@ import { useUserForums } from '../hooks/useUserForums';
 
 function Sidebar() {
     // Get unified currentUser from context (includes auth + Firestore data)
-    const { currentUser } = useAuth();
+    const { currentUser , isAdmin} = useAuth();
     const { validateImage, getFileExtension, uploadFileToStorage, loading: imageLoading } = useImageHandler();
     const navigate = useNavigate();
 
@@ -174,14 +174,23 @@ function Sidebar() {
                     <span className="text-xl">👥</span>
                     <span>חיפוש שותפים</span>
                 </NavLink>
-
+                {isAdmin && (
+                    <NavLink
+                        to="/admin"
+                        className={({ isActive }) => `px-5 py-3.5 cursor-pointer flex items-center gap-3.5 rounded-[20px] transition-all
+                            ${isActive
+                                ? 'bg-white text-red-600 shadow-sm border border-white font-bold'
+                                : 'text-red-600 hover:bg-red-50/60 font-medium opacity-90'
+                            }`}
+                    >
+                        <span className="text-xl">⚙️</span>
+                        <span>פאנל ניהול אדמין</span>
+                    </NavLink>
+                )}
             </nav>
 
             {/* Bottom Menu - Location Toggle and Profile Navigation */}
             <div className="mt-auto flex flex-col gap-2 px-4">
-                <div className="px-5 py-2">
-                    {/*<LocationToggle initialStatus={userData?.isDiscoverable || false} />*/}
-                </div>
 
                 {/* Profile View Link Route Anchor */}
                 <NavLink
