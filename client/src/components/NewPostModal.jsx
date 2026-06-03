@@ -18,10 +18,10 @@ function NewPostModal({ isOpen, onClose, lockedForumId = null }) {
 
     const { forums: userCourses } = useUserForums();
 
-    // קובעים מהו הפורום הנוכחי (האם הוא נעול בנתיב או נבחר ידנית במודאל)
+    // Determine the current forum (locked to route or selected in modal)
     const targetForumId = lockedForumId || selectedForumId;
 
-    // 2. מפעילים את ההוק ליצירת פוסט בלבד
+    // Activate the post creation hook
     const { createPost } = useCreateForumPost(targetForumId);
 
     // Context synchronization: Handle if the modal is locked to a specific course route or floating free
@@ -57,10 +57,10 @@ function NewPostModal({ isOpen, onClose, lockedForumId = null }) {
 
         setLoading(true);
         try {
-            // מוצאים את האובייקט של הפורום הנבחר כדי לשלוף את השם שלו
+            // Find the selected forum object to extract its name
             const chosenForum = userCourses?.find(f => f.id === targetForumId);
             
-            // 3. משתמשים בפונקציה מההוק במקום ב-addDoc ישיר, ומתקנים את השדה ל-forumName
+            // Use the hook's createPost function instead of addDoc directly
             await createPost({
                 title,
                 content,
@@ -98,7 +98,7 @@ function NewPostModal({ isOpen, onClose, lockedForumId = null }) {
                                 className="w-full text-sm p-3.5 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:border-[#4F46E5] font-medium text-gray-700"
                             >
                                 {userCourses?.map(course => (
-                                    /* 4. תיקון תצוגת שם הקורס מ-course.name ל-course.forumName */
+                                    /* Display course name using forumName field */
                                     <option key={course.id} value={course.id}>{course.forumName}</option>
                                 ))}
                             </select>
