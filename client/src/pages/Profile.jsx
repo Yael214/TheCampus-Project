@@ -108,9 +108,9 @@ function Profile() {
             
             // Handle specific Firebase auth errors early detection
             if (error.code === 'auth/requires-recent-login') {
-                setDeleteError('For security, please log out, sign in again, and retry deletion.');
+                setDeleteError('מטעמי אבטחה, יש להתחבר מחדש לחשבון לפני ביצוע המחיקה.');
             } else {
-                setDeleteError(error.message || 'An error occurred while deleting your account. Please try again.');
+                setDeleteError('אירעה שגיאה בעת מחיקת חשבונך. אנא נסה שוב.');
             }
             setShowDeleteConfirm(false); 
         } finally {
