@@ -260,11 +260,11 @@ function Profile() {
             {/* Deletion Confirmation Modal Dialog */}
             {showDeleteConfirm && (
                 <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justify: 'center', zIndex: 1000 }}>
-                    <div style={{ background: 'white', borderRadius: '16px', padding: '32px', maxWidth: '400px', width: '90%', textAlign: 'center', fontFamily: 'Heebo, sans-serif' }} dir="rtl">
+                    <div style={{ background: 'white', borderRadius: '16px', padding: '32px', maxWidth: '400px', width: '90%', textAlign: 'center', fontFamily: 'Heebo, sans-serif', position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 1001 }} dir="rtl">
                         <div style={{ fontSize: '36px', marginBottom: '12px' }}>⚠️</div>
                         <h3 style={{ color: '#1A1A2E', fontSize: '18px', fontWeight: '800', margin: '0 0 12px 0' }}>מחיקת חשבון לצמיתות</h3>
                         <p style={{ color: '#6B7280', fontSize: '14px', lineHeight: '1.6', margin: '0 0 24px 0' }}>
-                            האם את/ה בטוח/ה? פעולה זו תמחק את החשבון שלך לצמיתות, כולל קבצים שהעלית, ולא ניתן יהיה לשחזר אותה.
+                            האם את/ה בטוח/ה? פעולה זו תמחק את החשבון שלך לצמיתות, ולא ניתן יהיה לשחזר אותה.
                         </p>
                         <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
                             <button
