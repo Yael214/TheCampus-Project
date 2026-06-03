@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useUserForums } from '../hooks/useUserForums';
 import { db } from '../firebase/config';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
-// Importing our shared modal and Shani's post container component
+import { collection, onSnapshot, query, orderBy, where } from 'firebase/firestore';
 import NewPostModal from '../components/NewPostModal';
 import PostContainer from '../components/PostContainer';
 import Loader from '../components/Loader';
@@ -18,17 +17,34 @@ function Feed() {
     const { forums: userCourses } = useUserForums();
 
     useEffect(() => {
+        // Clear feed and prevent fetching all posts when logged-in user has no courses
+        if (currentUser && userCourses && userCourses.length === 0) {
+            setPosts([]);
+            setLoading(false);
+            return;
+        }
+
         const postsCollectionRef = collection(db, 'posts');
-        const q = query(postsCollectionRef, orderBy('createdAt', 'desc'));
+        let q;
+
+        if (currentUser && userCourses && userCourses.length > 0) {
+            const courseIds = userCourses.map(course => course.id);
+            q = query(
+                postsCollectionRef, 
+                where('forumId', 'in', courseIds),
+                orderBy('createdAt', 'desc')
+            );
+        } else {
+            // Fallback query for guests or users with no active course subscriptions
+            q = query(postsCollectionRef, orderBy('createdAt', 'desc'));
+        }
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            if (!snapshot.empty) {
-                const activeFeeds = snapshot.docs.map(doc => ({
-                    postId: doc.id,
-                    ...doc.data()
-                }));
-                setPosts(activeFeeds);
-            }
+            const activeFeeds = snapshot.docs.map(doc => ({
+                postId: doc.id,
+                ...doc.data()
+            }));
+            setPosts(activeFeeds);
             setLoading(false);
         }, (err) => {
             console.log("Database permissions block handled. Rendering layout mockup views safely.");
@@ -36,7 +52,7 @@ function Feed() {
         });
 
         return () => unsubscribe();
-    }, []);
+    }, [currentUser, userCourses]);
 
     // Render loading spinner while fetching data
     if (loading) {

@@ -1,23 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useUserData } from '../hooks/useUserData';
-import { doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { doc, updateDoc } from "firebase/firestore";
 import { useForums } from '../hooks/useForums';
-import { ref, deleteObject } from 'firebase/storage';
-import { db, storage } from '../firebase/config';
+import { db } from '../firebase/config';
 import { useNavigate } from 'react-router-dom';
 import Loader from '../components/Loader';
 import AddressInput from '../components/AddressInput.jsx'; 
 
 function Profile() {
-    const { currentUser } = useAuth();
+    // Get unified currentUser from context (includes auth + Firestore data)
+    const { currentUser, loading: authLoading, deleteAccountComplete } = useAuth();
     const targetUserId = currentUser?.uid;
-    const { userData: cloudData, loading: dataLoading } = useUserData(targetUserId);
     const navigate = useNavigate();
 
     // Central subscription tracking hook built by Shani
     const { forums, isLoading: forumsLoading, toggleFollowForum } = useForums(targetUserId);
-    const followedForums = cloudData?.followedForums || {};
+    const followedForums = currentUser?.followedForums || {};
     
     const [tempData, setTempData] = useState({});
     const [tempLocation, setTempLocation] = useState(null); 
@@ -32,7 +30,7 @@ function Profile() {
     const [deleteError, setDeleteError] = useState('');
     const [deleteSuccess, setDeleteSuccess] = useState(false);
 
-    const display = isEditing ? tempData : (savedData || cloudData);
+    const display = isEditing ? tempData : (savedData || currentUser);
 
     const handleStartEdit = () => {
         setTempData({ ...display });
@@ -80,7 +78,7 @@ function Profile() {
             });
 
             setSavedData({ 
-                ...cloudData, 
+                ...currentUser, 
                 ...tempData, 
                 location: tempLocation 
             });
@@ -94,27 +92,25 @@ function Profile() {
     };
 
     const handleDeleteAccount = async () => {
-        if (!currentUser || !cloudData) return;
         setDeleteLoading(true);
         setDeleteError('');
         
         try {
-            const fileUrls = [cloudData.profileImage, cloudData.studyApproval].filter(Boolean);
-            await Promise.allSettled(
-                fileUrls.map(url => deleteObject(ref(storage, url)))
-            );
-
-            await deleteDoc(doc(db, "users", currentUser.uid));
-            await currentUser.delete();
-
+            // Call centralized deletion function from context
+            // Execution order: verify session → delete storage → delete firestore → delete auth
+            await deleteAccountComplete();
+            
             setDeleteSuccess(true);
+            // Redirect to login after success
             setTimeout(() => navigate('/login'), 2500);
         } catch (error) {
-            console.error("Error executing account purge sequence:", error);
+            console.error("Error executing account deletion:", error);
+            
+            // Handle specific Firebase auth errors early detection
             if (error.code === 'auth/requires-recent-login') {
-                setDeleteError('לצורך אבטחה, יש להתנתק, להתחבר מחדש ולבצע את המחיקה.');
+                setDeleteError('מטעמי אבטחה, יש להתחבר מחדש לחשבון לפני ביצוע המחיקה.');
             } else {
-                setDeleteError('אירעה שגיאה במחיקת החשבון. נסה/י שוב.');
+                setDeleteError('אירעה שגיאה בעת מחיקת חשבונך. אנא נסה שוב.');
             }
             setShowDeleteConfirm(false); 
         } finally {
@@ -122,8 +118,8 @@ function Profile() {
         }
     };
 
-    if (dataLoading) return <Loader text="טוען פרופיל... 🎓" />;
-    if (!cloudData) return (
+    if (authLoading) return <Loader text="טוען פרופיל... 🎓" />;
+    if (!currentUser) return (
         <div style={{ textAlign: 'center', padding: '60px', fontFamily: 'Heebo, sans-serif' }}>
             <h2>המשתמש לא נמצא</h2>
         </div>
@@ -160,10 +156,10 @@ function Profile() {
 
                 {/* Core User Details */}
                 <div style={grid}>
-                    <Field label="שם מלא" value={cloudData.fullName} />
-                    <Field label="תעודת זהות" value={cloudData.idNumber} />
+                    <Field label="שם מלא" value={currentUser.fullName} />
+                    <Field label="תעודת זהות" value={currentUser.idNumber} />
                     <Field label="אימייל" value={currentUser?.email} />
-                    <Field label="מגדר" value={cloudData.gender} />
+                    <Field label="מגדר" value={currentUser.gender} />
                 </div>
 
                 <div style={divider} />

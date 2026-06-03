@@ -1,17 +1,15 @@
 import { useState } from 'react';
 import UserImage from './UserProfile';
 import { useAuth } from '../context/AuthContext';
-import { useUserData } from '../hooks/useUserData';
-import { db, storage } from '../firebase/config'; 
+import { db } from '../firebase/config'; 
 import { doc, updateDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'; 
 import { useImageHandler } from '../hooks/useImageHandler';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useUserForums } from '../hooks/useUserForums';
 
 function Sidebar() {
+    // Get unified currentUser from context (includes auth + Firestore data)
     const { currentUser } = useAuth();
-    const { userData } = useUserData(currentUser?.uid);
     const { validateImage, getFileExtension, uploadFileToStorage, loading: imageLoading } = useImageHandler();
     const navigate = useNavigate();
 
@@ -19,10 +17,10 @@ function Sidebar() {
     const [isCoursesOpen, setIsCoursesOpen] = useState(false);
     const [courseSearch, setCourseSearch] = useState('');
 
-    // Fetching user-enrolled courses directly from the database hook
+    // Fetching user-enrolled courses from the database hook
     const { forums, loading: forumsLoading } = useUserForums() || { forums: [], loading: false };
 
-    // Alphabetical sorting and real-time query filtering for the courses dropdown
+    // Sort alphabetically and filter courses based on search input
     const sortedForums = [...(forums || [])].sort((a, b) => a.forumName.localeCompare(b, 'he'));
 
     const filteredForums = sortedForums.filter(forum => 
@@ -34,7 +32,7 @@ function Sidebar() {
         const file = e.target.files[0];
         if (!file || !currentUser?.uid) return;
 
-        // validate image extension
+        // Validate image extension before upload
         if (!validateImage(file)) {
             alert("Please select a valid image file (png, jpg, jpeg, webp).");
             return;
@@ -49,7 +47,7 @@ function Sidebar() {
             const downloadURL = await uploadFileToStorage(file, storagePath);
 
             if (downloadURL) {
-                // Update Firestore using your preferred field name: profileImage
+                // Update Firestore with the new profile image URL
                 await updateDoc(doc(db, "users", currentUser.uid), { 
                     profileImage: downloadURL 
                 });
@@ -67,18 +65,18 @@ function Sidebar() {
             {/* Small profile card */}
             <div className="px-6 pb-8 flex flex-col items-center border-b border-gray-100 mb-6 text-center">
                 <UserImage
-                    image={userData?.profileImage}
-                    fullName={userData?.fullName}
+                    image={currentUser?.profileImage}
+                    fullName={currentUser?.fullName}
                     onImageChange={handleImageChange}
                     onImageClick={() => navigate('/profile')}
                 />
-                {imageLoading && <p style={{ color: '#4F46E5', fontSize: '13px', marginTop: '6px' }}>Uploading image...</p>}
+                {imageLoading && <p style={{ color: '#4F46E5', fontSize: '13px', marginTop: '6px' }}>טוען תמונה...</p>}
                 <div className="mt-4">
                     <h3 className="font-bold text-[#2C3E7A] text-xl">
-                        {userData?.fullName || 'Student'}
+                        {currentUser?.fullName || 'Student'}
                     </h3>
                     <p className="text-[#4F46E5] font-semibold opacity-70 text-sm">
-                        Year {userData?.year || 'A'} • {userData?.studyField || 'General Degree'}
+                        שנה {currentUser?.year || 'A'} • {currentUser?.studyField || 'General Degree'}
                     </p>
                 </div>
             </div>
@@ -138,7 +136,7 @@ function Sidebar() {
                             
                             {/* Scrollable courses collection viewport */}
                             <div className="overflow-y-auto flex-1 space-y-1 pr-1">
-                                {forumsLoading && <p className="text-xs text-gray-400 text-center py-2">Loading courses...</p>}
+                                {forumsLoading && <p className="text-xs text-gray-400 text-center py-2">טוען קורסים...</p>}
                                 
                                 {!forumsLoading && filteredForums.map((forum) => (
                                     <NavLink
