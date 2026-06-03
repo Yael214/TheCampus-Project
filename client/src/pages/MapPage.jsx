@@ -4,25 +4,23 @@ import PartnerCard from './PartnerCard.jsx';
 import MapContainer from '../components/map/MapContainer.jsx';
 import { useNearbyUsers } from '../hooks/useNearbyUsers';
 import { useAuth } from '../context/AuthContext.jsx';
-import { useUserData } from '../hooks/useUserData';
 import { LocationToggle } from '../components/LocationToggle.jsx';
 
 const DEFAULT_CENTER = { lat: 31.788, lng: 35.2112 };
 
 function MapPage() {
+  // Get unified currentUser from context (includes auth + Firestore data)
   const { currentUser } = useAuth();
-  const { userData } = useUserData(currentUser?.uid);
-  const isDiscoverable = userData?.isDiscoverable ?? false;
+  const isDiscoverable = currentUser?.isDiscoverable ?? false;
   
-  // Get user's location from database, fallback to default if not available
-  //const userCenter = userData?.location ? { lat: userData.location.lat, lng: userData.location.lng } : null;
+  // Get user's location from currentUser, fallback to default if not available
   const userCenter = useMemo(() => {
-  return userData?.location ? { lat: userData.location.lat, lng: userData.location.lng } : DEFAULT_CENTER;
-}, [userData?.location?.lat, userData?.location?.lng]);
+    return currentUser?.location ? { lat: currentUser.location.lat, lng: currentUser.location.lng } : DEFAULT_CENTER;
+  }, [currentUser?.location?.lat, currentUser?.location?.lng]);
 
   const [tempRadius, setTempRadius] = useState(10);
-  const [searchRadius, setSearchRadius] = useState(null); // ← נתחיל עם null
-  const [hasSearched, setHasSearched] = useState(false); // ← עקוב אם הפעילו חיפוש
+  const [searchRadius, setSearchRadius] = useState(null); // Initialized as null for lazy loading
+  const [hasSearched, setHasSearched] = useState(false); // Track if user has initiated search
 
   const [selectedPartner, setSelectedPartner] = useState(null);
   // const [selectedCourse, setSelectedCourse] = useState('כל הקורסים'); // This state is for future implementation of course filtering
@@ -32,7 +30,7 @@ function MapPage() {
   // Track previous isDiscoverable value to detect actual toggles (not just re-renders)
   const prevIsDiscoverableRef = useRef(isDiscoverable);
   
-  // אפס את החיפוש והתוצאות רק כשמשתמש בעצם מכבה את שיתוף המיקום (true → false)
+  // Reset search and results only when user disables location sharing (true → false)
   useEffect(() => {
     if (prevIsDiscoverableRef.current === true && !isDiscoverable) {
       setSearchRadius(null);
@@ -41,8 +39,9 @@ function MapPage() {
     }
     prevIsDiscoverableRef.current = isDiscoverable;
   }, [isDiscoverable]);
-  // The hook to fetch nearby users based on location and radius
-  // ← רק תרוץ אם searchRadius לא null (כלומר, לאחר לחיצה על חיפוש)
+  
+  // Hook to fetch nearby users based on location and radius
+  // Only runs if searchRadius is not null (i.e., after clicking search)
   const { nearbyUsers, loading, error } = useNearbyUsers(userCenter, searchRadius, currentUser?.uid); 
 
   // Filter partners with valid location
@@ -64,10 +63,11 @@ function MapPage() {
 
   const handleSearchSubmit = () => {
     if (!isDiscoverable) {
-      return; // לא תן לחפש אם לא אישרו מיקום
+      return; // Cannot search if location sharing is not enabled
     }
-    setSearchRadius(tempRadius); // Update the search radius which will trigger the useNearbyUsers hook to refetch data
-    setHasSearched(true); // סמן שהפעילו חיפוש
+    // Update the search radius which will trigger the useNearbyUsers hook to refetch data
+    setSearchRadius(tempRadius);
+    setHasSearched(true); // Mark that search was initiated
   };
 
   const handlePartnerSelect = (partner) => {
@@ -98,7 +98,7 @@ function MapPage() {
           <div className="panel">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2>סינון</h2>
-              <LocationToggle initialStatus={userData?.isDiscoverable || false} />
+              <LocationToggle initialStatus={currentUser?.isDiscoverable || false} />
             </div>
             <p>בחר קורסים, מרחק וזמינות.</p>
             <div className="filters">
