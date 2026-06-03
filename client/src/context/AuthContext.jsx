@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }) => {
   const currentUser = authUser && userData
     ? { ...authUser, ...userData, emailVerified: authUser.emailVerified }
     : authUser
-      ? { ...authUser, emailVerified: authUser.emailVerified }
+      ? { ...authUser, emailVerified: authUser.emailVerified, isAdmin }
       : null;
 
   // Combined loading state: includes both auth and Firestore data loading
@@ -42,15 +42,14 @@ export const AuthProvider = ({ children }) => {
 
       if (user) {
         try {
-          const userDoc = await getDoc(doc(db, "users", user.uid));
-          // Check if the user is an admin 
-          if (userDoc.exists() && userDoc.data().role === "admin") {
+          const idTokenResult = await user.getIdTokenResult();
+          if (idTokenResult.claims.role === "admin") {
             setIsAdmin(true);
           } else {
             setIsAdmin(false);
           }
         } catch (error) {
-          console.error("Error fetching user document:", error);
+          console.error("Error fetching token claims:", error);
           setIsAdmin(false);
         }
       } else {

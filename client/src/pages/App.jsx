@@ -16,6 +16,7 @@ import Courses from './Courses.jsx';
 import Topbar from '../components/Topbar.jsx';
 import Sidebar from '../components/Sidebar.jsx';
 import EmailVerificationPage from '../components/EmailVerificationPage.jsx';
+import AdminDashboard from '../components/AdminDashboard.jsx';
 
 function ProtectedLayout() {
   const { currentUser, isAdmin} = useAuth();

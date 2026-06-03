@@ -184,7 +184,7 @@ function Sidebar() {
                             }`}
                     >
                         <span className="text-xl">⚙️</span>
-                        <span>פאנל ניהול אדמין</span>
+                        <span>מפקדת הקמפוס</span>
                     </NavLink>
                 )}
             </nav>
