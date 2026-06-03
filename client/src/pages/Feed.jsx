@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useUserForums } from '../hooks/useUserForums';
 import { db } from '../firebase/config';
-import { collection, onSnapshot, query, orderBy,where } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, where } from 'firebase/firestore';
 import NewPostModal from '../components/NewPostModal';
 import PostContainer from '../components/PostContainer';
 import Loader from '../components/Loader';
@@ -17,6 +17,13 @@ function Feed() {
     const { forums: userCourses } = useUserForums();
 
     useEffect(() => {
+        // Clear feed and prevent fetching all posts when logged-in user has no courses
+        if (currentUser && userCourses && userCourses.length === 0) {
+            setPosts([]);
+            setLoading(false);
+            return;
+        }
+
         const postsCollectionRef = collection(db, 'posts');
         let q;
 
@@ -33,13 +40,11 @@ function Feed() {
         }
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            if (!snapshot.empty) {
-                const activeFeeds = snapshot.docs.map(doc => ({
-                    postId: doc.id,
-                    ...doc.data()
-                }));
-                setPosts(activeFeeds);
-            }
+            const activeFeeds = snapshot.docs.map(doc => ({
+                postId: doc.id,
+                ...doc.data()
+            }));
+            setPosts(activeFeeds);
             setLoading(false);
         }, (err) => {
             console.log("Database permissions block handled. Rendering layout mockup views safely.");
