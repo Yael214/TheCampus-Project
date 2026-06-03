@@ -18,7 +18,7 @@ export default function useCreateForumPost(forumId) {
             likedBy: [],
             commentsCount: 0,
             authorId: postData.authorId || currentUser?.uid || 'anonymous-user',
-            authorName: postData.authorName || currentUser?.displayName || 'סטודנט/ית',
+            authorName: postData.authorName || currentUser?.fullName || 'סטודנט/ית',
         };
 
         const docRef = await addDoc(postsCollectionRef, payload);
