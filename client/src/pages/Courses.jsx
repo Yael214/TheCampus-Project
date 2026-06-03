@@ -46,7 +46,7 @@ function UploadMaterialModal({ isOpen, onClose }) {
 }
 
 function Courses() {
-    const { user: currentUser } = useAuth();
+    const { currentUser } = useAuth();
     const params = useParams();
     const rawForumId = params.forumId; 
 
