@@ -70,7 +70,7 @@ function Sidebar() {
                     onImageChange={handleImageChange}
                     onImageClick={() => navigate('/profile')}
                 />
-                {imageLoading && <p style={{ color: '#4F46E5', fontSize: '13px', marginTop: '6px' }}>Uploading image...</p>}
+                {imageLoading && <p style={{ color: '#4F46E5', fontSize: '13px', marginTop: '6px' }}>טוען תמונה...</p>}
                 <div className="mt-4">
                     <h3 className="font-bold text-[#2C3E7A] text-xl">
                         {currentUser?.fullName || 'Student'}
@@ -136,7 +136,7 @@ function Sidebar() {
                             
                             {/* Scrollable courses collection viewport */}
                             <div className="overflow-y-auto flex-1 space-y-1 pr-1">
-                                {forumsLoading && <p className="text-xs text-gray-400 text-center py-2">Loading courses...</p>}
+                                {forumsLoading && <p className="text-xs text-gray-400 text-center py-2">טוען קורסים...</p>}
                                 
                                 {!forumsLoading && filteredForums.map((forum) => (
                                     <NavLink
