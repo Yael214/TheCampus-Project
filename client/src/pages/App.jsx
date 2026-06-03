@@ -15,10 +15,18 @@ import Courses from './Courses.jsx';
 // Layout elements
 import Topbar from '../components/Topbar.jsx';
 import Sidebar from '../components/Sidebar.jsx';
+import EmailVerificationPage from '../components/EmailVerificationPage.jsx';
 
 function ProtectedLayout() {
-  const {user} = useAuth();
-
+  const { currentUser } = useAuth();
+  // 1. If there is NO user logged in, redirect them to the login page immediately
+  if (!currentUser) {
+    return <Navigate to="/login" replace />;
+  }
+  // 2. If the user IS logged in but hasn't verified their email, block them here until they verify
+  if (currentUser && !currentUser.emailVerified) {
+    return <EmailVerificationPage />;
+  }
   return (
     <div style={{ direction: 'rtl', minHeight: '100vh', backgroundColor: '#F0F2FA', fontFamily: 'Heebo, sans-serif' }}>
       <Topbar />
@@ -40,16 +48,16 @@ function ProtectedLayout() {
 }
 
 function App() {
-  const { user } = useAuth();
-  
+  const { currentUser } = useAuth();
+
   // If user is logged in, the default layout with the Topbar and Sidebar is displayed.
   return (
     <div className="App">
       <Routes>
         {/* Public paths (only for those who are not logged in) */}
         {/* If a logged in user tries to log in, we will send them straight to Lapid. */}
-        <Route path="/login" element={user ? <Navigate to="/feed" replace /> : <Login />} />
-        <Route path="/register" element={user ? <Navigate to="/feed" replace /> : <Register />} />
+        <Route path="/login" element={currentUser ? <Navigate to="/feed" replace /> : <Login />} />
+        <Route path="/register" element={currentUser ? <Navigate to="/feed" replace /> : <Register />} />
         <Route path="/reset" element={<Reset />} />
         <Route path="/success" element={<Success />} />
 

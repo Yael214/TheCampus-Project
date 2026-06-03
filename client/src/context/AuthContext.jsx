@@ -5,7 +5,8 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  sendEmailVerification
 } from "firebase/auth";
 import { auth, db, storage } from "../firebase/config";
 import { getDoc, doc, setDoc, updateDoc, deleteDoc } from "firebase/firestore";
@@ -27,9 +28,9 @@ export const AuthProvider = ({ children }) => {
 
   // Merge auth data with Firestore user data into single object
   const currentUser = authUser && userData
-    ? { ...authUser, ...userData }
+    ? { ...authUser, ...userData, emailVerified: authUser.emailVerified }
     : authUser
-      ? authUser
+      ? { ...authUser, emailVerified: authUser.emailVerified }
       : null;
 
   // Combined loading state: includes both auth and Firestore data loading
@@ -103,7 +104,8 @@ export const AuthProvider = ({ children }) => {
       role: "user", // הגדרת תפקיד ברירת מחדל
       createdAt: new Date()
     });
-
+    // Send initial verification email automatically on signup
+    await sendEmailVerification(user);
     return userCredential;
   };
 
