@@ -35,4 +35,4 @@ dist-ssr/
 Thumbs.db
 theCampus-HTMLpages
 Courses_TheOU.html
-script/serviceAccountKey.json
+scripts/serviceAccountKey.json
