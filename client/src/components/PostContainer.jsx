@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import CommentItem from './CommentItem';
 import { useComments } from '../hooks/useComments';
 import { useLikes } from '../hooks/useLikes';
+import { doc, deleteDoc } from 'firebase/firestore'; 
+import { db } from '../firebase/config';
 
 // Get the post from fid/ forum page
 function PostContainer({ post, showForumLink=true}) {
@@ -15,6 +17,11 @@ function PostContainer({ post, showForumLink=true}) {
 
   const [liked, setLiked] = useState(isLiked);
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
+
+  // Check if current user is the author or an admin to allow deletion
+  const isAuthor = user?.uid === post.authorId;
+  const isAdmin = user?.role === 'admin';
+  const canDelete = isAuthor || isAdmin;
 
   useEffect(() => {
     setLiked(isLiked);
@@ -47,6 +54,20 @@ function PostContainer({ post, showForumLink=true}) {
       setLiked(!newLikedStatus);
       setLikesCount(prev => !newLikedStatus ? prev + 1 : prev - 1);
       console.error("Failed to update like in database", error);
+    }
+  };
+
+  // Handle post deletion
+  const handleDelete = async () => {
+    const confirmDelete = window.confirm("האם את בטוחה שברצונך למחוק את הפוסט?");
+    if (!confirmDelete) return;
+
+    try {
+      const postRef = doc(db, 'posts', post.postId);
+      await deleteDoc(postRef);
+      console.log("Post deleted successfully");
+    } catch (error) {
+      console.error("Error deleting post:", error);
     }
   };
 
@@ -106,12 +127,24 @@ function PostContainer({ post, showForumLink=true}) {
         </div>
       </div>
 
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="text-sm font-semibold text-slate-600 hover:text-slate-900"
-      >
-        {isOpen ? 'הסתר תגובות' : `הצג תגובות (${commentCount})`}
-      </button>
+      <div className="flex justify-between items-center mt-2">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="text-sm font-semibold text-slate-600 hover:text-slate-900"
+        >
+          {isOpen ? 'הסתר תגובות' : `הצג תגובות (${commentCount})`}
+        </button>
+
+        {/* Delete post button conditionally rendered */}
+        {canDelete && (
+          <button 
+            onClick={handleDelete}
+            className="text-sm font-medium text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition"
+          >
+            מחק פוסט 
+          </button>
+        )}
+      </div>
 
       {isOpen && (
         <div className="mt-4 pt-4 border-t border-slate-200/70 bg-slate-50 p-3 rounded-2xl">
@@ -147,7 +180,6 @@ function PostContainer({ post, showForumLink=true}) {
 }
 
 export default PostContainer;
-
 
 function formatTimeAgo(dateInput) {
   if (!dateInput) return '';
