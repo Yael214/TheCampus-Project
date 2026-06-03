@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
 export function useForumPosts(forumId) {
@@ -7,7 +7,7 @@ export function useForumPosts(forumId) {
     const [error, setError] = useState(null);
     const [posts, setPosts] = useState([]);
 
-    // --- 1. קריאת פוסטים ---
+    // Fetch posts from the global posts collection, filtered by forumId
     useEffect(() => {
         if (!forumId) {
             setPosts([]);
@@ -16,11 +16,9 @@ export function useForumPosts(forumId) {
         }
         setLoading(true);
         
-        // 🚨 שינוי 1: ניתוב לתת-קולקשן הנכון!
-        const postsCollectionRef = collection(db, 'forums', forumId, 'posts');
-        
-        // 🚨 שינוי 2: הסרנו את פקודת ה-where
-        const q = query(postsCollectionRef, orderBy('createdAt', 'desc'));
+        // Query the root 'posts' collection and filter by forumId
+        const postsCollectionRef = collection(db, 'posts');
+        const q = query(postsCollectionRef, where('forumId', '==', forumId), orderBy('createdAt', 'desc'));
         
         const unsubscribe = onSnapshot(q, (snapshot) => {
             if (snapshot.empty) {
@@ -45,6 +43,6 @@ export function useForumPosts(forumId) {
         return () => unsubscribe();
     }, [forumId]);
 
-    // החזר רק את קריאת הפוסטים - יצירת פוסט הועברה להוק נפרד
+    // Return read-only posts (post creation is handled by useCreateForumPost)
     return { posts, loading, error };
 }

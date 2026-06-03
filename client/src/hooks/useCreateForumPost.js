@@ -8,9 +8,11 @@ export default function useCreateForumPost(forumId) {
     const createPost = async (postData) => {
         if (!forumId) throw new Error('Missing forumId to create post');
 
-        const postsCollectionRef = collection(db, 'forums', forumId, 'posts');
+        // Write to the global 'posts' collection (not a subcollection)
+        const postsCollectionRef = collection(db, 'posts');
         const payload = {
             ...postData,
+            forumId: forumId,
             createdAt: serverTimestamp(),
             likesCount: 0,
             likedBy: [],
