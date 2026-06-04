@@ -10,7 +10,7 @@ import PostContainer from '../components/PostContainer';
 import MaterialsSidebar from '../components/MaterialsSidebar'
      
 function Courses() {
-    const { currentUser } = useAuth();
+    const { currentUser, isAdmin } = useAuth();
     const params = useParams();
     const rawForumId = params.forumId; 
 
@@ -118,7 +118,8 @@ function Courses() {
                             <PostContainer 
                                 key={post.postId} 
                                 post={post} 
-                                showForumLink={false} 
+                                showForumLink={false}
+                                isAdmin={isAdmin} 
                             />
                         ))
                     )}
