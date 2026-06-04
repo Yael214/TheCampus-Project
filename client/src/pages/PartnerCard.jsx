@@ -7,7 +7,7 @@ const PartnerCard = ({ name, distance, tags, phone }) => {
         <button 
             className="btn" 
             onClick={(e) => {
-              e.stopPropagation(); // מונע את בחירת הכרטיס במפה כשלוחצים על הכפתור
+              e.stopPropagation(); // Prevents the card from being selected on the map when the button is pressed
               if (phone) {
                 const cleanPhone = phone.startsWith('0') ? '972' + phone.slice(1) : phone;
                 window.open(`https://wa.me/${cleanPhone}`, '_blank');
