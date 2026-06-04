@@ -7,18 +7,19 @@ export default function useCreateForumPost(forumId) {
 
     const createPost = async (postData) => {
         if (!forumId) throw new Error('Missing forumId to create post');
+        if (!currentUser?.uid) throw new Error('User must be signed in to create a post');
 
         // Write to the global 'posts' collection (not a subcollection)
         const postsCollectionRef = collection(db, 'posts');
         const payload = {
             ...postData,
-            forumId: forumId,
+            forumId,
             createdAt: serverTimestamp(),
             likesCount: 0,
             likedBy: [],
             commentsCount: 0,
-            authorId: postData.authorId || currentUser?.uid || 'anonymous-user',
-            authorName: postData.authorName || currentUser?.fullName || 'סטודנט/ית',
+            authorId: currentUser.uid,
+            authorName: postData.authorName || currentUser.fullName || currentUser.displayName || 'סטודנט/ית',
         };
 
         const docRef = await addDoc(postsCollectionRef, payload);
