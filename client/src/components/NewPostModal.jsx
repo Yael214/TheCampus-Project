@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useUserForums } from '../hooks/useUserForums';
-import { db } from '../firebase/config';
-import { collection, addDoc } from 'firebase/firestore';
+import useCreateForumPost from '../hooks/useCreateForumPost'; // use the create-only hook
 
 // Global standalone Modal for dynamic post creation across Feed and specific Course views
 function NewPostModal({ isOpen, onClose, lockedForumId = null }) {
@@ -18,6 +17,12 @@ function NewPostModal({ isOpen, onClose, lockedForumId = null }) {
     const [selectedFileName, setSelectedFileName] = useState('');
 
     const { forums: userCourses } = useUserForums();
+
+    // Determine the current forum (locked to route or selected in modal)
+    const targetForumId = lockedForumId || selectedForumId;
+
+    // Activate the post creation hook
+    const { createPost } = useCreateForumPost(targetForumId);
 
     // Context synchronization: Handle if the modal is locked to a specific course route or floating free
     useEffect(() => {
@@ -48,26 +53,20 @@ function NewPostModal({ isOpen, onClose, lockedForumId = null }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const targetForumId = lockedForumId || selectedForumId;
         if (!title || !content || !targetForumId || loading) return;
 
         setLoading(true);
         try {
-            // Locate dynamic textual metadata descriptors
+            // Find the selected forum object to extract its name
             const chosenForum = userCourses?.find(f => f.id === targetForumId);
             
-            await addDoc(collection(db, 'posts'), {
+            // Use the hook's createPost function instead of addDoc directly
+            await createPost({
                 title,
                 content,
                 forumId: targetForumId,
-                forumName: chosenForum?.name || 'פורום קורס',
-                authorId: currentUser?.uid || 'anonymous-user',
-                authorName: currentUser?.fullName || 'סטודנט/ית',
-                createdAt: new Date(),
-                likesCount: 0,
-                commentsCount: 0,
+                forumName: chosenForum?.forumName || 'פורום קורס',
                 saveToMaterials: isSavedToMaterials,
-                likedBy: []
             });
 
             setTitle('');
@@ -99,7 +98,8 @@ function NewPostModal({ isOpen, onClose, lockedForumId = null }) {
                                 className="w-full text-sm p-3.5 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:border-[#4F46E5] font-medium text-gray-700"
                             >
                                 {userCourses?.map(course => (
-                                    <option key={course.id} value={course.id}>{course.name}</option>
+                                    /* Display course name using forumName field */
+                                    <option key={course.forumId} value={course.forumId}>{course.forumName}</option>
                                 ))}
                             </select>
                         </div>
