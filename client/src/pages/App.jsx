@@ -16,9 +16,10 @@ import Courses from './Courses.jsx';
 import Topbar from '../components/Topbar.jsx';
 import Sidebar from '../components/Sidebar.jsx';
 import EmailVerificationPage from '../components/EmailVerificationPage.jsx';
+import AdminDashboard from '../components/AdminDashboard.jsx';
 
 function ProtectedLayout() {
-  const { currentUser } = useAuth();
+  const { currentUser, isAdmin} = useAuth();
   // 1. If there is NO user logged in, redirect them to the login page immediately
   if (!currentUser) {
     return <Navigate to="/login" replace />;
@@ -40,6 +41,7 @@ function ProtectedLayout() {
             <Route path="/partners" element={<MapPage />} />
             <Route path="/forum/:forumId" element={<Courses />} />
             {/* /courses will be here in next sprint */}
+            <Route path="/admin" element={isAdmin ? <AdminDashboard /> : <Navigate to="/feed" replace />} />
           </Routes>
         </main>
       </div>
@@ -48,8 +50,8 @@ function ProtectedLayout() {
 }
 
 function App() {
-  const { currentUser } = useAuth();
-
+  const { currentUser, isAdmin } = useAuth();
+  
   // If user is logged in, the default layout with the Topbar and Sidebar is displayed.
   return (
     <div className="App">
