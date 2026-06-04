@@ -93,8 +93,8 @@ function Register() {
     // valid phone number check
     if (!formData.phone) {
       tempErrors.phone = "חובה להזין מספר טלפון";
-    } else if (!/^\d{9,10}$/.test(formData.phone.replace(/[-]/g, ''))) {
-      tempErrors.phone = "מספר טלפון לא תקין (צריך להכיל 9 או 10 ספרות)";
+    } else if (!/^05\d{8}$/.test(formData.phone.replace(/[-]/g, ''))) {
+      tempErrors.phone = "מספר טלפון לא תקין (צריך להכיל 10 ספרות ולהתחיל ב 05)";
     }
 
     // The address is only valid if the user actually picked a place from the dropdown

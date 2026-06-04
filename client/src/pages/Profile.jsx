@@ -29,13 +29,16 @@ function Profile() {
     const [deleteLoading, setDeleteLoading] = useState(false);
     const [deleteError, setDeleteError] = useState('');
     const [deleteSuccess, setDeleteSuccess] = useState(false);
+    const [profileErrors, setProfileErrors] = useState({});
 
     const display = isEditing ? tempData : (savedData || currentUser);
 
     const handleStartEdit = () => {
-        setTempData({ ...display });
-        setTempLocation(display.location || null); 
+        const currentData = savedData || currentUser || {};
+        setTempData({ ...currentData });
+        setTempLocation(currentData.location || null); 
         setAddressError(null);
+        setProfileErrors({});
         setIsEditing(true);
     };
 
@@ -58,9 +61,40 @@ function Profile() {
 
     const handleSave = async () => {
         if (!targetUserId) return;
+        
+        let tempErrors = {};
+        
+        setProfileErrors({});
+        setAddressError(null);
 
-        if (tempData.address && !tempLocation) {
-            setAddressError("יש לבחור כתובת חוקית מתוך הרשימה");
+        const studyFieldVal = (tempData.studyField || '').toString().trim();
+        const yearVal = (tempData.year || '').toString().trim();
+        const phoneVal = (tempData.phone || '').toString().trim();
+        const addressVal = (tempData.address || '').toString().trim();
+    
+        if (!studyFieldVal) {
+            tempErrors.studyField = "חובה להזין תחום לימודים";
+        }
+        
+        if (!yearVal) {
+            tempErrors.year = "חובה להזין שנת לימודים";
+        }
+
+        if (!phoneVal) {
+            tempErrors.phone = "חובה להזין מספר טלפון";
+        } else if (!/^05\d{8}$/.test(phoneVal)) {
+            tempErrors.phone = "מספר טלפון חייב להכיל 10 ספרות בדיוק ולהתחיל ב-05";
+        }
+
+        if (!addressVal) {
+            tempErrors.address = "חובה להזין כתובת";
+        } else if (!tempLocation) {
+            tempErrors.address = "יש לבחור כתובת חוקית מתוך הרשימה";
+        }
+
+        if (Object.keys(tempErrors).length > 0) {
+            setProfileErrors(tempErrors);
+            if (tempErrors.address) setAddressError(tempErrors.address);
             return;
         }
 
@@ -168,9 +202,9 @@ function Profile() {
                 <div style={sectionTitle}>פרטים נוספים</div>
                 <div style={{ ...grid, marginTop: '12px' }}>
                     <EditableField label="גיל" name="age" value={display.age} isEditing={isEditing} onChange={handleInputChange} />
-                    <EditableField label="תחום לימודים" name="studyField" value={display.studyField} isEditing={isEditing} onChange={handleInputChange} />
-                    <EditableField label="שנת לימודים" name="year" value={display.year} isEditing={isEditing} onChange={handleInputChange} />
-                    <EditableField label="מספר טלפון" name="phone" value={display.phone} isEditing={isEditing} onChange={handleInputChange} type="tel" />
+                    <EditableField label="תחום לימודים" name="studyField" value={display.studyField} isEditing={isEditing} onChange={handleInputChange} error={profileErrors.studyField} />
+                    <EditableField label="שנת לימודים" name="year" value={display.year} isEditing={isEditing} onChange={handleInputChange} error={profileErrors.year} />
+                    <EditableField label="מספר טלפון" name="phone" value={display.phone} isEditing={isEditing} onChange={handleInputChange} type="tel" error={profileErrors.phone} />
                     
                     {/* Address Autocomplete Selection Block */}
                     <div>
@@ -182,7 +216,7 @@ function Profile() {
                                 className={inputStyle}
                                 onTextChange={handleAddressTextChange}
                                 onLocationSelected={handleLocationSelected}
-                                error={addressError}
+                                error={profileErrors.address || addressError}
                             />
                         ) : (
                             <p style={contentStyle}>{display.address || '—'}</p>
@@ -307,11 +341,21 @@ const Field = ({ label, value }) => (
     </div>
 );
 
-const EditableField = ({ label, name, value, isEditing, onChange, type = "text" }) => (
+const EditableField = ({ label, name, value, isEditing, onChange, type = "text", error }) => (
     <div>
         <label style={labelStyle}>{label}</label>
         {isEditing ? (
-            <input type={type} name={name} value={value || ''} onChange={onChange} style={inputStyle} />
+            <>
+                <input 
+                    type={type} 
+                    name={name} 
+                    value={value || ''} 
+                    onChange={onChange} 
+                    maxLength={name === 'phone' ? 10 : undefined}
+                    style={{...inputStyle, borderColor: error ? '#DC2626' : '#D1D5DB'}} 
+                />
+                {error && <span style={{ color: '#DC2626', fontSize: '12px', display: 'block', marginTop: '4px', fontWeight: '600' }}>{error}</span>}
+            </>
         ) : (
             <p style={contentStyle}>{value || '—'}</p>
         )}
