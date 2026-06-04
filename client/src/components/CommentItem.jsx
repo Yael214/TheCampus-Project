@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 
-function CommentItem({ user, comment, allComments, onAddComment, currentUser, depth = 0 }) {
+function CommentItem({ user, comment, allComments, onAddComment, currentUser, depth = 0, isAdmin, onDeleteComment }) {
   const [isReplying, setIsReplying] = useState(false);
   const [replyText, setReplyText] = useState('');
 
   // childReplies are the comments that have this comment's ID as their parentId. 
   // This allows us to display replies nested under their parent comment.
   const childReplies = allComments.filter(c => c.parentId === comment.commentId);
+
+  // Check delete permissions
+  const isAuthor = currentUser?.uid === comment.authorId;
+  const canDelete = isAuthor || isAdmin;
 
   const handleReplySubmit = async (e) => {
     e.preventDefault();
@@ -41,19 +45,33 @@ function CommentItem({ user, comment, allComments, onAddComment, currentUser, de
               user={user}
               currentUser={currentUser}
               depth={depth + 1}
+              isAdmin={isAdmin}
+              onDeleteComment={onDeleteComment}
             />
           ))}
         </div>
       )}
 
-      {currentUser && (
-        <button
-          onClick={() => setIsReplying(!isReplying)}
-          className="text-xs font-semibold text-indigo-500 hover:text-indigo-700 mt-1 block transition"
-        >
-          {isReplying ? 'ביטול' : 'הגב'}
-        </button>
-      )}
+      {/* Action buttons wrapper */}
+      <div className="flex items-center gap-3 mt-1">
+        {currentUser && (
+          <button
+            onClick={() => setIsReplying(!isReplying)}
+            className="text-xs font-semibold text-indigo-500 hover:text-indigo-700 block transition"
+          >
+            {isReplying ? 'ביטול' : 'הגב'}
+          </button>
+        )}
+        
+        {canDelete && (
+          <button
+            onClick={() => onDeleteComment(comment.commentId)}
+            className="text-xs font-semibold text-red-500 hover:text-red-700 block transition"
+          >
+            מחק
+          </button>
+        )}
+      </div>
       
       {isReplying && (
         <form onSubmit={handleReplySubmit} className="mt-2 flex gap-2">

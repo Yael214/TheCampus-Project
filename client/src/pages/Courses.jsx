@@ -46,7 +46,7 @@ function UploadMaterialModal({ isOpen, onClose }) {
 }
 
 function Courses() {
-    const { currentUser } = useAuth();
+    const { currentUser, isAdmin } = useAuth();
     const params = useParams();
     const rawForumId = params.forumId; 
 
@@ -155,7 +155,8 @@ function Courses() {
                             <PostContainer 
                                 key={post.id} 
                                 post={post} 
-                                showForumLink={false} 
+                                showForumLink={false}
+                                isAdmin={isAdmin} 
                             />
                         ))
                     )}
