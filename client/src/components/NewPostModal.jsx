@@ -99,7 +99,7 @@ function NewPostModal({ isOpen, onClose, lockedForumId = null }) {
                             >
                                 {userCourses?.map(course => (
                                     /* Display course name using forumName field */
-                                    <option key={course.id} value={course.id}>{course.forumName}</option>
+                                    <option key={course.forumId} value={course.forumId}>{course.forumName}</option>
                                 ))}
                             </select>
                         </div>
