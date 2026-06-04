@@ -25,7 +25,7 @@ export function useForumPosts(forumId) {
                 return;
             }
             const fetchedPosts = snapshot.docs.map(doc => ({
-                id: doc.id,
+                postId: doc.id,
                 ...doc.data()
             }));
             setPosts(fetchedPosts);

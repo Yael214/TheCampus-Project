@@ -13,7 +13,7 @@ function AdminDashboard() {
     setLoading(true);
     setMessage({ text: '', isError: false });
 
-    const functions = getFunctions();
+    const functions = getFunctions(undefined, 'us-central1');
     const addAdminRole = httpsCallable(functions, 'addAdminRole');
 
     try {
