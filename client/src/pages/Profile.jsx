@@ -31,6 +31,8 @@ function Profile() {
     const [deleteSuccess, setDeleteSuccess] = useState(false);
     const [profileErrors, setProfileErrors] = useState({});
 
+    const [searchQuery, setSearchQuery] = useState('');
+
     const display = isEditing ? tempData : (savedData || currentUser);
 
     const handleStartEdit = () => {
@@ -232,32 +234,44 @@ function Profile() {
                     סמנ/י את הפורומים שברצונך לעקוב אחריהם בפיד:
                 </p>
 
+                <div style={{ marginBottom: '16px' }}>
+                    <input
+                        type="text"
+                        placeholder="חפש/י פורום או קורס..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        style={{...inputStyle, backgroundColor: '#F9FAFB'}}
+                    />
+                </div>
+
                 {forumsLoading ? (
                     <p style={contentStyle}>טוען פורומים...</p>
                 ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        {forums.map((forum) => {
-                            const isFollowing = followedForums[forum.id] !== undefined;
-                            return (
-                                <div key={forum.id} style={forumRowStyle}>
-                                    <input
-                                        type="checkbox"
-                                        id={forum.id}
-                                        checked={isFollowing}
-                                        onChange={() => toggleFollowForum(forum.id, forum.forumName || forum.id, isFollowing)}
-                                        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                                    />
-                                    <div style={{ marginRight: '12px', textAlign: 'right' }}>
-                                        <label htmlFor={forum.id} style={{ fontWeight: '700', color: '#1A1A2E', fontSize: '14px', cursor: 'pointer' }}>
-                                            {forum.forumName || forum.id}
-                                        </label>
-                                        <p style={{ color: '#6B7280', fontSize: '13px', margin: '2px 0 0 0' }}>
-                                            {forum.description}
-                                        </p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '300px', overflowY: 'auto', paddingRight: '4px' }}>
+                        {forums
+                            .filter(forum => (forum.forumName || forum.id).toLowerCase().includes(searchQuery.toLowerCase()))
+                            .map((forum) => {
+                                const isFollowing = followedForums[forum.id] !== undefined;
+                                return (
+                                    <div key={forum.id} style={forumRowStyle}>
+                                        <input
+                                            type="checkbox"
+                                            id={forum.id}
+                                            checked={isFollowing}
+                                            onChange={() => toggleFollowForum(forum.id, forum.forumName || forum.id, isFollowing)}
+                                            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                                        />
+                                        <div style={{ marginRight: '12px', textAlign: 'right' }}>
+                                            <label htmlFor={forum.id} style={{ fontWeight: '700', color: '#1A1A2E', fontSize: '14px', cursor: 'pointer' }}>
+                                                {forum.forumName || forum.id}
+                                            </label>
+                                            <p style={{ color: '#6B7280', fontSize: '13px', margin: '2px 0 0 0' }}>
+                                                {forum.description}
+                                            </p>
+                                        </div>
                                     </div>
-                                </div>
-                            );
-                        })}
+                                );
+                            })}
                     </div>
                 )}
 
