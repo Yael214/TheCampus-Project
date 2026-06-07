@@ -31,6 +31,9 @@ function Profile() {
     const [deleteSuccess, setDeleteSuccess] = useState(false);
     const [profileErrors, setProfileErrors] = useState({});
 
+    // New state for the 3-dots menu
+    const [showMenu, setShowMenu] = useState(false);
+
     const [searchQuery, setSearchQuery] = useState('');
 
     const display = isEditing ? tempData : (savedData || currentUser);
@@ -132,17 +135,13 @@ function Profile() {
         setDeleteError('');
         
         try {
-            // Call centralized deletion function from context
-            // Execution order: verify session → delete storage → delete firestore → delete auth
             await deleteAccountComplete();
             
             setDeleteSuccess(true);
-            // Redirect to login after success
             setTimeout(() => navigate('/login'), 2500);
         } catch (error) {
             console.error("Error executing account deletion:", error);
             
-            // Handle specific Firebase auth errors early detection
             if (error.code === 'auth/requires-recent-login') {
                 setDeleteError('מטעמי אבטחה, יש להתחבר מחדש לחשבון לפני ביצוע המחיקה.');
             } else {
@@ -165,9 +164,50 @@ function Profile() {
         <main className="flex-1 overflow-y-auto" dir="rtl" style={{ padding: '24px 32px', fontFamily: 'Heebo, sans-serif', backgroundColor: '#F0F2FA' }}>
             <div style={card}>
 
-                <h2 style={{ color: '#2C3E7A', fontSize: '22px', fontWeight: '800', margin: '0 0 20px 0' }}>
-                    הפרופיל שלי
-                </h2>
+                {/* --- HEADER WITH 3-DOTS MENU --- */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                    <h2 style={{ color: '#2C3E7A', fontSize: '22px', fontWeight: '800', margin: 0 }}>
+                        הפרופיל שלי
+                    </h2>
+                    
+                    <div style={{ position: 'relative' }}>
+                        <button 
+                            onClick={() => setShowMenu(!showMenu)}
+                            onBlur={() => setTimeout(() => setShowMenu(false), 200)} // Allows click to register before closing
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '24px', padding: '0 8px', color: '#6B7280', lineHeight: '1' }}
+                        >
+                            ⋮
+                        </button>
+                        
+                        {showMenu && (
+                            <div style={{ 
+                                position: 'absolute', 
+                                left: 0, 
+                                top: '100%', 
+                                backgroundColor: 'white', 
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.1)', 
+                                borderRadius: '10px', 
+                                padding: '8px', 
+                                zIndex: 10,
+                                minWidth: '130px',
+                                marginTop: '4px',
+                                border: '1px solid #E5E7EB'
+                            }}>
+                                <button
+                                    onClick={() => { 
+                                        setShowMenu(false); 
+                                        setShowDeleteConfirm(true); 
+                                        setDeleteError(''); 
+                                    }}
+                                    style={{ ...deleteBtn, width: '100%', padding: '8px 12px' }}
+                                >
+                                    מחיקת חשבון
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+                {/* --------------------------------- */}
 
                 {/* About Section */}
                 <div style={sectionTitle}>קצת על עצמי</div>
@@ -275,7 +315,7 @@ function Profile() {
                     </div>
                 )}
 
-                {/* Form Action Controls Section */}
+                {/* Form Action Controls Section (Updated to remove the absolute positioned delete button) */}
                 <div style={{ marginTop: '36px', position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px' }}>
                     {isEditing ? (
                         <>
@@ -285,15 +325,7 @@ function Profile() {
                             <button onClick={() => setIsEditing(false)} style={secondaryBtn}>ביטול</button>
                         </>
                     ) : (
-                        <>
-                            <button onClick={handleStartEdit} style={primaryBtn}>עריכת פרופיל</button>
-                            <button
-                                onClick={() => { setShowDeleteConfirm(true); setDeleteError(''); }}
-                                style={{ ...deleteBtn, position: 'absolute', left: 0 }}
-                            >
-                                מחיקת חשבון
-                            </button>
-                        </>
+                        <button onClick={handleStartEdit} style={primaryBtn}>עריכת פרופיל</button>
                     )}
                 </div>
 
