@@ -127,6 +127,12 @@ function Courses() {
 
                 <MaterialsSidebar forumId={safeForumId} />
             </div>
+
+            <NewPostModal
+                isOpen={isPostModalOpen}
+                onClose={() => setIsPostModalOpen(false)}
+                lockedForumId={safeForumId}
+            />
         </div>
     );
 }

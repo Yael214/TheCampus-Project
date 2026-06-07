@@ -58,7 +58,7 @@ function NewPostModal({ isOpen, onClose, lockedForumId = null }) {
         setLoading(true);
         try {
             // Find the selected forum object to extract its name
-            const chosenForum = userCourses?.find(f => f.id === targetForumId);
+            const chosenForum = userCourses?.find(f => (f.forumId ?? f.id) === targetForumId);
             
             // Use the hook's createPost function instead of addDoc directly
             await createPost({
@@ -97,10 +97,14 @@ function NewPostModal({ isOpen, onClose, lockedForumId = null }) {
                                 onChange={(e) => setSelectedForumId(e.target.value)}
                                 className="w-full text-sm p-3.5 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:border-[#4F46E5] font-medium text-gray-700"
                             >
-                                {userCourses?.map(course => (
-                                    /* Display course name using forumName field */
-                                    <option key={course.forumId} value={course.forumId}>{course.forumName}</option>
-                                ))}
+                                {userCourses?.map((course, index) => {
+                                    const forumId = course.forumId ?? course.id ?? String(index);
+                                    return (
+                                        <option key={forumId} value={forumId}>
+                                            {course.forumName || course.name || 'פורום קורס'}
+                                        </option>
+                                    );
+                                })}
                             </select>
                         </div>
                     )}
