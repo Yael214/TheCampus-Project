@@ -18,7 +18,7 @@ function UploadMaterialModal({ isOpen, onClose, onUpload }) {
         try {
             setIsUploading(true);
             // calling the upload function passed from the parent component
-            await onUpload(title, file, currentUser);
+            await onUpload(title, file, currentUser, true );
             
             // reset form and close modal after successful upload
             setTitle('');
