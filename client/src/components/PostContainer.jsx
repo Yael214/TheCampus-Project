@@ -8,7 +8,7 @@ import { doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
 // Get the post from fid/ forum page
-function PostContainer({ post, showForumLink=true}) {
+function PostContainer({ post, showForumLink=true, isAdmin }) {
   const { currentUser: user } = useAuth();
   const [isOpen, setIsOpen] = useState(false); // does the post's comment section is open or closed
   const [rootCommentText, setRootCommentText] = useState('');
@@ -20,7 +20,6 @@ function PostContainer({ post, showForumLink=true}) {
 
   // Check if current user is the author or an admin to allow deletion
   const isAuthor = user?.uid === post.authorId;
-  const isAdmin = user?.role === 'admin';
   const canDelete = isAuthor || isAdmin;
 
   useEffect(() => {
@@ -68,6 +67,20 @@ function PostContainer({ post, showForumLink=true}) {
       console.log("Post deleted successfully");
     } catch (error) {
       console.error("Error deleting post:", error);
+    }
+  };
+
+  // Handle comment deletion (Passed down to CommentItem)
+  const handleDeleteComment = async (commentId) => {
+    const confirmDelete = window.confirm("האם את בטוחה שברצונך למחוק את התגובה?");
+    if (!confirmDelete) return;
+
+    try {
+      const commentRef = doc(db, 'posts', post.postId, 'comments', commentId);
+      await deleteDoc(commentRef);
+      console.log("Comment deleted successfully");
+    } catch (error) {
+      console.error("Error deleting comment:", error);
     }
   };
 
@@ -157,6 +170,8 @@ function PostContainer({ post, showForumLink=true}) {
                 currentUser={user}
                 onAddComment={(text, parentId) => addComment(text, user, parentId)}
                 depth={0}
+                isAdmin={isAdmin}
+                onDeleteComment={handleDeleteComment}
               />
           ))}
 

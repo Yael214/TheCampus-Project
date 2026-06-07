@@ -1,14 +1,22 @@
 import React from 'react';
 
-const PartnerCard = ({ name, distance, tags }) => {
+const PartnerCard = ({ name, distance, tags, phone }) => {
   return (
     <article className="card">
       <div className="card-row">
         <button 
-          className="btn" 
-          onClick={() => window.location.href = 'chat.html'}
-        >
-          שלח הודעה
+            className="btn" 
+            onClick={(e) => {
+              e.stopPropagation(); // Prevents the card from being selected on the map when the button is pressed
+              if (phone) {
+                const cleanPhone = phone.startsWith('0') ? '972' + phone.slice(1) : phone;
+                window.open(`https://wa.me/${cleanPhone}`, '_blank');
+              } else {
+                alert('לא נמצא מספר טלפון למשתמש זה');
+              }
+            }}
+          >
+            שלח הודעה
         </button>
         <div className="card-content">
           <div className="card-title">

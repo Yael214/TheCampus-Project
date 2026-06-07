@@ -110,7 +110,7 @@ function Sidebar() {
                     >
                         <div className="flex items-center gap-3.5">
                             <span className="text-xl">📚</span>
-                            <span>הקורסים שלי</span>
+                            <span>הפורומים שלי</span>
                         </div>
                         {/* Dynamic arrow icon toggling direction based on open state */}
                         <span className={`text-xs transition-transform duration-200 ${isCoursesOpen ? 'rotate-180' : ''}`}>

@@ -8,7 +8,7 @@ import PostContainer from '../components/PostContainer';
 import Loader from '../components/Loader';
 
 function Feed() {
-    const { currentUser } = useAuth();
+    const { currentUser, isAdmin } = useAuth();
     const [isPostModalOpen, setIsPostModalOpen] = useState(false);
     const [loading, setLoading] = useState(true);
 
@@ -86,6 +86,7 @@ function Feed() {
                                 key={post.postId} 
                                 post={post} 
                                 showForumLink={true} 
+                                isAdmin={isAdmin}
                             />
                         ))
                     )}
