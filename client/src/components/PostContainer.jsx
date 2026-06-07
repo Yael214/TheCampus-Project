@@ -17,6 +17,9 @@ function PostContainer({ post, showForumLink=true, isAdmin }) {
 
   const [liked, setLiked] = useState(isLiked);
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
+  
+  // New state for the 3-dots menu
+  const [showMenu, setShowMenu] = useState(false);
 
   // Check if current user is the author or an admin to allow deletion
   const isAuthor = user?.uid === post.authorId;
@@ -92,23 +95,56 @@ function PostContainer({ post, showForumLink=true, isAdmin }) {
 
   return (
     <div className="bg-white rounded-[14px] border border-slate-200/80 p-4 mb-4 shadow-sm transition hover:shadow-md" dir="rtl">
-      {showForumLink && post.forumId && post.forumName && (
-        <div className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold mb-3 ${forumTagClass}`}>
-            <Link 
-                // to={`/forum/${post.forumId}`} 
-                to="feed" // temporary link for testing
-                className="flex items-center gap-1 text-slate-800 hover:text-slate-900 transition"
-            >
-                {post.forumName}
-            </Link>
+      
+      {/* Header Section: Forum Link, Title, and 3-Dots Menu */}
+      <div className="flex justify-between items-start mb-2">
+        <div className="flex-1">
+          {showForumLink && post.forumId && post.forumName && (
+            <div className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold mb-3 ${forumTagClass}`}>
+                <Link 
+                    // to={`/forum/${post.forumId}`} 
+                    to="feed" // temporary link for testing
+                    className="flex items-center gap-1 text-slate-800 hover:text-slate-900 transition"
+                >
+                    {post.forumName}
+                </Link>
+            </div>
+          )}
+          <h2 className="text-base md:text-lg font-semibold text-slate-900 leading-6">
+            {post.title}
+          </h2>
         </div>
-    )}
 
-      <h2 className="text-base md:text-lg font-semibold text-slate-900 leading-6 mb-3">
-        {post.title}
-      </h2>
+        {/* 3-Dots Menu Wrapper - NOW VISIBLE TO EVERYONE */}
+        <div className="relative z-10 mr-2">
+          <button 
+            onClick={() => setShowMenu(!showMenu)}
+            onBlur={() => setTimeout(() => setShowMenu(false), 200)}
+            className="text-slate-400 hover:text-slate-600 px-2 text-xl leading-none"
+          >
+            ⋮
+          </button>
+          
+          {showMenu && (
+            <div className="absolute left-0 mt-1 w-32 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden">
+              {canDelete ? (
+                <button
+                  onClick={handleDelete}
+                  className="w-full text-right px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
+                >
+                  מחק פוסט
+                </button>
+              ) : (
+                <div className="w-full text-center px-4 py-2 text-sm text-slate-400 cursor-default">
+                  בקרוב...
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
 
-      <p className="text-sm text-slate-500 leading-6 mb-4 max-h-14 overflow-hidden">
+      <p className="text-sm text-slate-500 leading-6 mb-4 max-h-14 overflow-hidden mt-3">
         {post.content || ''}
       </p>
 
@@ -147,16 +183,6 @@ function PostContainer({ post, showForumLink=true, isAdmin }) {
         >
           {isOpen ? 'הסתר תגובות' : `הצג תגובות (${commentCount})`}
         </button>
-
-        {/* Delete post button conditionally rendered */}
-        {canDelete && (
-          <button 
-            onClick={handleDelete}
-            className="text-sm font-medium text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition"
-          >
-            מחק פוסט 
-          </button>
-        )}
       </div>
 
       {isOpen && (
