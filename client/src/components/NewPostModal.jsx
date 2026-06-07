@@ -99,7 +99,7 @@ function NewPostModal({ isOpen, onClose, lockedForumId = null }) {
     };
 
     const handleClose = () => {
-        setSelectedFile(null); // מאפס את הקובץ הנבחר
+        setSelectedFile(null);
         setTitle('');
         setContent('');
         setIsSavedToMaterials(false);
