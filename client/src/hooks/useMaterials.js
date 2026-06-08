@@ -36,7 +36,7 @@ export function useMaterials(forumId) {
     }, [forumId]);
 
     // A function to handle uploading a new material file and saving its metadata to Firestore.
-    const uploadMaterial = async (title, file, user) => {
+    const uploadMaterial = async (title, file, user, saveToMaterials = false) => {
         if (!file || !user) return;
 
         try {
@@ -45,17 +45,25 @@ export function useMaterials(forumId) {
             const uploadResult = await uploadBytes(fileRef, file);
             const fileUrl = await getDownloadURL(uploadResult.ref);
 
-            // Save the material metadata to Firestore
-            await addDoc(collection(db, 'materials'), {
-                forumId: forumId,
-                uploadedBy: user.uid,
-                authorName: user.fullName,
-                title: title,
+            const fileMetaData = {
+                fileName: file.name,
                 fileUrl: fileUrl,
-                fileType: file.type || 'application/octet-stream',
-                isApproved: true, // default to true for now
-                createdAt: serverTimestamp()
-            });
+                fileType: file.type || 'application/octet-stream'
+            }
+            // Save the material metadata to Firestore
+            if (saveToMaterials) {
+                await addDoc(collection(db, 'materials'), {
+                    forumId: forumId,
+                    uploadedBy: user.uid,
+                    authorName: user.fullName,
+                    title: title,
+                    fileUrl: fileUrl,
+                    fileType: file.type || 'application/octet-stream',
+                    isApproved: true, // default to true for now
+                    createdAt: serverTimestamp()
+                });
+            };
+            return fileMetaData;
         } catch (err) {
             console.error("Error uploading material:", err);
             throw err;

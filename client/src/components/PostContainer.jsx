@@ -87,6 +87,21 @@ function PostContainer({ post, showForumLink=true, isAdmin }) {
     }
   };
 
+  // Helper function to render correct icon and styles per file type
+  const getAttachmentStyle = (type) => {
+    const lowerType = type?.toLowerCase() || '';
+    if (lowerType.includes('pdf')) {
+      return { icon: '📄', bg: 'bg-gray-50 text-red-700 border-red-100 hover:bg-red-100/70' };
+    }
+    if (lowerType.includes('image') || lowerType.includes('png') || lowerType.includes('jpg') || lowerType.includes('jpeg')) {
+      return { icon: '🖼️', bg: 'bg-gray-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100/70' };
+    }
+    if (lowerType.includes('video') || lowerType.includes('mp4')) {
+      return { icon: '🎬', bg: 'bg-gray-50 text-amber-700 border-amber-100 hover:bg-amber-100/70' };
+    }
+    return { icon: '📎', bg: 'bg-gray-50 text-slate-700 border-slate-100 hover:bg-slate-100' };
+  };
+
   // logic to separate root comments from replies (for simple nested display)
   const rootComments = comments.filter(c => !c.parentId);
   const replies = comments.filter(c => c.parentId);
@@ -147,6 +162,25 @@ function PostContainer({ post, showForumLink=true, isAdmin }) {
       <p className="text-sm text-slate-500 leading-6 mb-4 max-h-14 overflow-hidden mt-3">
         {post.content || ''}
       </p>
+
+      <div className="mb-4 flex flex-wrap gap-2">
+        {post.attachments.map((file, index) => {
+          const style = getAttachmentStyle(file.fileType || file.type);
+          return (
+            <a
+              key={index}
+              href={file.fileUrl || file.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium transition max-w-[240px] ${style.bg}`}
+              title={file.title || file.fileName || 'קובץ מצורף'}
+            >
+              <span className="text-sm shrink-0">{style.icon}</span>
+              <span className="truncate flex-1 text-right">{file.title || file.fileName || 'הצג קובץ'}</span>
+            </a>
+          );
+        })}
+      </div>
 
       <div className="flex items-center gap-3 mb-3">
         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-800 text-[11px] font-bold text-white shrink-0">
