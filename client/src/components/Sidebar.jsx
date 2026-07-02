@@ -174,18 +174,35 @@ function Sidebar() {
                     <span className="text-xl">👥</span>
                     <span>חיפוש שותפים</span>
                 </NavLink>
+
+                {/* Admin-only navigation links */}
                 {isAdmin && (
-                    <NavLink
-                        to="/admin"
-                        className={({ isActive }) => `px-5 py-3.5 cursor-pointer flex items-center gap-3.5 rounded-[20px] transition-all
-                            ${isActive
-                                ? 'bg-white text-red-600 shadow-sm border border-white font-bold'
-                                : 'text-red-600 hover:bg-red-50/60 font-medium opacity-90'
-                            }`}
-                    >
-                        <span className="text-xl">⚙️</span>
-                        <span>מפקדת הקמפוס</span>
-                    </NavLink>
+                    <>
+                        <NavLink
+                            to="/admin"
+                            className={({ isActive }) => `px-5 py-3.5 cursor-pointer flex items-center gap-3.5 rounded-[20px] transition-all
+                                ${isActive
+                                    ? 'bg-white text-red-600 shadow-sm border border-white font-bold'
+                                    : 'text-red-600 hover:bg-red-50/60 font-medium opacity-90'
+                                }`}
+                        >
+                            <span className="text-xl">⚙️</span>
+                            <span>מפקדת הקמפוס</span>
+                        </NavLink>
+                        
+                        {/* 4. User Management Dashboard Link */}
+                        <NavLink
+                            to="/admin-users"
+                            className={({ isActive }) => `px-5 py-3.5 cursor-pointer flex items-center gap-3.5 rounded-[20px] transition-all
+                                ${isActive
+                                    ? 'bg-white text-red-600 shadow-sm border border-white font-bold'
+                                    : 'text-red-600 hover:bg-red-50/60 font-medium opacity-90'
+                                }`}
+                        >
+                            <span className="text-xl">🛡️</span>
+                            <span>ניהול משתמשים</span>
+                        </NavLink>
+                    </>
                 )}
             </nav>
 
