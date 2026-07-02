@@ -9,12 +9,13 @@ import { useUserForums } from '../hooks/useUserForums';
 
 function Sidebar() {
     // Get unified currentUser from context (includes auth + Firestore data)
-    const { currentUser , isAdmin} = useAuth();
+    const { currentUser, isAdmin } = useAuth();
     const { validateImage, getFileExtension, uploadFileToStorage, loading: imageLoading } = useImageHandler();
     const navigate = useNavigate();
 
-    // State management for course dropdown visibility and search filtering
+    // State management for dropdown visibility and search filtering
     const [isCoursesOpen, setIsCoursesOpen] = useState(false);
+    const [isAdminOpen, setIsAdminOpen] = useState(false); // State for the Admin dropdown menu
     const [courseSearch, setCourseSearch] = useState('');
 
     // Fetching user-enrolled courses from the database hook
@@ -26,7 +27,6 @@ function Sidebar() {
     const filteredForums = sortedForums.filter(forum => 
         forum?.forumName?.toLowerCase().includes(courseSearch.toLowerCase())
     );
-    
 
     const handleImageChange = async (e) => {
         const file = e.target.files[0];
@@ -164,7 +164,6 @@ function Sidebar() {
                 {/* 3. Partners Connection Route Finder */}
                 <NavLink
                     to="/partners"
-                    // isActive variable from Router indicates whether the user is currently on this page.
                     className={({ isActive }) => `px-5 py-3.5 cursor-pointer flex items-center gap-3.5 rounded-[20px] transition-all
                         ${isActive
                             ? 'bg-white text-[#4F46E5] shadow-sm border border-white font-bold'
@@ -175,34 +174,57 @@ function Sidebar() {
                     <span>חיפוש שותפים</span>
                 </NavLink>
 
-                {/* Admin-only navigation links */}
+                {/* 4. Admin Management - Collapsible Dropdown Menu */}
                 {isAdmin && (
-                    <>
-                        <NavLink
-                            to="/admin"
-                            className={({ isActive }) => `px-5 py-3.5 cursor-pointer flex items-center gap-3.5 rounded-[20px] transition-all
-                                ${isActive
-                                    ? 'bg-white text-red-600 shadow-sm border border-white font-bold'
+                    <div className="w-full">
+                        <button 
+                            type="button"
+                            onClick={() => setIsAdminOpen(!isAdminOpen)}
+                            className={`w-full px-5 py-3.5 cursor-pointer flex items-center justify-between rounded-[20px] transition-all text-right border-none bg-transparent
+                                ${isAdminOpen 
+                                    ? 'bg-red-50 text-red-600 shadow-sm border border-white font-bold' 
                                     : 'text-red-600 hover:bg-red-50/60 font-medium opacity-90'
                                 }`}
                         >
-                            <span className="text-xl">⚙️</span>
-                            <span>מפקדת הקמפוס</span>
-                        </NavLink>
-                        
-                        {/* 4. User Management Dashboard Link */}
-                        <NavLink
-                            to="/admin-users"
-                            className={({ isActive }) => `px-5 py-3.5 cursor-pointer flex items-center gap-3.5 rounded-[20px] transition-all
-                                ${isActive
-                                    ? 'bg-white text-red-600 shadow-sm border border-white font-bold'
-                                    : 'text-red-600 hover:bg-red-50/60 font-medium opacity-90'
-                                }`}
-                        >
-                            <span className="text-xl">🛡️</span>
-                            <span>ניהול משתמשים</span>
-                        </NavLink>
-                    </>
+                            <div className="flex items-center gap-3.5">
+                                <span className="text-xl">⚙️</span>
+                                <span>מפקדת הקמפוס</span>
+                            </div>
+                            {/* Dynamic arrow icon toggling direction based on open state */}
+                            <span className={`text-xs transition-transform duration-200 ${isAdminOpen ? 'rotate-180' : ''}`}>
+                                ▼
+                            </span>
+                        </button>
+
+                        {/* Admin Sub-menu Portal */}
+                        {isAdminOpen && (
+                            <div className="mt-2 bg-red-50/40 border border-red-100/50 rounded-[20px] p-3 shadow-inner flex flex-col gap-2">
+                                <NavLink
+                                    to="/admin"
+                                    className={({ isActive }) => `w-full text-right text-sm p-2.5 rounded-xl transition-all flex items-center gap-2
+                                        ${isActive 
+                                            ? 'bg-red-100 text-red-700 font-bold' 
+                                            : 'text-red-600 hover:bg-white font-medium opacity-90'
+                                        }`}
+                                >
+                                    <span>📊</span>
+                                    <span>דאשבורד ראשי</span>
+                                </NavLink>
+
+                                <NavLink
+                                    to="/admin-users"
+                                    className={({ isActive }) => `w-full text-right text-sm p-2.5 rounded-xl transition-all flex items-center gap-2
+                                        ${isActive 
+                                            ? 'bg-red-100 text-red-700 font-bold' 
+                                            : 'text-red-600 hover:bg-white font-medium opacity-90'
+                                        }`}
+                                >
+                                    <span>🛡️</span>
+                                    <span>ניהול משתמשים</span>
+                                </NavLink>
+                            </div>
+                        )}
+                    </div>
                 )}
             </nav>
 
