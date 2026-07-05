@@ -9,7 +9,7 @@ import { useUserForums } from '../hooks/useUserForums';
 
 function Sidebar() {
     // Get unified currentUser from context (includes auth + Firestore data)
-    const { currentUser , isAdmin} = useAuth();
+    const { currentUser, isAdmin } = useAuth();
     const { validateImage, getFileExtension, uploadFileToStorage, loading: imageLoading } = useImageHandler();
     const navigate = useNavigate();
 
@@ -26,7 +26,6 @@ function Sidebar() {
     const filteredForums = sortedForums.filter(forum => 
         forum?.forumName?.toLowerCase().includes(courseSearch.toLowerCase())
     );
-    
 
     const handleImageChange = async (e) => {
         const file = e.target.files[0];
@@ -39,15 +38,12 @@ function Sidebar() {
         }
 
         try {
-            // Extract the real file extension to build the correct dynamic path
             const fileExt = getFileExtension(file);
             const storagePath = `users/${currentUser.uid}/profile.${fileExt}`;
             
-            // Upload to storage with cache control
             const downloadURL = await uploadFileToStorage(file, storagePath);
 
             if (downloadURL) {
-                // Update Firestore with the new profile image URL
                 await updateDoc(doc(db, "users", currentUser.uid), { 
                     profileImage: downloadURL 
                 });
@@ -84,7 +80,6 @@ function Sidebar() {
             {/* Navigation Menu */}
             <nav className="flex flex-col gap-3 px-4 overflow-y-auto max-h-[50vh]">
                 
-                {/* 1. Main Feed Hub Route Anchor */}
                 <NavLink
                     to="/feed"
                     className={({ isActive }) => `px-5 py-3.5 cursor-pointer flex items-center gap-3.5 rounded-[20px] transition-all
@@ -97,7 +92,7 @@ function Sidebar() {
                     <span>פיד ראשי</span>
                 </NavLink>
 
-                {/* 2. My Courses - Collapsible Dropdown Menu Component */}
+                {/* Courses Dropdown */}
                 <div className="w-full">
                     <button 
                         type="button"
@@ -112,17 +107,13 @@ function Sidebar() {
                             <span className="text-xl">📚</span>
                             <span>הפורומים שלי</span>
                         </div>
-                        {/* Dynamic arrow icon toggling direction based on open state */}
                         <span className={`text-xs transition-transform duration-200 ${isCoursesOpen ? 'rotate-180' : ''}`}>
                             ▼
                         </span>
                     </button>
 
-                    {/* Enrolled Courses Sub-list View Portal */}
                     {isCoursesOpen && (
                         <div className="mt-2 bg-white/80 border border-white/60 rounded-[20px] p-3 shadow-inner flex flex-col gap-2 max-h-56">
-                            
-                            {/* Inside-dropdown search parameter query entry field */}
                             <div className="relative">
                                 <input 
                                     type="text" 
@@ -134,7 +125,6 @@ function Sidebar() {
                                 <span className="absolute left-3 top-2.5 text-gray-400 text-sm pointer-events-none">🔍</span>
                             </div>
                             
-                            {/* Scrollable courses collection viewport */}
                             <div className="overflow-y-auto flex-1 space-y-1 pr-1">
                                 {forumsLoading && <p className="text-xs text-gray-400 text-center py-2">טוען קורסים...</p>}
                                 
@@ -152,7 +142,6 @@ function Sidebar() {
                                         <span className="truncate">{forum.forumName}</span>
                                     </NavLink>
                                 ))}
-
                                 {!forumsLoading && filteredForums.length === 0 && (
                                     <p className="text-xs text-gray-400 text-center py-2">No courses found</p>
                                 )}
@@ -161,10 +150,8 @@ function Sidebar() {
                     )}
                 </div>
 
-                {/* 3. Partners Connection Route Finder */}
                 <NavLink
                     to="/partners"
-                    // isActive variable from Router indicates whether the user is currently on this page.
                     className={({ isActive }) => `px-5 py-3.5 cursor-pointer flex items-center gap-3.5 rounded-[20px] transition-all
                         ${isActive
                             ? 'bg-white text-[#4F46E5] shadow-sm border border-white font-bold'
@@ -174,25 +161,24 @@ function Sidebar() {
                     <span className="text-xl">👥</span>
                     <span>חיפוש שותפים</span>
                 </NavLink>
+
+                {/* 🛡️ Single Clean Admin Button */}
                 {isAdmin && (
                     <NavLink
-                        to="/admin"
-                        className={({ isActive }) => `px-5 py-3.5 cursor-pointer flex items-center gap-3.5 rounded-[20px] transition-all
+                        to="/admin-users"
+                        className={({ isActive }) => `px-5 py-3.5 cursor-pointer flex items-center gap-3.5 rounded-[20px] transition-all mt-4
                             ${isActive
-                                ? 'bg-white text-red-600 shadow-sm border border-white font-bold'
+                                ? 'bg-red-50 text-red-600 shadow-sm border border-red-100 font-bold'
                                 : 'text-red-600 hover:bg-red-50/60 font-medium opacity-90'
                             }`}
                     >
-                        <span className="text-xl">⚙️</span>
-                        <span>מפקדת הקמפוס</span>
+                        <span className="text-xl">🛡️</span>
+                        <span>ניהול משתמשים</span>
                     </NavLink>
                 )}
             </nav>
 
-            {/* Bottom Menu - Location Toggle and Profile Navigation */}
             <div className="mt-auto flex flex-col gap-2 px-4">
-
-                {/* Profile View Link Route Anchor */}
                 <NavLink
                     to="/profile"
                     className={({ isActive }) => `px-6 py-5 cursor-pointer flex items-center gap-3.5 rounded-[24px] transition-all border
@@ -205,7 +191,6 @@ function Sidebar() {
                     <span className="text-indigo-600 font-bold">הפרופיל שלי</span>
                 </NavLink>
             </div>
-
         </div>
     );
 }
