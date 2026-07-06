@@ -161,7 +161,7 @@ function Profile() {
     );
 
     return (
-        <main className="flex-1 overflow-y-auto" dir="rtl" style={{ padding: '24px 32px', fontFamily: 'Heebo, sans-serif', backgroundColor: '#F0F2FA' }}>
+        <main className="flex-1 overflow-y-auto" dir="rtl" style={{ padding: '24px 32px', fontFamily: 'Heebo, sans-serif' }}>
             <div style={card}>
 
                 {/* --- HEADER WITH 3-DOTS MENU --- */}

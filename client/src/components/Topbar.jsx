@@ -12,9 +12,15 @@ function Topbar() {
             justifyContent: 'space-between',
             alignItems: 'center',
             padding: '10px 40px',
-            backgroundColor: 'white',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-            direction: 'rtl'
+            backgroundColor: 'rgba(255,255,255,0.85)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            borderBottom: '1px solid rgba(186,230,253,0.6)',
+            boxShadow: '0 1px 8px rgba(56,189,248,0.08)',
+            direction: 'rtl',
+            position: 'sticky',
+            top: 0,
+            zIndex: 100
         }}>
 
 

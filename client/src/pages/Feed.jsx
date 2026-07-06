@@ -60,7 +60,7 @@ function Feed() {
     }
 
     return (
-        <main className="flex-1 p-8 bg-[#F3F5FA] overflow-hidden flex flex-col items-start justify-start text-right h-[calc(100vh-56px)]" dir="rtl">
+        <main className="flex-1 p-8 overflow-hidden flex flex-col items-start justify-start text-right h-[calc(100vh-56px)]" dir="rtl">
             <div className="w-full max-w-4xl mx-auto flex flex-col h-full">
                 
                 {/* Header Area */}
