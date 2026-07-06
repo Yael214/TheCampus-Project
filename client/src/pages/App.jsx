@@ -39,18 +39,9 @@ function ProtectedLayout() {
   }
 
   return (
-    <div style={{ direction: 'rtl', minHeight: '100vh', backgroundColor: '#FAFEFF', fontFamily: 'Heebo, sans-serif', position: 'relative', overflow: 'hidden' }}>
-      {/* Fixed wave decoration at the bottom */}
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 0, pointerEvents: 'none' }}>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 220" preserveAspectRatio="none" style={{ width: '100%', display: 'block' }}>
-          <path fill="#BAE6FD" fillOpacity="0.22" d="M0,112L60,101.3C120,91,240,69,360,74.7C480,80,600,112,720,117.3C840,123,960,101,1080,90.7C1200,80,1320,80,1380,80L1440,80L1440,220L1380,220C1320,220,1200,220,1080,220C960,220,840,220,720,220C600,220,480,220,360,220C240,220,120,220,60,220L0,220Z"/>
-          <path fill="#7DD3FC" fillOpacity="0.16" d="M0,160L60,149.3C120,139,240,117,360,117.3C480,117,600,139,720,144C840,149,960,139,1080,128C1200,117,1320,107,1380,101.3L1440,96L1440,220L1380,220C1320,220,1200,220,1080,220C960,220,840,220,720,220C600,220,480,220,360,220C240,220,120,220,60,220L0,220Z"/>
-          <path fill="#38BDF8" fillOpacity="0.1" d="M0,192L60,181.3C120,171,240,149,360,144C480,139,600,149,720,154.7C840,160,960,160,1080,154.7C1200,149,1320,139,1380,133.3L1440,128L1440,220L1380,220C1320,220,1200,220,1080,220C960,220,840,220,720,220C600,220,480,220,360,220C240,220,120,220,60,220L0,220Z"/>
-        </svg>
-      </div>
-
+    <div style={{ direction: 'rtl', minHeight: '100vh', backgroundColor: '#FAFEFF', fontFamily: 'Heebo, sans-serif' }}>
       <Topbar />
-      <div style={{ display: 'flex', position: 'relative', zIndex: 1 }}>
+      <div style={{ display: 'flex' }}>
         <Sidebar />
         <main style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
           <Routes>

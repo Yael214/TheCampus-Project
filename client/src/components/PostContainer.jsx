@@ -109,7 +109,7 @@ function PostContainer({ post, showForumLink=true, isAdmin }) {
   const commentCount = comments.length || 0;
 
   return (
-    <div className="bg-white/90 rounded-[14px] border border-sky-100/80 p-4 mb-4 shadow-sm transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 border-r-4 border-r-sky-300" dir="rtl">
+    <div className="bg-white/90 rounded-[14px] border border-slate-100 p-4 mb-4 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 border-r-4 border-r-sky-200" dir="rtl">
       
       {/* Header Section: Forum Link, Title, and 3-Dots Menu */}
       <div className="flex justify-between items-start mb-2">

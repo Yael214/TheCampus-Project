@@ -415,9 +415,9 @@ const sectionTitle = { fontSize: '13px', fontWeight: '700', color: '#6B7280' };
 const labelStyle = { display: 'block', fontSize: '12px', fontWeight: '700', color: '#6B7280', marginBottom: '4px' };
 const contentStyle = { fontSize: '15px', color: '#1A1A2E', fontWeight: '500', margin: 0 };
 const inputStyle = { width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #D1D5DB', fontSize: '14px', fontFamily: 'Heebo, sans-serif', boxSizing: 'border-box' };
-const primaryBtn = { backgroundColor: '#4F46E5', color: 'white', padding: '10px 28px', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '14px', fontFamily: 'Heebo, sans-serif' };
-const secondaryBtn = { backgroundColor: 'white', color: '#4B5563', padding: '10px 28px', border: '1px solid #D1D5DB', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '14px', fontFamily: 'Heebo, sans-serif' };
+const primaryBtn = { backgroundColor: '#4F46E5', color: 'white', padding: '10px 28px', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '14px', fontFamily: 'Heebo, sans-serif', boxShadow: '0 2px 6px rgba(56,189,248,0.22)' };
+const secondaryBtn = { backgroundColor: 'white', color: '#4B5563', padding: '10px 28px', border: '1px solid #D1D5DB', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '14px', fontFamily: 'Heebo, sans-serif', boxShadow: '0 2px 6px rgba(56,189,248,0.18)' };
 const forumRowStyle = { display: 'flex', alignItems: 'center', padding: '12px 16px', backgroundColor: '#F9FAFB', borderRadius: '10px', border: '1px solid #E5E7EB' };
-const deleteBtn = { backgroundColor: '#FEF2F2', color: '#DC2626', padding: '8px 18px', border: '1px solid #FECACA', borderRadius: '10px', cursor: 'pointer', fontWeight: '600', fontSize: '12px', fontFamily: 'Heebo, sans-serif' };
+const deleteBtn = { backgroundColor: '#FEF2F2', color: '#DC2626', padding: '8px 18px', border: '1px solid #FECACA', borderRadius: '10px', cursor: 'pointer', fontWeight: '600', fontSize: '12px', fontFamily: 'Heebo, sans-serif', boxShadow: '0 2px 6px rgba(56,189,248,0.18)' };
 
 export default Profile;

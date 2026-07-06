@@ -106,6 +106,7 @@ function Sidebar() {
                 <NavLink
                     to="/feed"
                     title="פיד ראשי"
+                    style={{ boxShadow: '0 2px 6px rgba(56,189,248,0.18)' }}
                     className={({ isActive }) => `cursor-pointer flex items-center rounded-[20px] transition-all
                         ${isCollapsed ? 'justify-center w-10 h-10 p-0' : 'gap-3.5 px-5 py-3.5'}
                         ${isActive
@@ -178,6 +179,7 @@ function Sidebar() {
                 <NavLink
                     to="/partners"
                     title="חיפוש שותפים"
+                    style={{ boxShadow: '0 2px 6px rgba(56,189,248,0.18)' }}
                     className={({ isActive }) => `cursor-pointer flex items-center rounded-[20px] transition-all
                         ${isCollapsed ? 'justify-center w-10 h-10 p-0' : 'gap-3.5 px-5 py-3.5'}
                         ${isActive
@@ -193,6 +195,7 @@ function Sidebar() {
                     <NavLink
                         to="/admin-users"
                         title="ניהול משתמשים"
+                        style={{ boxShadow: '0 2px 6px rgba(56,189,248,0.18)' }}
                         className={({ isActive }) => `cursor-pointer flex items-center rounded-[20px] transition-all mt-4
                             ${isCollapsed ? 'justify-center w-10 h-10 p-0' : 'gap-3.5 px-5 py-3.5'}
                             ${isActive
@@ -211,6 +214,7 @@ function Sidebar() {
                 <NavLink
                     to="/profile"
                     title="הפרופיל שלי"
+                    style={{ boxShadow: '0 2px 6px rgba(56,189,248,0.18)' }}
                     className={({ isActive }) => `cursor-pointer flex items-center rounded-[24px] transition-all border
                         ${isCollapsed ? 'justify-center w-10 h-10 p-0' : 'gap-3.5 px-6 py-5'}
                         ${isActive

@@ -45,6 +45,14 @@ input, select {
     border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;
 }
 
+button {
+    box-shadow: 0 2px 6px rgba(56, 189, 248, 0.18);
+}
+
+button:hover {
+    box-shadow: 0 3px 10px rgba(56, 189, 248, 0.28);
+}
+
 .forgot-password { text-align: right; margin-bottom: 10px; }
 .forgot-password a, .secondary-text a, .guest-link a {
     color: #4F46E5; text-decoration: underline; font-weight: 600; cursor: pointer;
