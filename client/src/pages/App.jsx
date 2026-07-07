@@ -39,9 +39,9 @@ function ProtectedLayout() {
   }
 
   return (
-    <div style={{ direction: 'rtl', minHeight: '100vh', backgroundColor: '#FAFEFF', fontFamily: 'Heebo, sans-serif' }}>
+    <div style={{ direction: 'rtl', height: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#FAFEFF', fontFamily: 'Heebo, sans-serif' }}>
       <Topbar />
-      <div style={{ display: 'flex' }}>
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         <Sidebar />
         <main style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
           <Routes>

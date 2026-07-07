@@ -65,13 +65,16 @@ function Feed() {
                 
                 {/* Header Area */}
                 <header className="flex justify-between items-center mb-8 shrink-0 w-full">
-                    <h2 className="text-3xl font-black text-[#2C3E7A] m-0">הפיד שלי</h2>
-                    <button 
+                    <h2 className="text-3xl font-black text-[#2C3E7A] m-0 tracking-tight">הפיד שלי</h2>
+                    <button
                         onClick={() => setIsPostModalOpen(true)}
-                        className="bg-[#4F46E5] text-white px-6 py-3 rounded-xl font-bold border-none text-sm flex items-center gap-1.5 cursor-pointer hover:bg-indigo-700 transition-colors"
+                        className="text-white px-6 py-2.5 rounded-xl font-bold border-none text-sm flex items-center gap-2 cursor-pointer transition-all duration-200 hover:-translate-y-px"
+                        style={{ background: 'linear-gradient(135deg, #4F46E5 0%, #6D28D9 100%)', boxShadow: '0 4px 14px rgba(79,70,229,0.4)' }}
+                        onMouseEnter={e => e.currentTarget.style.boxShadow='0 6px 20px rgba(79,70,229,0.55)'}
+                        onMouseLeave={e => e.currentTarget.style.boxShadow='0 4px 14px rgba(79,70,229,0.4)'}
                     >
                         <span>פוסט חדש</span>
-                        <span className="text-base font-light">+</span>
+                        <span className="text-lg font-light leading-none">+</span>
                     </button>
                 </header>
 

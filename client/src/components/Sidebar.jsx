@@ -53,7 +53,7 @@ function Sidebar() {
     return (
         <div
             className={`flex flex-col py-8 shrink-0 transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-72'}`}
-            style={{ height: 'calc(100vh - 56px)', position: 'sticky', top: 0, overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderLeft: '1px solid rgba(186,230,253,0.5)', boxShadow: '2px 0 16px rgba(56,189,248,0.07)' }}
+            style={{ height: '100%', overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderLeft: '1px solid rgba(186,230,253,0.5)', boxShadow: '2px 0 16px rgba(56,189,248,0.07)' }}
         >
             {/* Collapse toggle button */}
             <div className={`flex mb-4 px-3 ${isCollapsed ? 'justify-center' : 'justify-end'}`}>
