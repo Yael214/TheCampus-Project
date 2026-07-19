@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { db, storage } from '../firebase/config';
-import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { collection, query, where, orderBy, onSnapshot, addDoc, doc, deleteDoc, getDocs, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 
 export function useMaterials(forumId) {
     const [materials, setMaterials] = useState([]);
@@ -41,14 +41,17 @@ export function useMaterials(forumId) {
 
         try {
             // Save the file to Firebase Storage
-            const fileRef = ref(storage, `materials/${forumId}/${Date.now()}_${file.name}`);
+            const fileId = `${Date.now()}_${file.name}`;
+            const storagePath = `materials/${forumId}/${fileId}`;
+            const fileRef = ref(storage, storagePath);
             const uploadResult = await uploadBytes(fileRef, file);
             const fileUrl = await getDownloadURL(uploadResult.ref);
 
             const fileMetaData = {
                 fileName: file.name,
                 fileUrl: fileUrl,
-                fileType: file.type || 'application/octet-stream'
+                fileType: file.type || 'application/octet-stream',
+                storagePath: storagePath
             }
             // Save the material metadata to Firestore
             if (saveToMaterials) {
@@ -59,6 +62,7 @@ export function useMaterials(forumId) {
                     title: title,
                     fileUrl: fileUrl,
                     fileType: file.type || 'application/octet-stream',
+                    storagePath: storagePath,
                     isApproved: true, // default to true for now
                     createdAt: serverTimestamp()
                 });
@@ -69,6 +73,32 @@ export function useMaterials(forumId) {
             throw err;
         }
     };
+    const deleteMaterial = async (materialId, fileUrl, storagePath) => {
+        try {
+            // Delete from jeneral
+            await deleteDoc(doc(db, 'materials', materialId));
+            console.log("Material metadata deleted from Firestore");
 
-    return { materials, loading, error, uploadMaterial };
+            // Check if any post is using this file using array-contains query
+            const postsQuery = query(
+                collection(db, 'posts'), 
+                where('attachmentUrls', 'array-contains', fileUrl)
+            );
+            const postsSnapshot = await getDocs(postsQuery);
+
+            // Delete from Storage only if no post contains this file url
+            if (postsSnapshot.empty && storagePath) {
+                const fileStorageRef = ref(storage, storagePath);
+                await deleteObject(fileStorageRef);
+                console.log("File deleted from Storage permanently");
+            } else {
+                console.log("File kept in Storage because a post is referencing it");
+            }
+        } catch (err) {
+            console.error("Error deleting material:", err);
+            throw err;
+        }
+    };
+
+    return { materials, loading, error, uploadMaterial, deleteMaterial };
 }

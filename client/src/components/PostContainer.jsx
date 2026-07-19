@@ -4,8 +4,9 @@ import { useAuth } from '../context/AuthContext';
 import CommentItem from './CommentItem';
 import { useComments } from '../hooks/useComments';
 import { useLikes } from '../hooks/useLikes';
-import { doc, deleteDoc } from 'firebase/firestore'; 
-import { db } from '../firebase/config';
+import { doc, deleteDoc, collection, query, where, getDocs } from 'firebase/firestore'; 
+import { ref, deleteObject } from 'firebase/storage';
+import { db, storage } from '../firebase/config';
 
 // Get the post from fid/ forum page
 function PostContainer({ post, showForumLink=true, isAdmin }) {
@@ -65,6 +66,28 @@ function PostContainer({ post, showForumLink=true, isAdmin }) {
     if (!confirmDelete) return;
 
     try {
+      // Process files cleanup if the post has attachments
+      if (post.attachments && post.attachments.length > 0) {
+        for (const attachment of post.attachments) {
+          // Check if this specific file is saved in the global materials collection
+          const materialsQuery = query(
+            collection(db, 'materials'), 
+            where('fileUrl', '==', attachment.fileUrl)
+          );
+          const materialsSnapshot = await getDocs(materialsQuery);
+
+          // If not found in materials, we can safely delete it from storage
+          if (materialsSnapshot.empty && attachment.storagePath) {
+            const fileStorageRef = ref(storage, attachment.storagePath);
+            await deleteObject(fileStorageRef);
+            console.log(`File deleted from storage: ${attachment.fileName}`);
+          } else {
+            console.log(`File retained in storage because it belongs to materials: ${attachment.fileName}`);
+          }
+        }
+      }
+
+      // Delete the post document from Firestore
       const postRef = doc(db, 'posts', post.postId);
       await deleteDoc(postRef);
       console.log("Post deleted successfully");
