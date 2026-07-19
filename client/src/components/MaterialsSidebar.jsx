@@ -4,7 +4,7 @@ import UploadMaterialModal from './UploadMaterialModal';
 
 function MaterialsSidebar({ forumId }) {
     const [isUploadOpen, setIsUploadOpen] = useState(false);
-    const { materials, loading, error, uploadMaterial } = useMaterials(forumId);
+    const { materials, loading, error, uploadMaterial, deleteMaterial } = useMaterials(forumId);
 
     // A helper function to determine the appropriate icon based on file type
     const getFileIcon = (type) => {
@@ -13,6 +13,21 @@ function MaterialsSidebar({ forumId }) {
         if (type.includes('image')) return '🖼️';
         if (type.includes('word') || type.includes('officedocument')) return '📘';
         return '📝';
+    };
+
+    const handleDeleteClick = async (e, material) => {
+        e.preventDefault(); // Prevents the <a> link from opening
+        e.stopPropagation(); // Stops event bubbling to the parent link
+
+        const confirmDelete = window.confirm(`האם את בטוחה שברצונך למחוק את החומר "${material.title}"?`);
+        if (!confirmDelete) return;
+
+        try {
+            await deleteMaterial(material.materialId, material.fileUrl, material.storagePath);
+            console.log(`Material ${material.title} deleted successfully`);
+        } catch (err) {
+            console.error("Failed to delete material component side:", err);
+        }
     };
 
     return (
@@ -40,19 +55,29 @@ function MaterialsSidebar({ forumId }) {
                     </div>
                 ) : (
                     materials.map((material) => (
-                        <a 
-                            key={material.materialId}
-                            href={material.fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-3.5 bg-gray-50 hover:bg-gray-100 rounded-2xl flex items-center gap-3 transition-all border border-transparent hover:border-gray-200 block text-right no-underline"
-                        >
-                            <span className="text-2xl shrink-0">{getFileIcon(material.fileType)}</span>
-                            <div className="overflow-hidden flex-1">
-                                <p className="font-bold text-xs text-[#2C3E7A] truncate m-0">{material.title}</p>
-                                <p className="text-[9px] text-gray-400 mt-0.5 m-0">הועלה ע"י {material.authorName}</p>
-                            </div>
-                        </a>
+                        <div key={material.materialId} className="relative group">
+                            <a 
+                                href={material.fileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-3.5 bg-gray-50 hover:bg-gray-100 rounded-2xl flex items-center gap-3 transition-all border border-transparent hover:border-gray-200 block text-right no-underline pl-12"
+                            >
+                                <span className="text-2xl shrink-0">{getFileIcon(material.fileType)}</span>
+                                <div className="overflow-hidden flex-1">
+                                    <p className="font-bold text-xs text-[#2C3E7A] truncate m-0">{material.title}</p>
+                                    <p className="text-[9px] text-gray-400 mt-0.5 m-0">הועלה ע"י {material.authorName}</p>
+                                </div>
+                            </a>
+                            
+                            {/* Trash Button - Styled with Tailwind, positioned absolute left */}
+                            <button
+                                onClick={(e) => handleDeleteClick(e, material)}
+                                className="absolute left-3 top-1/2 -translate-y-1/2 bg-transparent hover:bg-red-50 p-2 rounded-xl border-none cursor-pointer text-gray-400 hover:text-red-500 transition-colors flex items-center justify-center text-sm"
+                                title="מחיקת חומר"
+                            >
+                                🗑️
+                            </button>
+                        </div>
                     ))
                 )}
             </div>
