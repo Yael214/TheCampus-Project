@@ -67,7 +67,7 @@ function Courses() {
     }
 
     return (
-        <div className="w-full h-full bg-[#F3F5FA] p-8 flex flex-col items-start justify-start" dir="rtl">
+        <div className="w-full h-full p-8 flex flex-col items-start justify-start" dir="rtl">
             
             {/* Header Area */}
             <header className="mb-8 w-full block text-right">

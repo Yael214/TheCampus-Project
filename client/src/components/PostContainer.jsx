@@ -109,16 +109,15 @@ function PostContainer({ post, showForumLink=true, isAdmin }) {
   const commentCount = comments.length || 0;
 
   return (
-    <div className="bg-white rounded-[14px] border border-slate-200/80 p-4 mb-4 shadow-sm transition hover:shadow-md" dir="rtl">
+    <div className="bg-white rounded-2xl border border-slate-100/70 p-5 mb-4 transition-all duration-250 hover:-translate-y-[3px] border-r-[3px] border-r-indigo-300/70" style={{ boxShadow: '0 2px 12px -2px rgba(0,0,0,0.06), 0 4px 16px -4px rgba(79,70,229,0.05)' }} onMouseEnter={e => e.currentTarget.style.boxShadow='0 8px 28px -6px rgba(79,70,229,0.14), 0 4px 16px -4px rgba(0,0,0,0.08)'} onMouseLeave={e => e.currentTarget.style.boxShadow='0 2px 12px -2px rgba(0,0,0,0.06), 0 4px 16px -4px rgba(79,70,229,0.05)'} dir="rtl">
       
       {/* Header Section: Forum Link, Title, and 3-Dots Menu */}
       <div className="flex justify-between items-start mb-2">
         <div className="flex-1">
           {showForumLink && post.forumId && post.forumName && (
             <div className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold mb-3 ${forumTagClass}`}>
-                <Link 
-                    // to={`/forum/${post.forumId}`} 
-                    to="feed" // temporary link for testing
+                <Link
+                    to={`/forum/${post.forumId}`}
                     className="flex items-center gap-1 text-slate-800 hover:text-slate-900 transition"
                 >
                     {post.forumName}
@@ -183,7 +182,7 @@ function PostContainer({ post, showForumLink=true, isAdmin }) {
       </div>
 
       <div className="flex items-center gap-3 mb-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-800 text-[11px] font-bold text-white shrink-0">
+        <div className="flex h-9 w-9 items-center justify-center rounded-full text-[11px] font-bold text-white shrink-0" style={{ background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)', boxShadow: '0 2px 8px rgba(79,70,229,0.35)' }}>
           {post.authorName ? post.authorName.slice(0, 2) : 'ק'}
         </div>
         <p className="text-xs text-slate-500 flex-1 overflow-hidden whitespace-nowrap text-ellipsis">

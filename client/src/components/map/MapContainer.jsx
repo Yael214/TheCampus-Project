@@ -5,8 +5,8 @@ import PartnerCard from '../../pages/PartnerCard.jsx';
 // Map container styling
 const containerStyle = {
   width: '100%',
-  height: '500px',
-  borderRadius: '8px'
+  height: '100%',
+  borderRadius: '18px'
 };
 
 // Must match the libraries list used in PlacesAutocomplete so the Google Maps script

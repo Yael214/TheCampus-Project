@@ -2,7 +2,7 @@
   --main: #2C3E7A;
   --accent: #5B8DEF;
   --cta: #4F46E5;
-  --bg: #F7F8FC;
+  --bg: transparent;
   --card: #FFFFFF;
   --text-main: #1A1A2E;
   --text-muted: #6B7280;
@@ -101,6 +101,7 @@
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  flex: 1;
 }
 
 .panel h2 { margin: 0; font-size: 18px; color: var(--main); }

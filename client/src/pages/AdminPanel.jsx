@@ -61,10 +61,16 @@ const AdminPanel = () => {
     }
   };
 
-  const filteredUsers = users.filter(user => {
-    const name = user.fullName || '';
-    return name.toLowerCase().includes(searchQuery.toLowerCase());
-  });
+  const filteredUsers = users
+    .filter(user => {
+      const name = user.fullName || '';
+      return name.toLowerCase().includes(searchQuery.toLowerCase());
+    })
+    .sort((a, b) => {
+      if (a.role === 'admin' && b.role !== 'admin') return -1;
+      if (a.role !== 'admin' && b.role === 'admin') return 1;
+      return 0;
+    });
 
   if (loading) return <div className="p-6 text-center" dir="rtl">טוען משתמשים...</div>;
 
