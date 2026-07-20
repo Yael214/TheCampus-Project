@@ -27,27 +27,6 @@ function Topbar() {
                 <Logo />
             </div>
 
-            <div style={{ flex: 1, margin: '0 48px', maxWidth: '520px' }}>
-                <input
-                    type="text"
-                    placeholder="חפשו קורסים, סטודנטים או סיכומים..."
-                    style={{
-                        width: '100%',
-                        padding: '10px 22px',
-                        borderRadius: '999px',
-                        border: '1.5px solid #e5e7eb',
-                        backgroundColor: '#f8fafc',
-                        fontSize: '14px',
-                        outline: 'none',
-                        transition: 'border-color 0.2s, box-shadow 0.2s',
-                        fontFamily: 'Heebo, sans-serif',
-                        color: '#1A1A2E'
-                    }}
-                    onFocus={e => { e.target.style.borderColor = '#a5b4fc'; e.target.style.boxShadow = '0 0 0 3px rgba(79,70,229,0.08)'; }}
-                    onBlur={e => { e.target.style.borderColor = '#e5e7eb'; e.target.style.boxShadow = 'none'; }}
-                />
-            </div>
-
             <button
                 onClick={async () => { await logout(); navigate('/login'); }}
                 style={{
@@ -71,4 +50,4 @@ function Topbar() {
     );
 }
 
-export default Topbar; 
+export default Topbar;
