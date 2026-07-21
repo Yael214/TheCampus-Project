@@ -1,6 +1,6 @@
 import React from 'react';
 
-const PartnerCard = ({ name, distance, tags, phone ,about }) => {
+const PartnerCard = ({ name, distance, sharedCourses, phone ,about }) => {
   return (
     <article className="card">
       <div className="card-row">
@@ -34,9 +34,9 @@ const PartnerCard = ({ name, distance, tags, phone ,about }) => {
             wordBreak: 'break-word'}}>
           {about}
           </p>)}
-          <div className="tags">
-            {tags.map((tag, index) => (
-              <span key={index} className="tag">{tag}</span>
+          <div className="shared-courses">
+            {(sharedCourses || []).map((course, index) => (
+              <span key={index} className="course-tag">{course}</span>
             ))}
           </div>
         </div>

@@ -149,8 +149,8 @@
 .card-title h3 { margin: 0; font-size: 16px; }
 .card-distance { color: var(--text-muted); font-size: 12px; }
 
-.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
-.tag {
+.sharedCourses { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.course-tag {
   background: #EEF2FF; color: var(--main); font-size: 12px;
   padding: 6px 10px; border-radius: 999px;
 }
