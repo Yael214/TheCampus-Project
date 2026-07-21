@@ -43,7 +43,12 @@ function MapPage() {
   // Hook to fetch nearby users based on location and radius
   // Only runs if searchRadius is not null (i.e., after clicking search)
   const { nearbyUsers, loading, error } = useNearbyUsers(userCenter, searchRadius, currentUser?.uid); 
-
+  
+  // Get current user's forum IDs for fast lookup
+  const myForumIds = useMemo(() => {
+    return currentUser?.followedForums ? Object.keys(currentUser.followedForums) : [];
+  }, [currentUser?.followedForums]);
+  
   // Filter partners with valid location
   const filteredPartners = (nearbyUsers || []).filter(partner => {
     const matchesGender = selectedGender === 'הכל' || partner.gender === selectedGender;
@@ -183,13 +188,22 @@ function MapPage() {
                     transition: 'all 0.3s ease',
                     marginBottom: '10px'
                   }}>
-                  <PartnerCard 
-                    name={partner.fullName} 
-                    distance={partner.distance.toFixed(2)} 
-                    tags={partner.tags && partner.tags.length > 0 ? partner.tags : ['אין קורסים משותפים']} 
-                    phone={partner.phone}
-                    about={partner.about}
-                  />
+                  {(() => {
+                    const partnerForums = partner.followedForums || {};
+                    const commonCourses = myForumIds
+                      .filter(forumId => partnerForums[forumId] !== undefined)
+                      .map(forumId => partnerForums[forumId].forumName);
+
+                    return (
+                      <PartnerCard 
+                        name={partner.fullName} 
+                        distance={partner.distance.toFixed(2)} 
+                        sharedCourses={commonCourses.length > 0 ? commonCourses : ['אין קורסים משותפים']}
+                        phone={partner.phone}
+                        about={partner.about}
+                      />
+                    );
+                  })()}
                 </div>
               ))
             )}

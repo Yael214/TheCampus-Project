@@ -1,6 +1,6 @@
 import React from 'react';
 
-const PartnerCard = ({ name, distance, tags, phone ,about }) => {
+const PartnerCard = ({ name, distance, sharedCourses, phone ,about }) => {
   return (
     <article className="card">
       <div className="card-row">
@@ -28,16 +28,27 @@ const PartnerCard = ({ name, distance, tags, phone ,about }) => {
             fontSize: '13px', 
             color: '#4B5563', 
             margin: '4px 0 8px 0',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
+            lineHeight: '1.4',
             wordBreak: 'break-word'}}>
           {about}
           </p>)}
-          <div className="tags">
-            {tags.map((tag, index) => (
-              <span key={index} className="tag">{tag}</span>
+          <div className="shared-courses">
+            {/* Show first 2 courses */}
+            {(sharedCourses || []).slice(0, 2).map((course, index) => (
+              <span key={index} className="course-tag" title={course}>
+                {course}
+              </span>
             ))}
+
+            {/* Show indicator for extra courses */}
+            {(sharedCourses || []).length > 2 && (
+              <span 
+                className="course-tag extra-tag" 
+                data-tooltip={(sharedCourses || []).slice(2).join(', ')}
+              >
+                +{(sharedCourses || []).length - 2}
+              </span>
+            )}
           </div>
         </div>
         <div className="card-avatar">

@@ -149,10 +149,41 @@
 .card-title h3 { margin: 0; font-size: 16px; }
 .card-distance { color: var(--text-muted); font-size: 12px; }
 
-.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
-.tag {
-  background: #EEF2FF; color: var(--main); font-size: 12px;
-  padding: 6px 10px; border-radius: 999px;
+.shared-courses { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.course-tag {
+  background: #EEF2FF; 
+  color: var(--main); 
+  font-size: 12px;
+  padding: 6px 10px; 
+  border-radius: 999px;
+  max-width: 100%;
+  line-height: 1.3;
+  text-align: center;
+  box-sizing: border-box;
+}
+.course-tag.extra-tag {
+  background: #E0E7FF;
+  color: var(--main);
+  font-weight: 600;
+  cursor: pointer;
+  position: relative;
+}
+.course-tag.extra-tag:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: 125%; 
+  right: 50%;
+  transform: translateX(50%);
+  background-color: #1F2937;
+  color: #FFFFFF;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: normal;
+  white-space: nowrap;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  pointer-events: none;
 }
 
 .map-box {

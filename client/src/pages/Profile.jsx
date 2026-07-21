@@ -220,11 +220,11 @@ function Profile() {
                             onChange={handleInputChange}
                             placeholder="תחביבים, תחומי עניין, על מה תרצה/י לשתף (טקסט זה יוצג לפרטנרים בחיפוש)"
                             rows={3}
-                            maxLength={150}
+                            maxLength={90}
                             style={{ ...inputStyle, resize: 'vertical', width: '100%' }}
                         />
                         <span style={{ fontSize: '12px', color: '#6B7280', display: 'block', marginTop: '4px' }}>
-                        {(tempData.about || '').length}/150 תווים
+                        {(tempData.about || '').length}/90 תווים
                         </span>
                         </>
                     ) : (
