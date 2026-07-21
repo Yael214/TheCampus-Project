@@ -187,6 +187,7 @@ function MapPage() {
                     name={partner.fullName} 
                     distance={partner.distance.toFixed(2)} 
                     tags={partner.tags && partner.tags.length > 0 ? partner.tags : ['אין קורסים משותפים']} 
+                    phone={partner.phone}
                   />
                 </div>
               ))

@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useUserForums } from '../hooks/useUserForums';
 import { db } from '../firebase/config';
-import { collection, onSnapshot, query, orderBy,where } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, where } from 'firebase/firestore';
 import NewPostModal from '../components/NewPostModal';
 import PostContainer from '../components/PostContainer';
 import Loader from '../components/Loader';
 
 function Feed() {
-    const { currentUser } = useAuth();
+    const { currentUser, isAdmin } = useAuth();
     const [isPostModalOpen, setIsPostModalOpen] = useState(false);
     const [loading, setLoading] = useState(true);
 
@@ -17,6 +17,13 @@ function Feed() {
     const { forums: userCourses } = useUserForums();
 
     useEffect(() => {
+        // Clear feed and prevent fetching all posts when logged-in user has no courses
+        if (currentUser && userCourses && userCourses.length === 0) {
+            setPosts([]);
+            setLoading(false);
+            return;
+        }
+
         const postsCollectionRef = collection(db, 'posts');
         let q;
 
@@ -33,13 +40,11 @@ function Feed() {
         }
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            if (!snapshot.empty) {
-                const activeFeeds = snapshot.docs.map(doc => ({
-                    postId: doc.id,
-                    ...doc.data()
-                }));
-                setPosts(activeFeeds);
-            }
+            const activeFeeds = snapshot.docs.map(doc => ({
+                postId: doc.id,
+                ...doc.data()
+            }));
+            setPosts(activeFeeds);
             setLoading(false);
         }, (err) => {
             console.log("Database permissions block handled. Rendering layout mockup views safely.");
@@ -55,18 +60,21 @@ function Feed() {
     }
 
     return (
-        <main className="flex-1 p-8 bg-[#F3F5FA] overflow-hidden flex flex-col items-start justify-start text-right h-[calc(100vh-56px)]" dir="rtl">
+        <main className="flex-1 p-8 overflow-hidden flex flex-col items-start justify-start text-right h-[calc(100vh-56px)]" dir="rtl">
             <div className="w-full max-w-4xl mx-auto flex flex-col h-full">
                 
                 {/* Header Area */}
                 <header className="flex justify-between items-center mb-8 shrink-0 w-full">
-                    <h2 className="text-3xl font-black text-[#2C3E7A] m-0">הפיד שלי</h2>
-                    <button 
+                    <h2 className="text-3xl font-black text-[#2C3E7A] m-0 tracking-tight">הפיד שלי</h2>
+                    <button
                         onClick={() => setIsPostModalOpen(true)}
-                        className="bg-[#4F46E5] text-white px-6 py-3 rounded-xl font-bold border-none text-sm flex items-center gap-1.5 cursor-pointer hover:bg-indigo-700 transition-colors"
+                        className="text-white px-6 py-2.5 rounded-xl font-bold border-none text-sm flex items-center gap-2 cursor-pointer transition-all duration-200 hover:-translate-y-px"
+                        style={{ background: 'linear-gradient(135deg, #4F46E5 0%, #6D28D9 100%)', boxShadow: '0 4px 14px rgba(79,70,229,0.4)' }}
+                        onMouseEnter={e => e.currentTarget.style.boxShadow='0 6px 20px rgba(79,70,229,0.55)'}
+                        onMouseLeave={e => e.currentTarget.style.boxShadow='0 4px 14px rgba(79,70,229,0.4)'}
                     >
                         <span>פוסט חדש</span>
-                        <span className="text-base font-light">+</span>
+                        <span className="text-lg font-light leading-none">+</span>
                     </button>
                 </header>
 
@@ -81,6 +89,7 @@ function Feed() {
                                 key={post.postId} 
                                 post={post} 
                                 showForumLink={true} 
+                                isAdmin={isAdmin}
                             />
                         ))
                     )}

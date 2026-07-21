@@ -7,50 +7,13 @@ import { db } from '../firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
 import NewPostModal from '../components/NewPostModal';
 import PostContainer from '../components/PostContainer';
-
-function UploadMaterialModal({ isOpen, onClose }) {
-    const [fileName, setFileName] = useState('');
-    if (!isOpen) return null;
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        alert(`File "${fileName}" ready for upload!`);
-        onClose();
-        setFileName('');
-    };
-
-    return (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50" dir="rtl">
-            <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-right">
-                <h3 className="text-xl font-bold text-[#2C3E7A] mb-4">העלאת חומר לימוד חדש</h3>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label className="block text-xs font-bold text-gray-500 mb-1">שם החומר / קובץ</label>
-                        <input 
-                            type="text" 
-                            required
-                            placeholder="לדוגמה: סיכום הרצאה 4"
-                            value={fileName}
-                            onChange={(e) => setFileName(e.target.value)}
-                            className="w-full text-sm p-3 border border-gray-200 rounded-xl focus:outline-none"
-                        />
-                    </div>
-                    <div className="flex gap-3 pt-4">
-                        <button type="submit" className="flex-1 bg-[#4F46E5] text-white py-3 rounded-xl font-bold">העלה קובץ</button>
-                        <button type="button" onClick={onClose} className="flex-1 bg-gray-100 text-gray-500 py-3 rounded-xl font-bold">ביטול</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    );
-}
-
+import MaterialsSidebar from '../components/MaterialsSidebar'
+     
 function Courses() {
-    const { user: currentUser } = useAuth();
+    const { currentUser, isAdmin } = useAuth();
     const params = useParams();
     const rawForumId = params.forumId; 
 
-    const [isUploadOpen, setIsUploadOpen] = useState(false);
     const [isPostModalOpen, setIsPostModalOpen] = useState(false);
     const [forumDetails, setForumDetails] = useState(null);
     const [posts, setPosts] = useState([]);
@@ -104,12 +67,12 @@ function Courses() {
     }
 
     return (
-        <div className="w-full h-full bg-[#F3F5FA] p-8 flex flex-col items-start justify-start" dir="rtl">
+        <div className="w-full h-full p-8 flex flex-col items-start justify-start" dir="rtl">
             
             {/* Header Area */}
             <header className="mb-8 w-full block text-right">
                 <h1 className="text-3xl font-black text-[#2C3E7A] m-0 p-0 block text-right w-full">
-                    {forumDetails?.titel || currentCourse?.name || "פיתוח אפליקציות ב-React"}
+                    {forumDetails?.forumName || currentCourse?.name || "פיתוח אפליקציות ב-React"}
                 </h1>
                 <div className="text-gray-400 text-sm mt-2 font-medium w-full block text-right">
                     <span className="inline-block" style={{ marginLeft: '2rem' }}>
@@ -153,36 +116,19 @@ function Courses() {
                     ) : (
                         posts.map(post => (
                             <PostContainer 
-                                key={post.id} 
+                                key={post.postId} 
                                 post={post} 
-                                showForumLink={false} 
+                                showForumLink={false}
+                                isAdmin={isAdmin} 
                             />
                         ))
                     )}
                 </section>
 
-                {/* Sidebar Documents */}
-                <aside className="flex-1 bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col shrink-0 text-right h-full">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-lg font-bold text-[#2C3E7A] flex items-center gap-2 m-0">
-                            <span>📂</span> חומרי הקורס
-                        </h2>
-                        <button onClick={() => setIsUploadOpen(true)} className="text-[#4F46E5] font-bold text-xs bg-indigo-50 px-3 py-1.5 rounded-lg border-none cursor-pointer">העלאה +</button>
-                    </div>
-                    <div className="space-y-3 flex-1 overflow-y-auto">
-                        <div className="p-4 bg-gray-50 rounded-2xl flex items-center gap-3">
-                            <span className="text-xl">📁</span>
-                            <div>
-                                <p className="font-bold text-xs text-[#2C3E7A]">סיכומי הרצאות</p>
-                                <p className="text-[10px] text-gray-400">תיקייה ריקה (ספרינט הבא)</p>
-                            </div>
-                        </div>
-                    </div>
-                </aside>
+                <MaterialsSidebar forumId={safeForumId} />
             </div>
 
-            <UploadMaterialModal isOpen={isUploadOpen} onClose={() => setIsUploadOpen(false)} />
-            <NewPostModal 
+            <NewPostModal
                 isOpen={isPostModalOpen}
                 onClose={() => setIsPostModalOpen(false)}
                 lockedForumId={safeForumId}

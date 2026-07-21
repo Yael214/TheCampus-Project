@@ -5,7 +5,8 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  sendEmailVerification
 } from "firebase/auth";
 import { auth, db, storage } from "../firebase/config";
 import { getDoc, doc, setDoc, updateDoc, deleteDoc } from "firebase/firestore";
@@ -27,9 +28,9 @@ export const AuthProvider = ({ children }) => {
 
   // Merge auth data with Firestore user data into single object
   const currentUser = authUser && userData
-    ? { ...authUser, ...userData }
+    ? { ...authUser, ...userData, emailVerified: authUser.emailVerified }
     : authUser
-      ? authUser
+      ? { ...authUser, emailVerified: authUser.emailVerified, isAdmin }
       : null;
 
   // Combined loading state: includes both auth and Firestore data loading
@@ -41,15 +42,14 @@ export const AuthProvider = ({ children }) => {
 
       if (user) {
         try {
-          const userDoc = await getDoc(doc(db, "users", user.uid));
-          // Check if the user is an admin 
-          if (userDoc.exists() && userDoc.data().role === "admin") {
+          const idTokenResult = await user.getIdTokenResult();
+          if (idTokenResult.claims.role === "admin") {
             setIsAdmin(true);
           } else {
             setIsAdmin(false);
           }
         } catch (error) {
-          console.error("Error fetching user document:", error);
+          console.error("Error fetching token claims:", error);
           setIsAdmin(false);
         }
       } else {
@@ -103,7 +103,8 @@ export const AuthProvider = ({ children }) => {
       role: "user", // הגדרת תפקיד ברירת מחדל
       createdAt: new Date()
     });
-
+    // Send initial verification email automatically on signup
+    await sendEmailVerification(user);
     return userCredential;
   };
 

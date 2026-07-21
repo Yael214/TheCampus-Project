@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useUserForums } from '../hooks/useUserForums';
-import { db } from '../firebase/config';
-import { collection, addDoc } from 'firebase/firestore';
+import { useMaterials } from '../hooks/useMaterials'
+import useCreateForumPost from '../hooks/useCreateForumPost'; // use the create-only hook
 
 // Global standalone Modal for dynamic post creation across Feed and specific Course views
 function NewPostModal({ isOpen, onClose, lockedForumId = null }) {
@@ -11,13 +11,19 @@ function NewPostModal({ isOpen, onClose, lockedForumId = null }) {
     const [content, setContent] = useState('');
     const [selectedForumId, setSelectedForumId] = useState('');
     const [isSavedToMaterials, setIsSavedToMaterials] = useState(false);
+    const [selectedFile, setSelectedFile] = useState(null);
     const [loading, setLoading] = useState(false);
 
     const fileInputRef = useRef(null);
     const [uploadType, setUploadType] = useState('*');
-    const [selectedFileName, setSelectedFileName] = useState('');
 
     const { forums: userCourses } = useUserForums();
+
+    // Determine the current forum (locked to route or selected in modal)
+    const targetForumId = lockedForumId || selectedForumId;
+    const {uploadMaterial} = useMaterials(targetForumId);
+    // Activate the post creation hook
+    const { createPost } = useCreateForumPost(targetForumId);
 
     // Context synchronization: Handle if the modal is locked to a specific course route or floating free
     useEffect(() => {
@@ -42,45 +48,62 @@ function NewPostModal({ isOpen, onClose, lockedForumId = null }) {
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (file) {
-            setSelectedFileName(file.name);
+            setSelectedFile(file);
         }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const targetForumId = lockedForumId || selectedForumId;
         if (!title || !content || !targetForumId || loading) return;
 
         setLoading(true);
         try {
-            // Locate dynamic textual metadata descriptors
-            const chosenForum = userCourses?.find(f => f.id === targetForumId);
+            let attachments = [];
+
+            if (selectedFile) {
+                const uploadedFileData = await uploadMaterial(
+                    title,
+                    selectedFile,
+                    currentUser,
+                    isSavedToMaterials
+                );
+                if (uploadedFileData) {
+                    attachments.push(uploadedFileData);
+                }
+            }
+            // Find the selected forum object to extract its name
+            const chosenForum = userCourses?.find(f => (f.forumId ?? f.id) === targetForumId);
             
-            await addDoc(collection(db, 'posts'), {
+            // Use the hook's createPost function instead of addDoc directly
+            await createPost({
                 title,
                 content,
                 forumId: targetForumId,
-                forumName: chosenForum?.name || 'פורום קורס',
-                authorId: currentUser?.uid || 'anonymous-user',
-                authorName: currentUser?.fullName || 'סטודנט/ית',
-                createdAt: new Date(),
-                likesCount: 0,
-                commentsCount: 0,
+                forumName: chosenForum?.forumName || 'פורום קורס',
+                attachments: attachments,
                 saveToMaterials: isSavedToMaterials,
-                likedBy: []
             });
 
             setTitle('');
             setContent('');
             setIsSavedToMaterials(false);
-            setSelectedFileName('');
+            setSelectedFile(null);
             onClose();
+            console.log("הפוסט פורסם בהצלחה!");
         } catch (err) {
             console.error("Error creating post database instance:", err);
             alert("שגיאה בפרסום הפוסט.");
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleClose = () => {
+        setSelectedFile(null);
+        setTitle('');
+        setContent('');
+        setIsSavedToMaterials(false);
+        onClose();
     };
 
     return (
@@ -98,9 +121,14 @@ function NewPostModal({ isOpen, onClose, lockedForumId = null }) {
                                 onChange={(e) => setSelectedForumId(e.target.value)}
                                 className="w-full text-sm p-3.5 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:border-[#4F46E5] font-medium text-gray-700"
                             >
-                                {userCourses?.map(course => (
-                                    <option key={course.id} value={course.id}>{course.name}</option>
-                                ))}
+                                {userCourses?.map((course, index) => {
+                                    const forumId = course.forumId ?? course.id ?? String(index);
+                                    return (
+                                        <option key={forumId} value={forumId}>
+                                            {course.forumName || course.name || 'פורום קורס'}
+                                        </option>
+                                    );
+                                })}
                             </select>
                         </div>
                     )}
@@ -136,8 +164,8 @@ function NewPostModal({ isOpen, onClose, lockedForumId = null }) {
                     {/* Media Actions Dashboard */}
                     <div className="space-y-3">
                         <div className="w-full p-3 border border-dashed border-gray-200 rounded-xl bg-gray-50 text-right text-xs font-semibold text-gray-500">
-                            {selectedFileName ? (
-                                <span className="text-[#4F46E5]">📎 קובץ נבחר: {selectedFileName}</span>
+                            {selectedFile ? (
+                                <span className="text-[#4F46E5]">📎 קובץ נבחר: {selectedFile.name}</span>
                             ) : (
                                 <span>בחירת קובץ לא נבחר קובץ</span>
                             )}
@@ -168,7 +196,7 @@ function NewPostModal({ isOpen, onClose, lockedForumId = null }) {
                     {/* Form Controls */}
                     <div className="flex gap-3 pt-4">
                         <button type="submit" disabled={loading} className="flex-1 bg-[#4F46E5] text-white py-3.5 rounded-xl font-bold hover:bg-indigo-700 border-none text-sm cursor-pointer">{loading ? 'מפרסם...' : 'פרסם'}</button>
-                        <button type="button" onClick={onClose} className="flex-1 bg-gray-100 text-gray-500 py-3.5 rounded-xl font-bold hover:bg-gray-200 border-none text-sm cursor-pointer">ביטול</button>
+                        <button type="button" onClick={handleClose} className="flex-1 bg-gray-100 text-gray-500 py-3.5 rounded-xl font-bold hover:bg-gray-200 border-none text-sm cursor-pointer">ביטול</button>
                     </div>
                 </form>
             </div>

@@ -4,9 +4,12 @@ import { useAuth } from '../context/AuthContext';
 import CommentItem from './CommentItem';
 import { useComments } from '../hooks/useComments';
 import { useLikes } from '../hooks/useLikes';
+import { doc, deleteDoc, collection, query, where, getDocs } from 'firebase/firestore'; 
+import { ref, deleteObject } from 'firebase/storage';
+import { db, storage } from '../firebase/config';
 
 // Get the post from fid/ forum page
-function PostContainer({ post, showForumLink=true}) {
+function PostContainer({ post, showForumLink=true, isAdmin }) {
   const { currentUser: user } = useAuth();
   const [isOpen, setIsOpen] = useState(false); // does the post's comment section is open or closed
   const [rootCommentText, setRootCommentText] = useState('');
@@ -15,6 +18,13 @@ function PostContainer({ post, showForumLink=true}) {
 
   const [liked, setLiked] = useState(isLiked);
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
+  
+  // New state for the 3-dots menu
+  const [showMenu, setShowMenu] = useState(false);
+
+  // Check if current user is the author or an admin to allow deletion
+  const isAuthor = user?.uid === post.authorId;
+  const canDelete = isAuthor || isAdmin;
 
   useEffect(() => {
     setLiked(isLiked);
@@ -50,6 +60,71 @@ function PostContainer({ post, showForumLink=true}) {
     }
   };
 
+  // Handle post deletion
+  const handleDelete = async () => {
+    const confirmDelete = window.confirm("האם את בטוחה שברצונך למחוק את הפוסט?");
+    if (!confirmDelete) return;
+
+    try {
+      // Process files cleanup if the post has attachments
+      if (post.attachments && post.attachments.length > 0) {
+        for (const attachment of post.attachments) {
+          // Check if this specific file is saved in the global materials collection
+          const materialsQuery = query(
+            collection(db, 'materials'), 
+            where('fileUrl', '==', attachment.fileUrl)
+          );
+          const materialsSnapshot = await getDocs(materialsQuery);
+
+          // If not found in materials, we can safely delete it from storage
+          if (materialsSnapshot.empty && attachment.storagePath) {
+            const fileStorageRef = ref(storage, attachment.storagePath);
+            await deleteObject(fileStorageRef);
+            console.log(`File deleted from storage: ${attachment.fileName}`);
+          } else {
+            console.log(`File retained in storage because it belongs to materials: ${attachment.fileName}`);
+          }
+        }
+      }
+
+      // Delete the post document from Firestore
+      const postRef = doc(db, 'posts', post.postId);
+      await deleteDoc(postRef);
+      console.log("Post deleted successfully");
+    } catch (error) {
+      console.error("Error deleting post:", error);
+    }
+  };
+
+  // Handle comment deletion (Passed down to CommentItem)
+  const handleDeleteComment = async (commentId) => {
+    const confirmDelete = window.confirm("האם את בטוחה שברצונך למחוק את התגובה?");
+    if (!confirmDelete) return;
+
+    try {
+      const commentRef = doc(db, 'posts', post.postId, 'comments', commentId);
+      await deleteDoc(commentRef);
+      console.log("Comment deleted successfully");
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+    }
+  };
+
+  // Helper function to render correct icon and styles per file type
+  const getAttachmentStyle = (type) => {
+    const lowerType = type?.toLowerCase() || '';
+    if (lowerType.includes('pdf')) {
+      return { icon: '📄', bg: 'bg-gray-50 text-red-700 border-red-100 hover:bg-red-100/70' };
+    }
+    if (lowerType.includes('image') || lowerType.includes('png') || lowerType.includes('jpg') || lowerType.includes('jpeg')) {
+      return { icon: '🖼️', bg: 'bg-gray-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100/70' };
+    }
+    if (lowerType.includes('video') || lowerType.includes('mp4')) {
+      return { icon: '🎬', bg: 'bg-gray-50 text-amber-700 border-amber-100 hover:bg-amber-100/70' };
+    }
+    return { icon: '📎', bg: 'bg-gray-50 text-slate-700 border-slate-100 hover:bg-slate-100' };
+  };
+
   // logic to separate root comments from replies (for simple nested display)
   const rootComments = comments.filter(c => !c.parentId);
   const replies = comments.filter(c => c.parentId);
@@ -57,29 +132,80 @@ function PostContainer({ post, showForumLink=true}) {
   const commentCount = comments.length || 0;
 
   return (
-    <div className="bg-white rounded-[14px] border border-slate-200/80 p-4 mb-4 shadow-sm transition hover:shadow-md" dir="rtl">
-      {showForumLink && post.forumId && post.forumName && (
-        <div className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold mb-3 ${forumTagClass}`}>
-            <Link 
-                // to={`/forum/${post.forumId}`} 
-                to="feed" // temporary link for testing
-                className="flex items-center gap-1 text-slate-800 hover:text-slate-900 transition"
-            >
-                {post.forumName}
-            </Link>
+    <div className="bg-white rounded-2xl border border-slate-100/70 p-5 mb-4 transition-all duration-250 hover:-translate-y-[3px] border-r-[3px] border-r-indigo-300/70" style={{ boxShadow: '0 2px 12px -2px rgba(0,0,0,0.06), 0 4px 16px -4px rgba(79,70,229,0.05)' }} onMouseEnter={e => e.currentTarget.style.boxShadow='0 8px 28px -6px rgba(79,70,229,0.14), 0 4px 16px -4px rgba(0,0,0,0.08)'} onMouseLeave={e => e.currentTarget.style.boxShadow='0 2px 12px -2px rgba(0,0,0,0.06), 0 4px 16px -4px rgba(79,70,229,0.05)'} dir="rtl">
+      
+      {/* Header Section: Forum Link, Title, and 3-Dots Menu */}
+      <div className="flex justify-between items-start mb-2">
+        <div className="flex-1">
+          {showForumLink && post.forumId && post.forumName && (
+            <div className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold mb-3 ${forumTagClass}`}>
+                <Link
+                    to={`/forum/${post.forumId}`}
+                    className="flex items-center gap-1 text-slate-800 hover:text-slate-900 transition"
+                >
+                    {post.forumName}
+                </Link>
+            </div>
+          )}
+          <h2 className="text-base md:text-lg font-semibold text-slate-900 leading-6">
+            {post.title}
+          </h2>
         </div>
-    )}
 
-      <h2 className="text-base md:text-lg font-semibold text-slate-900 leading-6 mb-3">
-        {post.title}
-      </h2>
+        {/* 3-Dots Menu Wrapper - NOW VISIBLE TO EVERYONE */}
+        <div className="relative z-10 mr-2">
+          <button 
+            onClick={() => setShowMenu(!showMenu)}
+            onBlur={() => setTimeout(() => setShowMenu(false), 200)}
+            className="text-slate-400 hover:text-slate-600 px-2 text-xl leading-none"
+          >
+            ⋮
+          </button>
+          
+          {showMenu && (
+            <div className="absolute left-0 mt-1 w-32 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden">
+              {canDelete ? (
+                <button
+                  onClick={handleDelete}
+                  className="w-full text-right px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
+                >
+                  מחק פוסט
+                </button>
+              ) : (
+                <div className="w-full text-center px-4 py-2 text-sm text-slate-400 cursor-default">
+                  בקרוב...
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
 
-      <p className="text-sm text-slate-500 leading-6 mb-4 max-h-14 overflow-hidden">
+      <p className="text-sm text-slate-500 leading-6 mb-4 max-h-14 overflow-hidden mt-3">
         {post.content || ''}
       </p>
 
+      <div className="mb-4 flex flex-wrap gap-2">
+        {post.attachments.map((file, index) => {
+          const style = getAttachmentStyle(file.fileType || file.type);
+          return (
+            <a
+              key={index}
+              href={file.fileUrl || file.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium transition max-w-[240px] ${style.bg}`}
+              title={file.title || file.fileName || 'קובץ מצורף'}
+            >
+              <span className="text-sm shrink-0">{style.icon}</span>
+              <span className="truncate flex-1 text-right">{file.title || file.fileName || 'הצג קובץ'}</span>
+            </a>
+          );
+        })}
+      </div>
+
       <div className="flex items-center gap-3 mb-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-800 text-[11px] font-bold text-white shrink-0">
+        <div className="flex h-9 w-9 items-center justify-center rounded-full text-[11px] font-bold text-white shrink-0" style={{ background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)', boxShadow: '0 2px 8px rgba(79,70,229,0.35)' }}>
           {post.authorName ? post.authorName.slice(0, 2) : 'ק'}
         </div>
         <p className="text-xs text-slate-500 flex-1 overflow-hidden whitespace-nowrap text-ellipsis">
@@ -106,12 +232,14 @@ function PostContainer({ post, showForumLink=true}) {
         </div>
       </div>
 
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="text-sm font-semibold text-slate-600 hover:text-slate-900"
-      >
-        {isOpen ? 'הסתר תגובות' : `הצג תגובות (${commentCount})`}
-      </button>
+      <div className="flex justify-between items-center mt-2">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="text-sm font-semibold text-slate-600 hover:text-slate-900"
+        >
+          {isOpen ? 'הסתר תגובות' : `הצג תגובות (${commentCount})`}
+        </button>
+      </div>
 
       {isOpen && (
         <div className="mt-4 pt-4 border-t border-slate-200/70 bg-slate-50 p-3 rounded-2xl">
@@ -124,6 +252,8 @@ function PostContainer({ post, showForumLink=true}) {
                 currentUser={user}
                 onAddComment={(text, parentId) => addComment(text, user, parentId)}
                 depth={0}
+                isAdmin={isAdmin}
+                onDeleteComment={handleDeleteComment}
               />
           ))}
 
@@ -147,7 +277,6 @@ function PostContainer({ post, showForumLink=true}) {
 }
 
 export default PostContainer;
-
 
 function formatTimeAgo(dateInput) {
   if (!dateInput) return '';

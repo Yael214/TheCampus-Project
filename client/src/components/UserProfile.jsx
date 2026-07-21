@@ -1,6 +1,6 @@
 import React from 'react';
 
-function UserImage({ image, fullName, onImageChange, onImageClick }) {
+function UserImage({ image, fullName, onImageChange, onImageClick, size = 100 }) {
 
     const getInitials = (name) => {
         if (!name) return "";
@@ -12,7 +12,7 @@ function UserImage({ image, fullName, onImageChange, onImageClick }) {
     const hasValidImage = image && image !== "" && image !== "**";
 
     return (
-        <div style={{ position: 'relative', width: '100px', height: '100px' }}>
+        <div style={{ position: 'relative', width: `${size}px`, height: `${size}px` }}>
 
             <div
                 onClick={onImageClick}
@@ -21,13 +21,13 @@ function UserImage({ image, fullName, onImageChange, onImageClick }) {
                     height: '100%',
                     borderRadius: '50%',
                     overflow: 'hidden',
-                    border: '3px solid #6366f1',
+                    border: `${size < 50 ? 2 : 3}px solid #6366f1`,
                     cursor: 'pointer',
                     backgroundColor: '#6366f1',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '32px',
+                    fontSize: `${Math.round(size * 0.32)}px`,
                     fontWeight: 'bold',
                     color: 'white',
                     boxShadow: '0 4px 10px rgba(99, 102, 241, 0.3)'
@@ -40,25 +40,26 @@ function UserImage({ image, fullName, onImageChange, onImageClick }) {
                 )}
             </div>
 
-
-            <label style={{
-                position: 'absolute',
-                bottom: '0',
-                right: '0',
-                backgroundColor: 'white',
-                borderRadius: '50%',
-                width: '30px',
-                height: '30px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-                cursor: 'pointer',
-                border: '1px solid #e5e7eb'
-            }}>
-                ✏️
-                <input type="file" name="profileImage" accept="image/*" onChange={onImageChange} style={{ display: 'none' }} />
-            </label>
+            {size >= 50 && (
+                <label style={{
+                    position: 'absolute',
+                    bottom: '0',
+                    right: '0',
+                    backgroundColor: 'white',
+                    borderRadius: '50%',
+                    width: '30px',
+                    height: '30px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+                    cursor: 'pointer',
+                    border: '1px solid #e5e7eb'
+                }}>
+                    ✏️
+                    <input type="file" name="profileImage" accept="image/*" onChange={onImageChange} style={{ display: 'none' }} />
+                </label>
+            )}
         </div>
     );
 }

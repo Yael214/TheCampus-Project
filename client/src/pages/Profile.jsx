@@ -29,13 +29,21 @@ function Profile() {
     const [deleteLoading, setDeleteLoading] = useState(false);
     const [deleteError, setDeleteError] = useState('');
     const [deleteSuccess, setDeleteSuccess] = useState(false);
+    const [profileErrors, setProfileErrors] = useState({});
+
+    // New state for the 3-dots menu
+    const [showMenu, setShowMenu] = useState(false);
+
+    const [searchQuery, setSearchQuery] = useState('');
 
     const display = isEditing ? tempData : (savedData || currentUser);
 
     const handleStartEdit = () => {
-        setTempData({ ...display });
-        setTempLocation(display.location || null); 
+        const currentData = savedData || currentUser || {};
+        setTempData({ ...currentData });
+        setTempLocation(currentData.location || null); 
         setAddressError(null);
+        setProfileErrors({});
         setIsEditing(true);
     };
 
@@ -58,9 +66,40 @@ function Profile() {
 
     const handleSave = async () => {
         if (!targetUserId) return;
+        
+        let tempErrors = {};
+        
+        setProfileErrors({});
+        setAddressError(null);
 
-        if (tempData.address && !tempLocation) {
-            setAddressError("יש לבחור כתובת חוקית מתוך הרשימה");
+        const studyFieldVal = (tempData.studyField || '').toString().trim();
+        const yearVal = (tempData.year || '').toString().trim();
+        const phoneVal = (tempData.phone || '').toString().trim();
+        const addressVal = (tempData.address || '').toString().trim();
+    
+        if (!studyFieldVal) {
+            tempErrors.studyField = "חובה להזין תחום לימודים";
+        }
+        
+        if (!yearVal) {
+            tempErrors.year = "חובה להזין שנת לימודים";
+        }
+
+        if (!phoneVal) {
+            tempErrors.phone = "חובה להזין מספר טלפון";
+        } else if (!/^05\d{8}$/.test(phoneVal)) {
+            tempErrors.phone = "מספר טלפון חייב להכיל 10 ספרות בדיוק ולהתחיל ב-05";
+        }
+
+        if (!addressVal) {
+            tempErrors.address = "חובה להזין כתובת";
+        } else if (!tempLocation) {
+            tempErrors.address = "יש לבחור כתובת חוקית מתוך הרשימה";
+        }
+
+        if (Object.keys(tempErrors).length > 0) {
+            setProfileErrors(tempErrors);
+            if (tempErrors.address) setAddressError(tempErrors.address);
             return;
         }
 
@@ -96,17 +135,13 @@ function Profile() {
         setDeleteError('');
         
         try {
-            // Call centralized deletion function from context
-            // Execution order: verify session → delete storage → delete firestore → delete auth
             await deleteAccountComplete();
             
             setDeleteSuccess(true);
-            // Redirect to login after success
             setTimeout(() => navigate('/login'), 2500);
         } catch (error) {
             console.error("Error executing account deletion:", error);
             
-            // Handle specific Firebase auth errors early detection
             if (error.code === 'auth/requires-recent-login') {
                 setDeleteError('מטעמי אבטחה, יש להתחבר מחדש לחשבון לפני ביצוע המחיקה.');
             } else {
@@ -126,12 +161,53 @@ function Profile() {
     );
 
     return (
-        <main className="flex-1 overflow-y-auto" dir="rtl" style={{ padding: '24px 32px', fontFamily: 'Heebo, sans-serif', backgroundColor: '#F0F2FA' }}>
+        <main className="flex-1 overflow-y-auto" dir="rtl" style={{ padding: '24px 32px', fontFamily: 'Heebo, sans-serif' }}>
             <div style={card}>
 
-                <h2 style={{ color: '#2C3E7A', fontSize: '22px', fontWeight: '800', margin: '0 0 20px 0' }}>
-                    הפרופיל שלי
-                </h2>
+                {/* --- HEADER WITH 3-DOTS MENU --- */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                    <h2 style={{ color: '#2C3E7A', fontSize: '22px', fontWeight: '800', margin: 0 }}>
+                        הפרופיל שלי
+                    </h2>
+                    
+                    <div style={{ position: 'relative' }}>
+                        <button 
+                            onClick={() => setShowMenu(!showMenu)}
+                            onBlur={() => setTimeout(() => setShowMenu(false), 200)} // Allows click to register before closing
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '24px', padding: '0 8px', color: '#6B7280', lineHeight: '1' }}
+                        >
+                            ⋮
+                        </button>
+                        
+                        {showMenu && (
+                            <div style={{ 
+                                position: 'absolute', 
+                                left: 0, 
+                                top: '100%', 
+                                backgroundColor: 'white', 
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.1)', 
+                                borderRadius: '10px', 
+                                padding: '8px', 
+                                zIndex: 10,
+                                minWidth: '130px',
+                                marginTop: '4px',
+                                border: '1px solid #E5E7EB'
+                            }}>
+                                <button
+                                    onClick={() => { 
+                                        setShowMenu(false); 
+                                        setShowDeleteConfirm(true); 
+                                        setDeleteError(''); 
+                                    }}
+                                    style={{ ...deleteBtn, width: '100%', padding: '8px 12px' }}
+                                >
+                                    מחיקת חשבון
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+                {/* --------------------------------- */}
 
                 {/* About Section */}
                 <div style={sectionTitle}>קצת על עצמי</div>
@@ -168,9 +244,9 @@ function Profile() {
                 <div style={sectionTitle}>פרטים נוספים</div>
                 <div style={{ ...grid, marginTop: '12px' }}>
                     <EditableField label="גיל" name="age" value={display.age} isEditing={isEditing} onChange={handleInputChange} />
-                    <EditableField label="תחום לימודים" name="studyField" value={display.studyField} isEditing={isEditing} onChange={handleInputChange} />
-                    <EditableField label="שנת לימודים" name="year" value={display.year} isEditing={isEditing} onChange={handleInputChange} />
-                    <EditableField label="מספר טלפון" name="phone" value={display.phone} isEditing={isEditing} onChange={handleInputChange} type="tel" />
+                    <EditableField label="תחום לימודים" name="studyField" value={display.studyField} isEditing={isEditing} onChange={handleInputChange} error={profileErrors.studyField} />
+                    <EditableField label="שנת לימודים" name="year" value={display.year} isEditing={isEditing} onChange={handleInputChange} error={profileErrors.year} />
+                    <EditableField label="מספר טלפון" name="phone" value={display.phone} isEditing={isEditing} onChange={handleInputChange} type="tel" error={profileErrors.phone} />
                     
                     {/* Address Autocomplete Selection Block */}
                     <div>
@@ -182,7 +258,7 @@ function Profile() {
                                 className={inputStyle}
                                 onTextChange={handleAddressTextChange}
                                 onLocationSelected={handleLocationSelected}
-                                error={addressError}
+                                error={profileErrors.address || addressError}
                             />
                         ) : (
                             <p style={contentStyle}>{display.address || '—'}</p>
@@ -198,36 +274,48 @@ function Profile() {
                     סמנ/י את הפורומים שברצונך לעקוב אחריהם בפיד:
                 </p>
 
+                <div style={{ marginBottom: '16px' }}>
+                    <input
+                        type="text"
+                        placeholder="חפש/י פורום או קורס..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        style={{...inputStyle, backgroundColor: '#F9FAFB'}}
+                    />
+                </div>
+
                 {forumsLoading ? (
                     <p style={contentStyle}>טוען פורומים...</p>
                 ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        {forums.map((forum) => {
-                            const isFollowing = followedForums[forum.id] !== undefined;
-                            return (
-                                <div key={forum.id} style={forumRowStyle}>
-                                    <input
-                                        type="checkbox"
-                                        id={forum.id}
-                                        checked={isFollowing}
-                                        onChange={() => toggleFollowForum(forum.id, forum.forumName || forum.id, isFollowing)}
-                                        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                                    />
-                                    <div style={{ marginRight: '12px', textAlign: 'right' }}>
-                                        <label htmlFor={forum.id} style={{ fontWeight: '700', color: '#1A1A2E', fontSize: '14px', cursor: 'pointer' }}>
-                                            {forum.forumName || forum.id}
-                                        </label>
-                                        <p style={{ color: '#6B7280', fontSize: '13px', margin: '2px 0 0 0' }}>
-                                            {forum.description}
-                                        </p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '300px', overflowY: 'auto', paddingRight: '4px' }}>
+                        {forums
+                            .filter(forum => (forum.forumName || forum.id).toLowerCase().includes(searchQuery.toLowerCase()))
+                            .map((forum) => {
+                                const isFollowing = followedForums[forum.id] !== undefined;
+                                return (
+                                    <div key={forum.id} style={forumRowStyle}>
+                                        <input
+                                            type="checkbox"
+                                            id={forum.id}
+                                            checked={isFollowing}
+                                            onChange={() => toggleFollowForum(forum.id, forum.forumName || forum.id, isFollowing)}
+                                            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                                        />
+                                        <div style={{ marginRight: '12px', textAlign: 'right' }}>
+                                            <label htmlFor={forum.id} style={{ fontWeight: '700', color: '#1A1A2E', fontSize: '14px', cursor: 'pointer' }}>
+                                                {forum.forumName || forum.id}
+                                            </label>
+                                            <p style={{ color: '#6B7280', fontSize: '13px', margin: '2px 0 0 0' }}>
+                                                {forum.description}
+                                            </p>
+                                        </div>
                                     </div>
-                                </div>
-                            );
-                        })}
+                                );
+                            })}
                     </div>
                 )}
 
-                {/* Form Action Controls Section */}
+                {/* Form Action Controls Section (Updated to remove the absolute positioned delete button) */}
                 <div style={{ marginTop: '36px', position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px' }}>
                     {isEditing ? (
                         <>
@@ -237,15 +325,7 @@ function Profile() {
                             <button onClick={() => setIsEditing(false)} style={secondaryBtn}>ביטול</button>
                         </>
                     ) : (
-                        <>
-                            <button onClick={handleStartEdit} style={primaryBtn}>עריכת פרופיל</button>
-                            <button
-                                onClick={() => { setShowDeleteConfirm(true); setDeleteError(''); }}
-                                style={{ ...deleteBtn, position: 'absolute', left: 0 }}
-                            >
-                                מחיקת חשבון
-                            </button>
-                        </>
+                        <button onClick={handleStartEdit} style={primaryBtn}>עריכת פרופיל</button>
                     )}
                 </div>
 
@@ -260,11 +340,11 @@ function Profile() {
             {/* Deletion Confirmation Modal Dialog */}
             {showDeleteConfirm && (
                 <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justify: 'center', zIndex: 1000 }}>
-                    <div style={{ background: 'white', borderRadius: '16px', padding: '32px', maxWidth: '400px', width: '90%', textAlign: 'center', fontFamily: 'Heebo, sans-serif' }} dir="rtl">
+                    <div style={{ background: 'white', borderRadius: '16px', padding: '32px', maxWidth: '400px', width: '90%', textAlign: 'center', fontFamily: 'Heebo, sans-serif', position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 1001 }} dir="rtl">
                         <div style={{ fontSize: '36px', marginBottom: '12px' }}>⚠️</div>
                         <h3 style={{ color: '#1A1A2E', fontSize: '18px', fontWeight: '800', margin: '0 0 12px 0' }}>מחיקת חשבון לצמיתות</h3>
                         <p style={{ color: '#6B7280', fontSize: '14px', lineHeight: '1.6', margin: '0 0 24px 0' }}>
-                            האם את/ה בטוח/ה? פעולה זו תמחק את החשבון שלך לצמיתות, כולל קבצים שהעלית, ולא ניתן יהיה לשחזר אותה.
+                            האם את/ה בטוח/ה? פעולה זו תמחק את החשבון שלך לצמיתות, ולא ניתן יהיה לשחזר אותה.
                         </p>
                         <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
                             <button
@@ -307,11 +387,21 @@ const Field = ({ label, value }) => (
     </div>
 );
 
-const EditableField = ({ label, name, value, isEditing, onChange, type = "text" }) => (
+const EditableField = ({ label, name, value, isEditing, onChange, type = "text", error }) => (
     <div>
         <label style={labelStyle}>{label}</label>
         {isEditing ? (
-            <input type={type} name={name} value={value || ''} onChange={onChange} style={inputStyle} />
+            <>
+                <input 
+                    type={type} 
+                    name={name} 
+                    value={value || ''} 
+                    onChange={onChange} 
+                    maxLength={name === 'phone' ? 10 : undefined}
+                    style={{...inputStyle, borderColor: error ? '#DC2626' : '#D1D5DB'}} 
+                />
+                {error && <span style={{ color: '#DC2626', fontSize: '12px', display: 'block', marginTop: '4px', fontWeight: '600' }}>{error}</span>}
+            </>
         ) : (
             <p style={contentStyle}>{value || '—'}</p>
         )}
@@ -325,9 +415,9 @@ const sectionTitle = { fontSize: '13px', fontWeight: '700', color: '#6B7280' };
 const labelStyle = { display: 'block', fontSize: '12px', fontWeight: '700', color: '#6B7280', marginBottom: '4px' };
 const contentStyle = { fontSize: '15px', color: '#1A1A2E', fontWeight: '500', margin: 0 };
 const inputStyle = { width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #D1D5DB', fontSize: '14px', fontFamily: 'Heebo, sans-serif', boxSizing: 'border-box' };
-const primaryBtn = { backgroundColor: '#4F46E5', color: 'white', padding: '10px 28px', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '14px', fontFamily: 'Heebo, sans-serif' };
-const secondaryBtn = { backgroundColor: 'white', color: '#4B5563', padding: '10px 28px', border: '1px solid #D1D5DB', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '14px', fontFamily: 'Heebo, sans-serif' };
+const primaryBtn = { backgroundColor: '#4F46E5', color: 'white', padding: '10px 28px', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '14px', fontFamily: 'Heebo, sans-serif', boxShadow: '0 2px 6px rgba(56,189,248,0.22)' };
+const secondaryBtn = { backgroundColor: 'white', color: '#4B5563', padding: '10px 28px', border: '1px solid #D1D5DB', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '14px', fontFamily: 'Heebo, sans-serif', boxShadow: '0 2px 6px rgba(56,189,248,0.18)' };
 const forumRowStyle = { display: 'flex', alignItems: 'center', padding: '12px 16px', backgroundColor: '#F9FAFB', borderRadius: '10px', border: '1px solid #E5E7EB' };
-const deleteBtn = { backgroundColor: '#FEF2F2', color: '#DC2626', padding: '8px 18px', border: '1px solid #FECACA', borderRadius: '10px', cursor: 'pointer', fontWeight: '600', fontSize: '12px', fontFamily: 'Heebo, sans-serif' };
+const deleteBtn = { backgroundColor: '#FEF2F2', color: '#DC2626', padding: '8px 18px', border: '1px solid #FECACA', borderRadius: '10px', cursor: 'pointer', fontWeight: '600', fontSize: '12px', fontFamily: 'Heebo, sans-serif', boxShadow: '0 2px 6px rgba(56,189,248,0.18)' };
 
 export default Profile;
