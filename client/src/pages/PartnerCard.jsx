@@ -1,6 +1,6 @@
 import React from 'react';
 
-const PartnerCard = ({ name, distance, tags, phone }) => {
+const PartnerCard = ({ name, distance, tags, phone ,about }) => {
   return (
     <article className="card">
       <div className="card-row">
@@ -23,6 +23,17 @@ const PartnerCard = ({ name, distance, tags, phone }) => {
             <h3>{name}</h3>
             <span className="card-distance">{distance} ק"מ</span>
           </div>
+          {about && (
+          <p className="card-about" style={{ 
+            fontSize: '13px', 
+            color: '#4B5563', 
+            margin: '4px 0 8px 0',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+            wordBreak: 'break-word'}}>
+          {about}
+          </p>)}
           <div className="tags">
             {tags.map((tag, index) => (
               <span key={index} className="tag">{tag}</span>

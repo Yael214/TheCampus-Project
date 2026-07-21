@@ -213,14 +213,20 @@ function Profile() {
                 <div style={sectionTitle}>קצת על עצמי</div>
                 <div style={{ marginTop: '10px' }}>
                     {isEditing ? (
+                        <>
                         <textarea
                             name="about"
                             value={tempData.about || ''}
                             onChange={handleInputChange}
-                            placeholder="תחביבים, תחומי עניין, על מה תרצה/י לשתף..."
+                            placeholder="תחביבים, תחומי עניין, על מה תרצה/י לשתף (טקסט זה יוצג לפרטנרים בחיפוש)"
                             rows={3}
+                            maxLength={150}
                             style={{ ...inputStyle, resize: 'vertical', width: '100%' }}
                         />
+                        <span style={{ fontSize: '12px', color: '#6B7280', display: 'block', marginTop: '4px' }}>
+                        {(tempData.about || '').length}/150 תווים
+                        </span>
+                        </>
                     ) : (
                         <p style={{ color: display.about ? '#1A1A2E' : '#9CA3AF', fontSize: '15px', lineHeight: '1.7', margin: 0 }}>
                             {display.about || 'לחצ/י על עריכת פרופיל כדי לספר על עצמך...'}
