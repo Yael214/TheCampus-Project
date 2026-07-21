@@ -33,9 +33,22 @@ const PartnerCard = ({ name, distance, sharedCourses, phone ,about }) => {
           {about}
           </p>)}
           <div className="shared-courses">
-            {(sharedCourses || []).map((course, index) => (
-              <span key={index} className="course-tag">{course}</span>
+            {/* Show first 2 courses */}
+            {(sharedCourses || []).slice(0, 2).map((course, index) => (
+              <span key={index} className="course-tag" title={course}>
+                {course}
+              </span>
             ))}
+
+            {/* Show indicator for extra courses */}
+            {(sharedCourses || []).length > 2 && (
+              <span 
+                className="course-tag extra-tag" 
+                data-tooltip={(sharedCourses || []).slice(2).join(', ')}
+              >
+                +{(sharedCourses || []).length - 2}
+              </span>
+            )}
           </div>
         </div>
         <div className="card-avatar">
