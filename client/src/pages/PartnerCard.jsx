@@ -28,9 +28,7 @@ const PartnerCard = ({ name, distance, sharedCourses, phone ,about }) => {
             fontSize: '13px', 
             color: '#4B5563', 
             margin: '4px 0 8px 0',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
+            lineHeight: '1.4',
             wordBreak: 'break-word'}}>
           {about}
           </p>)}
