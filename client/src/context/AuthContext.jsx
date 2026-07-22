@@ -100,8 +100,9 @@ export const AuthProvider = ({ children }) => {
       studyField: additionalData.studyField,
       profileImage: profileImageUrl,
       studyApproval: studyApprovalUrl,
-      role: "user", // הגדרת תפקיד ברירת מחדל
-      createdAt: new Date()
+      role: "user", //Default value
+      createdAt: new Date(),
+      idBlocked: false //Default value
     });
     // Send initial verification email automatically on signup
     await sendEmailVerification(user);
