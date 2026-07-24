@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collectionGroup, getDocs, query, orderBy, doc, getDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import PostContainer from '../components/PostContainer'; // ייבוא קומפוננטת הפוסטים שלך
+import { handleDeletePost } from '../utils/postDeleteUtils'; // ייבוא פונקציית העזר המרכזית למחיקת פוסטים וקבצים
 
 function AdminReports({ onBack }) {
   const [reports, setReports] = useState([]);
@@ -37,7 +38,7 @@ function AdminReports({ onBack }) {
     fetchReports();
   }, []);
 
-  // שליפת התוכן המדווח להצגה בפופ-אפ
+  // Retrieving the reported content for display in a pop-up
   const handleOpenContent = async (report) => {
     if (!report.targetId) return;
     setContentLoading(true);
@@ -52,7 +53,7 @@ function AdminReports({ onBack }) {
           setSelectedContent({ report, data: null, notFound: true });
         }
       } else {
-        // שליפת תגובה מדווחת מתוך הפוסט שלה
+        // Retrieving a reported comment
         let commentDoc = null;
         if (report.postId) {
           commentDoc = await getDoc(doc(db, 'posts', report.postId, 'comments', report.targetId));
@@ -72,7 +73,7 @@ function AdminReports({ onBack }) {
     }
   };
 
-  // מחיקת הדיווח בלבד (התעלם)
+  // Delete report only (ignore)
   const handleDeleteReportOnly = async (authorId, reportId) => {
     if (!window.confirm("האם למחוק את הדיווח מהרשימה?")) return;
     try {
@@ -83,7 +84,7 @@ function AdminReports({ onBack }) {
     }
   };
 
-  // מחיקת התוכן המדווח לחלוטין (פוסט או תגובה) וגם את הדיווח
+  // Complete deletion of the reported content
   const handleDeleteReportedContent = async (report) => {
     const { targetId, targetType, authorId, reportId, postId } = report;
     const contentHebrewName = targetType === 'post' ? 'פוסט' : 'תגובה';
@@ -92,15 +93,31 @@ function AdminReports({ onBack }) {
 
     try {
       if (targetType === 'post') {
-        await deleteDoc(doc(db, 'posts', targetId));
-      } else {
-        // מחיקת תגובה מהנתיב המדויק שלה תחת הפוסט
+        // Retrieving the post to check for attached files and allow admin to delete them permanently
+        const postDocRef = doc(db, 'posts', targetId);
+        const postSnap = await getDoc(postDocRef);
+
+        if (postSnap.exists()) {
+          const postData = { postId: postSnap.id, ...postSnap.data() };
+          
+          let deleteFilesPermanently = false;
+          if (postData.attachments && postData.attachments.length > 0) {
+            deleteFilesPermanently = window.confirm(
+              "האם למחוק גם את הקבצים המצורפים לפוסט הזה לצמיתות (כולל מחומרי הלימוד של הקורס)?"
+            );
+          }
+
+          // Using the central helper function for deletion
+          await handleDeletePost(postData, deleteFilesPermanently);
+        } else {
+          await deleteDoc(postDocRef);
+        }
+      } else { 
         if (postId) {
           await deleteDoc(doc(db, 'posts', postId, 'comments', targetId));
         }
       }
 
-      // מחיקת הדיווח עצמו מהפרופיל
       await deleteDoc(doc(db, "users", authorId, "reports", reportId));
       
       setReports(reports.filter(r => r.reportId !== reportId));
@@ -188,7 +205,7 @@ function AdminReports({ onBack }) {
         </table>
       </div>
 
-      {/* מודל תצוגה מקדימה שמשתמש ב-PostContainer */}
+      {/* A preview model that uses PostContainer */}
       {selectedContent && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-6 relative max-h-[90vh] overflow-y-auto" dir="rtl">
@@ -213,10 +230,8 @@ function AdminReports({ onBack }) {
             ) : (
               <div>
                 {selectedContent.report.targetType === 'post' ? (
-                  // מציג בדיוק את הפוסט באמצעות PostContainer האמיתי שלך!
                   <PostContainer post={selectedContent.data} isAdmin={true} showForumLink={true} />
                 ) : (
-                  // תצוגה מעוצבת לתגובה המדווחת
                   <div className="bg-amber-50 p-5 rounded-xl border border-amber-200 shadow-sm space-y-3">
                     <div className="flex justify-between items-center text-xs text-amber-700 border-b border-amber-200 pb-2">
                       <span>מזהה תגובה: <span className="font-mono">{selectedContent.data.commentId}</span></span>

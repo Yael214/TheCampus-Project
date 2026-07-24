@@ -2,20 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { collectionGroup, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
-import AdminPanel from './AdminPanel';     // קובץ ניהול המשתמשים הקיים שלך
-import AdminReports from './AdminReports'; // הקובץ החדש של הדיווחים
+import AdminPanel from './AdminPanel';     // Existing user management component
+import AdminReports from '../pages/AdminReports'; // New reports component
 
 function AdminDashboardLayout() {
   const { currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState('users'); // 'users' or 'reports'
   const [pendingReportsCount, setPendingReportsCount] = useState(0);
 
-  // בדיקת הרשאות אדמין כללית
+  // General admin permission check
   if (currentUser?.role !== 'admin') {
     return <div className="p-6 text-center text-red-500 font-bold" dir="rtl">אין גישה. העמוד מורשה למנהלים בלבד.</div>;
   }
 
-  // שליפת כמות הדיווחים הממתינים כדי להציג את התגית האדומה
+  // Fetch pending reports count for the red badge
   useEffect(() => {
     const fetchReportsCount = async () => {
       try {
@@ -31,14 +31,14 @@ function AdminDashboardLayout() {
 
   return (
     <div className="max-w-6xl mx-auto p-6" dir="rtl">
-      {/* כותרת ראשית של המפקדה */}
+      {/* Main header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b pb-4">
         <div>
           <h1 className="text-3xl font-bold text-[#2C3E7A]">מפקדת ניהול מערכת</h1>
           <p className="text-sm text-gray-500">ניהול משתמשים, הרשאות ובקרה על תכנים מדווחים</p>
         </div>
 
-        {/* טאבים למעבר מהיר */}
+        {/* Quick navigation tabs */}
         <div className="flex bg-gray-100 p-1 rounded-xl gap-1">
           <button
             onClick={() => setActiveTab('users')}
@@ -69,7 +69,7 @@ function AdminDashboardLayout() {
         </div>
       </div>
 
-      {/* הצגת הקומפוננטה בהתאם לטאב הנבחר */}
+      {/* Render component based on active tab */}
       <div className="transition-all">
         {activeTab === 'users' ? <AdminPanel /> : <AdminReports />}
       </div>

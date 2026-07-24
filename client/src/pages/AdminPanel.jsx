@@ -3,7 +3,7 @@ import { useAllUsers } from '../hooks/useAllUsers';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
-import AdminReports from '../components/AdminReports';
+import AdminReports from './AdminReports';
 
 const AdminPanel = () => {
   const { users, loading, setUsers } = useAllUsers();
@@ -83,23 +83,24 @@ const AdminPanel = () => {
   return (
     <div className="max-w-5xl mx-auto p-6" dir="rtl">
       <h1 className="text-3xl font-bold text-[#2C3E7A] mb-6">ניהול משתמשים והרשאות</h1>
-      <button
-          onClick={() => setShowReports(true)}
-          className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-all shadow-sm cursor-pointer flex items-center gap-2"
-        >
-          <span>🚨</span>
-          <span>צפה בדיווחים על תוכן</span>
-        </button>
       
-      {/* Search Bar */}
-      <div className="mb-6">
+      {/* Search bar and reports button side by side */}
+      <div className="flex items-center gap-4 mb-6">
         <input
           type="text"
           placeholder="חיפוש משתמש לפי שם..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full md:w-1/2 p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#2C3E7A] transition-all"
+          className="flex-1 h-[46px] px-4 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#2C3E7A] transition-all bg-white box-border"
         />
+
+        <button
+          onClick={() => setShowReports(true)}
+          className="h-[46px] px-5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-all shadow-sm cursor-pointer flex items-center justify-center gap-2 shrink-0 box-border relative -top-[1px]"
+        >
+          <span>🚨</span>
+          <span>צפה בדיווחים על תוכן</span>
+        </button>
       </div>
 
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
