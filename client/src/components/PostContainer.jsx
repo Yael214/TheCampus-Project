@@ -3,12 +3,13 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import CommentItem from './CommentItem';
 import { useComments } from '../hooks/useComments';
-import { useLikes } from '../hooks/useLikes';
-import { doc, deleteDoc, collection, query, where, getDocs } from 'firebase/firestore'; 
-import { ref, deleteObject } from 'firebase/storage';
-import { db, storage } from '../firebase/config';
+import { useLikes } from '../hooks/useLikes'; 
+import { db } from '../firebase/config';
+import { collection, addDoc, doc, deleteDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore'; 
+import ReportModal from './ReportModal';
+import { handleDeletePost } from '../utils/postDeleteUtils'; 
 
-// Get the post from fid/ forum page
+// Get the post from fid forum page
 function PostContainer({ post, showForumLink=true, isAdmin }) {
   const { currentUser: user } = useAuth();
   const [isOpen, setIsOpen] = useState(false); // does the post's comment section is open or closed
@@ -19,8 +20,9 @@ function PostContainer({ post, showForumLink=true, isAdmin }) {
   const [liked, setLiked] = useState(isLiked);
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
   
-  // New state for the 3-dots menu
+  // New state for the 3 dots menu
   const [showMenu, setShowMenu] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   // Check if current user is the author or an admin to allow deletion
   const isAuthor = user?.uid === post.authorId;
@@ -60,39 +62,61 @@ function PostContainer({ post, showForumLink=true, isAdmin }) {
     }
   };
 
-  // Handle post deletion
+  // Handle post deletion using utility function
   const handleDelete = async () => {
     const confirmDelete = window.confirm("האם את בטוחה שברצונך למחוק את הפוסט?");
     if (!confirmDelete) return;
 
+    let deleteFilesPermanently = false;
+    if (post.attachments && post.attachments.length > 0) {
+      deleteFilesPermanently = window.confirm(
+        "האם למחוק גם את הקבצים המצורפים לצמיתות (כולל מחומרי הלימוד של הקורס)?"
+      );
+    }
+
     try {
-      // Process files cleanup if the post has attachments
-      if (post.attachments && post.attachments.length > 0) {
-        for (const attachment of post.attachments) {
-          // Check if this specific file is saved in the global materials collection
-          const materialsQuery = query(
-            collection(db, 'materials'), 
-            where('fileUrl', '==', attachment.fileUrl)
-          );
-          const materialsSnapshot = await getDocs(materialsQuery);
-
-          // If not found in materials, we can safely delete it from storage
-          if (materialsSnapshot.empty && attachment.storagePath) {
-            const fileStorageRef = ref(storage, attachment.storagePath);
-            await deleteObject(fileStorageRef);
-            console.log(`File deleted from storage: ${attachment.fileName}`);
-          } else {
-            console.log(`File retained in storage because it belongs to materials: ${attachment.fileName}`);
-          }
-        }
-      }
-
-      // Delete the post document from Firestore
-      const postRef = doc(db, 'posts', post.postId);
-      await deleteDoc(postRef);
-      console.log("Post deleted successfully");
+      await handleDeletePost(post, deleteFilesPermanently);
+      console.log("Post deleted successfully via UI");
     } catch (error) {
       console.error("Error deleting post:", error);
+      alert("שגיאה במחיקת הפוסט");
+    }
+  };
+
+  const handleReportSubmit = async (selectedReason, customReason) => {
+    try {
+      const reportsRef = collection(db, "users", post.authorId, "reports");
+
+      // Check if the user has already reported this post
+      const q = query(
+        reportsRef, 
+        where("targetId", "==", post.postId), 
+        where("reporterUserId", "==", user.uid)
+      );
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        alert("כבר דיווחת על פוסט זה בעבר. הדיווח שלך נמצא בבדיקה.");
+        setIsReportModalOpen(false);
+        setShowMenu(false);
+        return;
+      }
+
+      await addDoc(reportsRef, {
+        targetId: post.postId,
+        targetType: "post",
+        reporterUserId: user.uid,
+        details: selectedReason === 'אחר' ? customReason : selectedReason,
+        status: "pending",
+        createdAt: serverTimestamp()
+      });
+
+      alert("הדיווח נשלח בהצלחה למערכת.");
+      setIsReportModalOpen(false);
+      setShowMenu(false);
+    } catch (error) {
+      console.error("Error reporting post:", error);
+      alert("שגיאה בשליחת הדיווח, נסי שוב.");
     }
   };
 
@@ -134,7 +158,7 @@ function PostContainer({ post, showForumLink=true, isAdmin }) {
   return (
     <div className="bg-white rounded-2xl border border-slate-100/70 p-5 mb-4 transition-all duration-250 hover:-translate-y-[3px] border-r-[3px] border-r-indigo-300/70" style={{ boxShadow: '0 2px 12px -2px rgba(0,0,0,0.06), 0 4px 16px -4px rgba(79,70,229,0.05)' }} onMouseEnter={e => e.currentTarget.style.boxShadow='0 8px 28px -6px rgba(79,70,229,0.14), 0 4px 16px -4px rgba(0,0,0,0.08)'} onMouseLeave={e => e.currentTarget.style.boxShadow='0 2px 12px -2px rgba(0,0,0,0.06), 0 4px 16px -4px rgba(79,70,229,0.05)'} dir="rtl">
       
-      {/* Header Section: Forum Link, Title, and 3-Dots Menu */}
+      {/* Header Section: Forum Link, Title, and 3 Dots Menu */}
       <div className="flex justify-between items-start mb-2">
         <div className="flex-1">
           {showForumLink && post.forumId && post.forumName && (
@@ -152,7 +176,7 @@ function PostContainer({ post, showForumLink=true, isAdmin }) {
           </h2>
         </div>
 
-        {/* 3-Dots Menu Wrapper - NOW VISIBLE TO EVERYONE */}
+        {/* 3 Dots Menu Wrapper */}
         <div className="relative z-10 mr-2">
           <button 
             onClick={() => setShowMenu(!showMenu)}
@@ -164,17 +188,22 @@ function PostContainer({ post, showForumLink=true, isAdmin }) {
           
           {showMenu && (
             <div className="absolute left-0 mt-1 w-32 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden">
-              {canDelete ? (
+              {canDelete && (
                 <button
                   onClick={handleDelete}
                   className="w-full text-right px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
                 >
                   מחק פוסט
                 </button>
-              ) : (
-                <div className="w-full text-center px-4 py-2 text-sm text-slate-400 cursor-default">
-                  בקרוב...
-                </div>
+              )}
+
+              {!isAuthor && user && (
+                <button
+                  onClick={() => setIsReportModalOpen(true)}
+                  className="w-full text-right px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition"
+                >
+                  דווח על פוסט
+                </button>
               )}
             </div>
           )}
@@ -186,7 +215,7 @@ function PostContainer({ post, showForumLink=true, isAdmin }) {
       </p>
 
       <div className="mb-4 flex flex-wrap gap-2">
-        {post.attachments.map((file, index) => {
+        {post.attachments?.map((file, index) => {
           const style = getAttachmentStyle(file.fileType || file.type);
           return (
             <a
@@ -217,7 +246,6 @@ function PostContainer({ post, showForumLink=true, isAdmin }) {
             <span>💬</span>
             <span>{commentCount}</span>
           </span>
-          {/* Like button with dynamic styling based on liked status */}
           <button 
             onClick={handleLikeClick}
             className={`inline-flex items-center gap-1 transition-all duration-200 active:scale-110 cursor-pointer ${
@@ -254,10 +282,9 @@ function PostContainer({ post, showForumLink=true, isAdmin }) {
                 depth={0}
                 isAdmin={isAdmin}
                 onDeleteComment={handleDeleteComment}
-              />
+            />
           ))}
 
-          {/* form to add a new root comment (not a reply) */}
           <form onSubmit={handleSubmit} className="mt-3 flex gap-2">
             <input
               type="text"
@@ -272,6 +299,13 @@ function PostContainer({ post, showForumLink=true, isAdmin }) {
           </form>
         </div>
       )}
+
+      <ReportModal 
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        onSubmit={handleReportSubmit}
+      />
+
     </div>
   );
 }
@@ -280,53 +314,30 @@ export default PostContainer;
 
 function formatTimeAgo(dateInput) {
   if (!dateInput) return '';
-
   let date;
-
-  // check if it's a Firestore Timestamp object
   if (dateInput && typeof dateInput.toDate === 'function') {
     date = dateInput.toDate();
   } else if (dateInput && dateInput.seconds) {
     date = new Date(dateInput.seconds * 1000);
   } else {
-    // if it's a regular date string or Date object
     date = new Date(dateInput);
   }
-
-  // Invalid Date check
   if (isNaN(date.getTime())) return '';
-
   const now = new Date();
   const diffInSeconds = Math.floor((now - date) / 1000);
-
-  // if the date is in the future or in another edge case, we can just say "just now"
   if (diffInSeconds < 0) return 'ממש עכשיו';
-
-  // calculate different time units
   const minutes = Math.floor(diffInSeconds / 60);
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
   const weeks = Math.floor(days / 7);
   const months = Math.floor(days / 30);
   const years = Math.floor(days / 365);
-
-  if (diffInSeconds < 60) {
-    return 'ממש עכשיו';
-  }
-  if (minutes < 60) {
-    return minutes === 1 ? 'לפני דקה' : minutes === 2 ? 'לפני שתי דקות' : `לפני ${minutes} דקות`;
-  }
-  if (hours < 24) {
-    return hours === 1 ? 'לפני שעה' : hours === 2 ? 'לפני שעתיים' : `לפני ${hours} שעות`;
-  }
-  if (days < 7) {
-    return days === 1 ? 'אתמול' : days === 2 ? 'לפני יומיים' : `לפני ${days} ימים`;
-  }
-  if (weeks < 4) {
-    return weeks === 1 ? 'לפני שבוע' : weeks === 2 ? 'לפני שבועיים' : `לפני ${weeks} שבועות`;
-  }
-  if (months < 12) {
-    return months === 1 ? 'לפני חודש' : months === 2 ? 'לפני חודשיים' : `לפני ${months} חודשים`;
-  }
+  
+  if (diffInSeconds < 60) return 'ממש עכשיו';
+  if (minutes < 60) return minutes === 1 ? 'לפני דקה' : minutes === 2 ? 'לפני שתי דקות' : `לפני ${minutes} דקות`;
+  if (hours < 24) return hours === 1 ? 'לפני שעה' : hours === 2 ? 'לפני שעתיים' : `לפני ${hours} שעות`;
+  if (days < 7) return days === 1 ? 'אתמול' : days === 2 ? 'לפני יומיים' : `לפני ${days} ימים`;
+  if (weeks < 4) return weeks === 1 ? 'לפני שבוע' : weeks === 2 ? 'לפני שבועיים' : `לפני ${weeks} שבועות`;
+  if (months < 12) return months === 1 ? 'לפני חודש' : months === 2 ? 'לפני חודשיים' : `לפני ${months} חודשים`;
   return years === 1 ? 'לפני שנה' : years === 2 ? 'לפני שנתיים' : `לפני ${years} שנים`;
 }
