@@ -5,11 +5,11 @@ import CommentItem from './CommentItem';
 import { useComments } from '../hooks/useComments';
 import { useLikes } from '../hooks/useLikes'; 
 import { db } from '../firebase/config';
-import { collection, addDoc, doc, deleteDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore'; // שים לב ש-addDoc מיובא נכון
+import { collection, addDoc, doc, deleteDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore'; 
 import ReportModal from './ReportModal';
 import { handleDeletePost } from '../utils/postDeleteUtils'; 
 
-// Get the post from fid/ forum page
+// Get the post from fid forum page
 function PostContainer({ post, showForumLink=true, isAdmin }) {
   const { currentUser: user } = useAuth();
   const [isOpen, setIsOpen] = useState(false); // does the post's comment section is open or closed
@@ -20,7 +20,7 @@ function PostContainer({ post, showForumLink=true, isAdmin }) {
   const [liked, setLiked] = useState(isLiked);
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
   
-  // New state for the 3-dots menu
+  // New state for the 3 dots menu
   const [showMenu, setShowMenu] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
@@ -62,7 +62,7 @@ function PostContainer({ post, showForumLink=true, isAdmin }) {
     }
   };
 
-  // Handle post deletion using our new utility function
+  // Handle post deletion using utility function
   const handleDelete = async () => {
     const confirmDelete = window.confirm("האם את בטוחה שברצונך למחוק את הפוסט?");
     if (!confirmDelete) return;
@@ -158,7 +158,7 @@ function PostContainer({ post, showForumLink=true, isAdmin }) {
   return (
     <div className="bg-white rounded-2xl border border-slate-100/70 p-5 mb-4 transition-all duration-250 hover:-translate-y-[3px] border-r-[3px] border-r-indigo-300/70" style={{ boxShadow: '0 2px 12px -2px rgba(0,0,0,0.06), 0 4px 16px -4px rgba(79,70,229,0.05)' }} onMouseEnter={e => e.currentTarget.style.boxShadow='0 8px 28px -6px rgba(79,70,229,0.14), 0 4px 16px -4px rgba(0,0,0,0.08)'} onMouseLeave={e => e.currentTarget.style.boxShadow='0 2px 12px -2px rgba(0,0,0,0.06), 0 4px 16px -4px rgba(79,70,229,0.05)'} dir="rtl">
       
-      {/* Header Section: Forum Link, Title, and 3-Dots Menu */}
+      {/* Header Section: Forum Link, Title, and 3 Dots Menu */}
       <div className="flex justify-between items-start mb-2">
         <div className="flex-1">
           {showForumLink && post.forumId && post.forumName && (
@@ -176,7 +176,7 @@ function PostContainer({ post, showForumLink=true, isAdmin }) {
           </h2>
         </div>
 
-        {/* 3-Dots Menu Wrapper */}
+        {/* 3 Dots Menu Wrapper */}
         <div className="relative z-10 mr-2">
           <button 
             onClick={() => setShowMenu(!showMenu)}
