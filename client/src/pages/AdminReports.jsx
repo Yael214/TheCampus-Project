@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { collectionGroup, getDocs, query, orderBy, doc, getDoc, deleteDoc } from 'firebase/firestore';
+import { collectionGroup, getDocs, query, orderBy, doc, getDoc, deleteDoc, where } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import PostContainer from '../components/PostContainer'; // ייבוא קומפוננטת הפוסטים שלך
-import { handleDeletePost } from '../utils/postDeleteUtils'; // ייבוא פונקציית העזר המרכזית למחיקת פוסטים וקבצים
+import PostContainer from '../components/PostContainer';
+import { handleDeletePost } from '../utils/postDeleteUtils';
 
 function AdminReports({ onBack }) {
   const [reports, setReports] = useState([]);
@@ -11,6 +11,7 @@ function AdminReports({ onBack }) {
   const [selectedContent, setSelectedContent] = useState(null);
   const [contentLoading, setContentLoading] = useState(false);
 
+  // Fetch all pending reports across the system using collection group queries
   const fetchReports = async () => {
     try {
       setLoading(true);
@@ -38,7 +39,7 @@ function AdminReports({ onBack }) {
     fetchReports();
   }, []);
 
-  // Retrieving the reported content for display in a pop-up
+  // Retrieve reported content (post or comment) for admin preview
   const handleOpenContent = async (report) => {
     if (!report.targetId) return;
     setContentLoading(true);
@@ -53,10 +54,20 @@ function AdminReports({ onBack }) {
           setSelectedContent({ report, data: null, notFound: true });
         }
       } else {
-        // Retrieving a reported comment
         let commentDoc = null;
+        
+        // Direct fetch if postId is available in the report document
         if (report.postId) {
           commentDoc = await getDoc(doc(db, 'posts', report.postId, 'comments', report.targetId));
+        }
+
+        // Fallback: Global search using collectionGroup if postId is missing or invalid
+        if (!commentDoc || !commentDoc.exists()) {
+          const commentsSnap = await getDocs(query(collectionGroup(db, 'comments'), where('commentId', '==', report.targetId)));
+          if (!commentsSnap.empty) {
+            commentDoc = commentsSnap.docs[0];
+            report.postId = commentDoc.ref.parent.parent.id;
+          }
         }
 
         if (commentDoc && commentDoc.exists()) {
@@ -73,7 +84,7 @@ function AdminReports({ onBack }) {
     }
   };
 
-  // Delete report only (ignore)
+  // Dismiss report without deleting the actual content
   const handleDeleteReportOnly = async (authorId, reportId) => {
     if (!window.confirm("האם למחוק את הדיווח מהרשימה?")) return;
     try {
@@ -84,7 +95,7 @@ function AdminReports({ onBack }) {
     }
   };
 
-  // Complete deletion of the reported content
+  // Complete removal of reported content and its associated report
   const handleDeleteReportedContent = async (report) => {
     const { targetId, targetType, authorId, reportId, postId } = report;
     const contentHebrewName = targetType === 'post' ? 'פוסט' : 'תגובה';
@@ -93,7 +104,6 @@ function AdminReports({ onBack }) {
 
     try {
       if (targetType === 'post') {
-        // Retrieving the post to check for attached files and allow admin to delete them permanently
         const postDocRef = doc(db, 'posts', targetId);
         const postSnap = await getDoc(postDocRef);
 
@@ -107,14 +117,21 @@ function AdminReports({ onBack }) {
             );
           }
 
-          // Using the central helper function for deletion
           await handleDeletePost(postData, deleteFilesPermanently);
         } else {
           await deleteDoc(postDocRef);
         }
       } else { 
-        if (postId) {
-          await deleteDoc(doc(db, 'posts', postId, 'comments', targetId));
+        let targetPostId = postId;
+        if (!targetPostId) {
+          const commentsSnap = await getDocs(query(collectionGroup(db, 'comments'), where('commentId', '==', targetId)));
+          if (!commentsSnap.empty) {
+            targetPostId = commentsSnap.docs[0].ref.parent.parent.id;
+          }
+        }
+
+        if (targetPostId) {
+          await deleteDoc(doc(db, 'posts', targetPostId, 'comments', targetId));
         }
       }
 
@@ -205,7 +222,6 @@ function AdminReports({ onBack }) {
         </table>
       </div>
 
-      {/* A preview model that uses PostContainer */}
       {selectedContent && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-6 relative max-h-[90vh] overflow-y-auto" dir="rtl">

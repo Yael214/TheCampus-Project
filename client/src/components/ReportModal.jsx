@@ -8,6 +8,7 @@ function ReportModal({ isOpen, onClose, onSubmit }) {
 
   if (!isOpen) return null;
 
+  // Handle form submission and reset state values upon completion
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     if (selectedReason === 'אחר' && !customText.trim()) {
@@ -23,7 +24,7 @@ function ReportModal({ isOpen, onClose, onSubmit }) {
     setSelectedReason('תוכן פוגעני או בלתי הולם');
   };
 
-  // שימוש ב-Portal כדי לזרוק את ה-Modal החוצה ישירות ל-body של הדפדפן
+  
   return ReactDOM.createPortal(
     <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" dir="rtl">
       <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
@@ -31,6 +32,7 @@ function ReportModal({ isOpen, onClose, onSubmit }) {
         <p className="text-xs text-slate-500 mb-4">בחר את סיבת הדיווח כדי שנוכל לבדוק את הנושא:</p>
 
         <form onSubmit={handleFormSubmit} className="space-y-2.5">
+          {/* Render standard report reasons as selectable options */}
           {[
             'תוכן פוגעני או בלתי הולם',
             'תוכן שאינו קשור לקהילה או לאפליקציה',
@@ -51,7 +53,7 @@ function ReportModal({ isOpen, onClose, onSubmit }) {
                 value={reason}
                 checked={selectedReason === reason}
                 onChange={(e) => setSelectedReason(e.target.value)}
-                className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 accent-indigo-600 cursor-pointer"
+                className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 accent-indigo-600 cursor-pointer shrink-0"
               />
               <span className="text-sm select-none">{reason}</span>
             </label>
@@ -90,7 +92,7 @@ function ReportModal({ isOpen, onClose, onSubmit }) {
         </form>
       </div>
     </div>,
-    document.body // יעד ההעברה של ה-Modal
+    document.body // Render modal directly into the document body using portal
   );
 }
 

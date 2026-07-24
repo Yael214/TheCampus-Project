@@ -197,18 +197,14 @@ function PostContainer({ post, showForumLink=true, isAdmin }) {
                 </button>
               )}
 
-              {!isAuthor && user ? (
+              {!isAuthor && user && (
                 <button
                   onClick={() => setIsReportModalOpen(true)}
                   className="w-full text-right px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition"
                 >
                   דווח על פוסט
                 </button>
-              ) : !canDelete ? (
-                <div className="w-full text-center px-4 py-2 text-sm text-slate-400 cursor-default">
-                  בקרוב...
-                </div>
-              ) : null}
+              )}
             </div>
           )}
         </div>
@@ -336,6 +332,7 @@ function formatTimeAgo(dateInput) {
   const weeks = Math.floor(days / 7);
   const months = Math.floor(days / 30);
   const years = Math.floor(days / 365);
+  
   if (diffInSeconds < 60) return 'ממש עכשיו';
   if (minutes < 60) return minutes === 1 ? 'לפני דקה' : minutes === 2 ? 'לפני שתי דקות' : `לפני ${minutes} דקות`;
   if (hours < 24) return hours === 1 ? 'לפני שעה' : hours === 2 ? 'לפני שעתיים' : `לפני ${hours} שעות`;
