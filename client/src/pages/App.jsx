@@ -12,7 +12,7 @@ import Feed from './Feed.jsx';
 import Profile from './Profile.jsx';
 import MapPage from './MapPage.jsx';
 import Courses from './Courses.jsx';
-import BlockedScreen from './BlockedScreen.jsx'; // Added import for the blocked screen
+import BlockedScreen from './BlockedScreen.jsx'; 
 
 // Layout elements
 import Topbar from '../components/Topbar.jsx';

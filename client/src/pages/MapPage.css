@@ -11,21 +11,21 @@
 * { box-sizing: border-box; }
 
 .page {
-  height: 100vh; /* נועל את העמוד לגובה המסך בדיוק */
+  height: 100vh; 
   padding: 24px;
   background: var(--bg);
   color: var(--text-main);
   font-family: 'Inter', sans-serif;
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* מעלים את פס הגלילה החיצוני והמעצבן */
+  overflow: hidd
 }
 
 .logo {
   font-size: 18px;
   font-weight: 700;
   color: #2C3E7A;
-  display: inline-flex; /* מונע תפיסה של כל השורה */
+  display: inline-flex; 
   align-items: center;
   gap: 6px;
   cursor: pointer;
@@ -36,7 +36,7 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: flex-start; /* בגלל שהגדרנו כיוון RTL, זה ידחוף הכל לימין */
+  align-items: flex-start; 
   text-align: right;
   flex-shrink: 0; 
 }
@@ -46,7 +46,7 @@
   font-weight: 700;
   color: #1A1A2E;
   margin: 0;
-  text-align: right; /* הכרחת יישור לימין */
+  text-align: right;
   width: 100%;
 }
 
@@ -54,15 +54,15 @@
   margin-top: 10px;
   color: var(--text-muted);
   font-size: 14px;
-  text-align: right; /* הכרחת יישור לימין */
+  text-align: right; 
   width: 100%;
 }
 
 .layout {
   display: flex;
   gap: 16px;
-  flex: 1; /* נותן לאזור התחתון לתפוס את כל השטח שנשאר */
-  overflow: hidden; /* מונע פריצה של התוכן החוצה */
+  flex: 1; 
+  overflow: hidden; 
 }
 
 .sidebar {
@@ -70,8 +70,8 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  height: 100%; /* מתאים בדיוק לגובה החלון */
-  overflow-y: auto; /* משאיר רק את פס הגלילה הזה */
+  height: 100%; 
+  overflow-y: auto; 
   padding-right: 8px;
 }
 
@@ -124,7 +124,7 @@
   gap: 12px; 
   flex-direction: row-reverse;
   justify-content: space-between;
-  align-items: flex-start; /* השורה הזו מונעת מהכפתור להימתח לגובה */
+  align-items: flex-start; 
 }
 
 .btn {
@@ -135,7 +135,7 @@
   padding: 12px 18px; 
   font-size: 14px; 
   cursor: pointer;
-  white-space: nowrap; /* השורה הזו שומרת שהטקסט בכפתור לא יישבר */
+  white-space: nowrap; 
 }
 
 .card-avatar {

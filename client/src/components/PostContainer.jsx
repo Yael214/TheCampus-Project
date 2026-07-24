@@ -3,10 +3,11 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import CommentItem from './CommentItem';
 import { useComments } from '../hooks/useComments';
-import { useLikes } from '../hooks/useLikes';
-import { doc, deleteDoc, collection, query, where, getDocs } from 'firebase/firestore'; 
+import { useLikes } from '../hooks/useLikes'; 
 import { ref, deleteObject } from 'firebase/storage';
 import { db, storage } from '../firebase/config';
+import { doc, deleteDoc, collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
+import ReportModal from './ReportModal';
 
 // Get the post from fid/ forum page
 function PostContainer({ post, showForumLink=true, isAdmin }) {
@@ -21,6 +22,7 @@ function PostContainer({ post, showForumLink=true, isAdmin }) {
   
   // New state for the 3-dots menu
   const [showMenu, setShowMenu] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   // Check if current user is the author or an admin to allow deletion
   const isAuthor = user?.uid === post.authorId;
@@ -96,6 +98,44 @@ function PostContainer({ post, showForumLink=true, isAdmin }) {
     }
   };
 
+  
+  const handleReportSubmit = async (selectedReason, customReason) => {
+    try {
+      const reportsRef = collection(db, "users", post.authorId, "reports");
+
+      // Check if the user has already reported this post
+      const q = query(
+        reportsRef, 
+        where("targetId", "==", post.postId), 
+        where("reporterUserId", "==", user.uid)
+      );
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        alert("כבר דיווחת על פוסט זה בעבר. הדיווח שלך נמצא בבדיקה.");
+        setIsReportModalOpen(false);
+        setShowMenu(false);
+        return;
+      }
+
+      await addDoc(reportsRef, {
+        targetId: post.postId,
+        targetType: "post",
+        reporterUserId: user.uid,
+        details: selectedReason === 'אחר' ? customReason : selectedReason,
+        status: "pending",
+        createdAt: serverTimestamp()
+      });
+
+      alert("הדיווח נשלח בהצלחה למערכת.");
+      setIsReportModalOpen(false);
+      setShowMenu(false);
+    } catch (error) {
+      console.error("Error reporting post:", error);
+      alert("שגיאה בשליחת הדיווח, נסי שוב.");
+    }
+  };
+
   // Handle comment deletion (Passed down to CommentItem)
   const handleDeleteComment = async (commentId) => {
     const confirmDelete = window.confirm("האם את בטוחה שברצונך למחוק את התגובה?");
@@ -162,20 +202,30 @@ function PostContainer({ post, showForumLink=true, isAdmin }) {
             ⋮
           </button>
           
+          
           {showMenu && (
             <div className="absolute left-0 mt-1 w-32 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden">
-              {canDelete ? (
+              {canDelete && (
                 <button
                   onClick={handleDelete}
                   className="w-full text-right px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
                 >
                   מחק פוסט
                 </button>
-              ) : (
+              )}
+
+              {!isAuthor && user ? (
+                <button
+                  onClick={() => setIsReportModalOpen(true)}
+                  className="w-full text-right px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition"
+                >
+                  דווח על פוסט
+                </button>
+              ) : !canDelete ? (
                 <div className="w-full text-center px-4 py-2 text-sm text-slate-400 cursor-default">
                   בקרוב...
                 </div>
-              )}
+              ) : null}
             </div>
           )}
         </div>
@@ -272,6 +322,14 @@ function PostContainer({ post, showForumLink=true, isAdmin }) {
           </form>
         </div>
       )}
+
+      {/* ה-Modal של הדיווח ממוקם ממש כאן, לפני סגירת ה-div הראשי של הפוסט */}
+      <ReportModal 
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        onSubmit={handleReportSubmit}
+      />
+
     </div>
   );
 }

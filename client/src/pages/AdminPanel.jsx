@@ -3,12 +3,14 @@ import { useAllUsers } from '../hooks/useAllUsers';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
+import AdminReports from '../components/AdminReports';
 
 const AdminPanel = () => {
   const { users, loading, setUsers } = useAllUsers();
   const { currentUser } = useAuth();
   
   const [searchQuery, setSearchQuery] = useState('');
+  const [showReports, setShowReports] = useState(false);
 
   // Block access for non-admin users
   if (currentUser?.role !== 'admin') {
@@ -74,9 +76,20 @@ const AdminPanel = () => {
 
   if (loading) return <div className="p-6 text-center" dir="rtl">טוען משתמשים...</div>;
 
+  if (showReports) {
+    return <AdminReports onBack={() => setShowReports(false)} />;
+  }
+
   return (
     <div className="max-w-5xl mx-auto p-6" dir="rtl">
       <h1 className="text-3xl font-bold text-[#2C3E7A] mb-6">ניהול משתמשים והרשאות</h1>
+      <button
+          onClick={() => setShowReports(true)}
+          className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-all shadow-sm cursor-pointer flex items-center gap-2"
+        >
+          <span>🚨</span>
+          <span>צפה בדיווחים על תוכן</span>
+        </button>
       
       {/* Search Bar */}
       <div className="mb-6">
