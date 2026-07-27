@@ -1,22 +1,29 @@
-import React from 'react';
+import React from "react";
 
-const PartnerCard = ({ name, distance, sharedCourses, phone ,about }) => {
+/**
+ * PartnerCard Component
+ * Displays an individual study partner's profile snippet within the map sidebar.
+ * Includes WhatsApp integration for direct messaging and course overflow tooltips.
+ */
+const PartnerCard = ({ name, distance, sharedCourses, phone, about }) => {
   return (
     <article className="card">
       <div className="card-row">
-        <button 
-            className="btn" 
-            onClick={(e) => {
-              e.stopPropagation(); // Prevents the card from being selected on the map when the button is pressed
-              if (phone) {
-                const cleanPhone = phone.startsWith('0') ? '972' + phone.slice(1) : phone;
-                window.open(`https://wa.me/${cleanPhone}`, '_blank');
-              } else {
-                alert('לא נמצא מספר טלפון למשתמש זה');
-              }
-            }}
-          >
-            שלח הודעה
+        <button
+          className="btn"
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent click event from bubbling up to the map selection handler
+            if (phone) {
+              const cleanPhone = phone.startsWith("0")
+                ? "972" + phone.slice(1)
+                : phone;
+              window.open(`https://wa.me/${cleanPhone}`, "_blank");
+            } else {
+              alert("לא נמצא מספר טלפון למשתמש זה");
+            }
+          }}
+        >
+          שלח הודעה
         </button>
         <div className="card-content">
           <div className="card-title">
@@ -24,27 +31,32 @@ const PartnerCard = ({ name, distance, sharedCourses, phone ,about }) => {
             <span className="card-distance">{distance} ק"מ</span>
           </div>
           {about && (
-          <p className="card-about" style={{ 
-            fontSize: '13px', 
-            color: '#4B5563', 
-            margin: '4px 0 8px 0',
-            lineHeight: '1.4',
-            wordBreak: 'break-word'}}>
-          {about}
-          </p>)}
+            <p
+              className="card-about"
+              style={{
+                fontSize: "13px",
+                color: "#4B5563",
+                margin: "4px 0 8px 0",
+                lineHeight: "1.4",
+                wordBreak: "break-word",
+              }}
+            >
+              {about}
+            </p>
+          )}
           <div className="shared-courses">
-            {/* Show first 2 courses */}
+            {/* Display up to two shared courses as individual tags */}
             {(sharedCourses || []).slice(0, 2).map((course, index) => (
               <span key={index} className="course-tag" title={course}>
                 {course}
               </span>
             ))}
 
-            {/* Show indicator for extra courses */}
+            {/* Display an overflow indicator with a tooltip for additional courses */}
             {(sharedCourses || []).length > 2 && (
-              <span 
-                className="course-tag extra-tag" 
-                data-tooltip={(sharedCourses || []).slice(2).join(', ')}
+              <span
+                className="course-tag extra-tag"
+                data-tooltip={(sharedCourses || []).slice(2).join(", ")}
               >
                 +{(sharedCourses || []).length - 2}
               </span>

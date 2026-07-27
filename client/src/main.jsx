@@ -1,13 +1,15 @@
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
-import './index.css';
-import App from './pages/App.jsx';
-import { AuthProvider } from './context/AuthContext';
-import { LocationToggle } from './components/LocationToggle.jsx';
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import App from "./pages/App.jsx";
+import { AuthProvider } from "./context/AuthContext";
 
-createRoot(document.getElementById('root')).render(
+/**
+ * Application Entry Point
+ * Initializes the React root, sets up global context providers (Auth),
+ * and configures the routing context.
+ */
+createRoot(document.getElementById("root")).render(
   <StrictMode>
     <AuthProvider>
       <BrowserRouter>
@@ -15,4 +17,4 @@ createRoot(document.getElementById('root')).render(
       </BrowserRouter>
     </AuthProvider>
   </StrictMode>,
-)
+);
