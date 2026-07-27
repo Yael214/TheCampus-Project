@@ -97,14 +97,6 @@ function Forums() {
           <span className="inline-block" style={{ marginLeft: "2rem" }}>
             {forumDetails?.description || "מרחב לדיונים ושאלות על ריאקט"}
           </span>
-          {forumDetails?.category && (
-            <span className="text-gray-400/60 font-normal inline-block">
-              תחום לימודים:{" "}
-              <span className="font-semibold text-gray-400">
-                {forumDetails.category}
-              </span>
-            </span>
-          )}
         </div>
       </header>
 
