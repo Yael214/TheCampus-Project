@@ -25,11 +25,11 @@ function Feed() {
 
   const [posts, setPosts] = useState([]);
 
-  const { forums: userCourses } = useUserForums();
+  const { forums: userForums } = useUserForums();
 
   useEffect(() => {
-    // Clear feed and prevent fetching all posts when logged-in user has no courses
-    if (currentUser && userCourses && userCourses.length === 0) {
+    // Clear feed and prevent fetching all posts when logged-in user has no forums
+    if (currentUser && userForums && userForums.length === 0) {
       setPosts([]);
       setLoading(false);
       return;
@@ -38,15 +38,15 @@ function Feed() {
     const postsCollectionRef = collection(db, "posts");
     let q;
 
-    if (currentUser && userCourses && userCourses.length > 0) {
-      const courseIds = userCourses.map((course) => course.id);
+    if (currentUser && userForums && userForums.length > 0) {
+      const forumIds = userForums.map((forum) => forum.id);
       q = query(
         postsCollectionRef,
-        where("forumId", "in", courseIds),
+        where("forumId", "in", forumIds),
         orderBy("createdAt", "desc"),
       );
     } else {
-      // Fallback query for guests or users with no active course subscriptions
+      // Fallback query for guests or users with no active forum subscriptions
       q = query(postsCollectionRef, orderBy("createdAt", "desc"));
     }
 
@@ -69,7 +69,7 @@ function Feed() {
     );
 
     return () => unsubscribe();
-  }, [currentUser, userCourses]);
+  }, [currentUser, userForums]);
 
   // Render loading spinner while fetching data
   if (loading) {
@@ -128,11 +128,11 @@ function Feed() {
         </div>
       </div>
 
-      {/* Post creation modal scoped to the user's active courses */}
+      {/* Post creation modal scoped to the user's active forums */}
       <NewPostModal
         isOpen={isPostModalOpen}
         onClose={() => setIsPostModalOpen(false)}
-        userCourses={userCourses}
+        userForums={userForums}
       />
     </main>
   );

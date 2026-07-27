@@ -3,9 +3,9 @@ import React from "react";
 /**
  * PartnerCard Component
  * Displays an individual study partner's profile snippet within the map sidebar.
- * Includes WhatsApp integration for direct messaging and course overflow tooltips.
+ * Includes WhatsApp integration for direct messaging and forum overflow tooltips.
  */
-const PartnerCard = ({ name, distance, sharedCourses, phone, about }) => {
+const PartnerCard = ({ name, distance, sharedForums, phone, about }) => {
   return (
     <article className="card">
       <div className="card-row">
@@ -44,21 +44,21 @@ const PartnerCard = ({ name, distance, sharedCourses, phone, about }) => {
               {about}
             </p>
           )}
-          <div className="shared-courses">
-            {/* Display up to two shared courses as individual tags */}
-            {(sharedCourses || []).slice(0, 2).map((course, index) => (
-              <span key={index} className="course-tag" title={course}>
-                {course}
+          <div className="shared-forums">
+            {/* Display up to two shared forums as individual tags */}
+            {(sharedForums || []).slice(0, 2).map((forum, index) => (
+              <span key={index} className="forum-tag" title={forum}>
+                {forum}
               </span>
             ))}
 
-            {/* Display an overflow indicator with a tooltip for additional courses */}
-            {(sharedCourses || []).length > 2 && (
+            {/* Display an overflow indicator with a tooltip for additional forums */}
+            {(sharedForums || []).length > 2 && (
               <span
-                className="course-tag extra-tag"
-                data-tooltip={(sharedCourses || []).slice(2).join(", ")}
+                className="forum-tag extra-tag"
+                data-tooltip={(sharedForums || []).slice(2).join(", ")}
               >
-                +{(sharedCourses || []).length - 2}
+                +{(sharedForums || []).length - 2}
               </span>
             )}
           </div>

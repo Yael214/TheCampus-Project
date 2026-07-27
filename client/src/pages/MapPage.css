@@ -206,13 +206,13 @@
 }
 
 /* --- Tags & Tooltips --- */
-.shared-courses {
+.shared-forums {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 14px;
 }
-.course-tag {
+.forum-tag {
   background: #eef2ff;
   color: var(--main);
   font-size: 12px;
@@ -223,14 +223,14 @@
   text-align: center;
   box-sizing: border-box;
 }
-.course-tag.extra-tag {
+.forum-tag.extra-tag {
   background: #e0e7ff;
   color: var(--main);
   font-weight: 600;
   cursor: pointer;
   position: relative;
 }
-.course-tag.extra-tag:hover::after {
+.forum-tag.extra-tag:hover::after {
   content: attr(data-tooltip);
   position: absolute;
   top: 125%;

@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useUserForums } from '../hooks/useUserForums';
-import { useMaterials } from '../hooks/useMaterials'
-import useCreateForumPost from '../hooks/useCreateForumPost'; // use the create-only hook
+import { useMaterials } from '../hooks/useMaterials';
+import useCreateForumPost from '../hooks/useCreateForumPost';
 
-// Global standalone Modal for dynamic post creation across Feed and specific Course views
 function NewPostModal({ isOpen, onClose, lockedForumId = null }) {
     const { currentUser } = useAuth();
     const [title, setTitle] = useState('');
@@ -17,70 +16,59 @@ function NewPostModal({ isOpen, onClose, lockedForumId = null }) {
     const fileInputRef = useRef(null);
     const [uploadType, setUploadType] = useState('*');
 
-    const { forums: userCourses } = useUserForums();
+    const { forums: userForums } = useUserForums();
 
-    // Determine the current forum (locked to route or selected in modal)
     const targetForumId = lockedForumId || selectedForumId;
-    const {uploadMaterial} = useMaterials(targetForumId);
-    // Activate the post creation hook
+    const { uploadMaterial } = useMaterials(targetForumId);
     const { createPost } = useCreateForumPost(targetForumId);
 
-    // Context synchronization: Handle if the modal is locked to a specific course route or floating free
     useEffect(() => {
         if (lockedForumId) {
             setSelectedForumId(lockedForumId);
-        } else if (userCourses && userCourses.length > 0 && !selectedForumId) {
-            setSelectedForumId(userCourses[0].id);
+        } else if (userForums?.length > 0 && !selectedForumId) {
+            setSelectedForumId(userForums[0].id);
         }
-    }, [userCourses, selectedForumId, lockedForumId]);
+    }, [userForums, selectedForumId, lockedForumId]);
 
     if (!isOpen) return null;
 
     const triggerFileSelect = (acceptType) => {
         setUploadType(acceptType);
         setTimeout(() => {
-            if (fileInputRef.current) {
-                fileInputRef.current.click();
-            }
+            fileInputRef.current?.click();
         }, 50);
     };
 
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
+    const handleFileChange = (event) => {
+        const file = event.target.files[0];
         if (file) {
             setSelectedFile(file);
         }
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleSubmit = async (event) => {
+        event.preventDefault();
         if (!title || !content || !targetForumId || loading) return;
 
         setLoading(true);
         try {
-            let attachments = [];
+            const attachments = [];
 
             if (selectedFile) {
-                const uploadedFileData = await uploadMaterial(
-                    title,
-                    selectedFile,
-                    currentUser,
-                    isSavedToMaterials
-                );
+                const uploadedFileData = await uploadMaterial(title, selectedFile, currentUser, isSavedToMaterials);
                 if (uploadedFileData) {
                     attachments.push(uploadedFileData);
                 }
             }
-            // Find the selected forum object to extract its name
-            const chosenForum = userCourses?.find(f => (f.forumId ?? f.id) === targetForumId);
-            
-            // Use the hook's createPost function instead of addDoc directly
+
+            const chosenForum = userForums?.find((forum) => (forum.forumId ?? forum.id) === targetForumId);
+
             await createPost({
                 title,
                 content,
                 forumId: targetForumId,
                 forumName: chosenForum?.forumName || 'פורום קורס',
-                attachments: attachments,
+                attachments,
                 saveToMaterials: isSavedToMaterials,
             });
 
@@ -89,10 +77,10 @@ function NewPostModal({ isOpen, onClose, lockedForumId = null }) {
             setIsSavedToMaterials(false);
             setSelectedFile(null);
             onClose();
-            console.log("הפוסט פורסם בהצלחה!");
+            console.log('Post published successfully.');
         } catch (err) {
-            console.error("Error creating post database instance:", err);
-            alert("שגיאה בפרסום הפוסט.");
+            console.error('Error creating post database instance:', err);
+            alert('שגיאה בפרסום הפוסט.');
         } finally {
             setLoading(false);
         }
@@ -107,25 +95,24 @@ function NewPostModal({ isOpen, onClose, lockedForumId = null }) {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in" dir="rtl">
-            <div className="bg-white p-8 rounded-3xl shadow-xl max-w-xl w-full border border-gray-100 text-right">
-                <h3 className="text-xl font-bold text-[#2C3E7A] mb-6">פוסט חדש</h3>
-                
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in" dir="rtl">
+            <div className="w-full max-w-xl rounded-3xl border border-gray-100 bg-white p-8 text-right shadow-xl">
+                <h3 className="mb-6 text-xl font-bold text-[#2C3E7A]">פוסט חדש</h3>
+
                 <form onSubmit={handleSubmit} className="space-y-5">
-                    {/* Course Selector Row: Hidden completely if locked down to a unique context route parameter */}
                     {!lockedForumId && (
                         <div>
-                            <label className="block text-xs font-bold text-gray-500 mb-1.5">בחר פורום</label>
-                            <select 
+                            <label className="mb-1.5 block text-xs font-bold text-gray-500">בחר פורום</label>
+                            <select
                                 value={selectedForumId}
-                                onChange={(e) => setSelectedForumId(e.target.value)}
-                                className="w-full text-sm p-3.5 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:border-[#4F46E5] font-medium text-gray-700"
+                                onChange={(event) => setSelectedForumId(event.target.value)}
+                                className="w-full rounded-xl border border-gray-200 bg-gray-50 p-3.5 text-sm font-medium text-gray-700 focus:border-[#4F46E5] focus:outline-none"
                             >
-                                {userCourses?.map((course, index) => {
-                                    const forumId = course.forumId ?? course.id ?? String(index);
+                                {userForums?.map((forum, index) => {
+                                    const forumId = forum.forumId ?? forum.id ?? String(index);
                                     return (
                                         <option key={forumId} value={forumId}>
-                                            {course.forumName || course.name || 'פורום קורס'}
+                                            {forum.forumName || forum.name || 'פורום קורס'}
                                         </option>
                                     );
                                 })}
@@ -133,37 +120,34 @@ function NewPostModal({ isOpen, onClose, lockedForumId = null }) {
                         </div>
                     )}
 
-                    {/* Post Title */}
                     <div>
-                        <label className="block text-xs font-bold text-gray-500 mb-1.5">כותרת הפוסט</label>
-                        <input 
-                            type="text" 
+                        <label className="mb-1.5 block text-xs font-bold text-gray-500">כותרת הפוסט</label>
+                        <input
+                            type="text"
                             required
                             placeholder="כותרת ברורה ותמציתית..."
                             value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                            className="w-full text-sm p-3.5 border border-gray-200 rounded-xl focus:outline-none focus:border-[#4F46E5]"
+                            onChange={(event) => setTitle(event.target.value)}
+                            className="w-full rounded-xl border border-gray-200 p-3.5 text-sm focus:border-[#4F46E5] focus:outline-none"
                         />
                     </div>
 
-                    {/* Post Content Body */}
                     <div>
-                        <label className="block text-xs font-bold text-gray-500 mb-1.5">תוכן</label>
-                        <textarea 
+                        <label className="mb-1.5 block text-xs font-bold text-gray-500">תוכן</label>
+                        <textarea
                             required
                             placeholder="תוכן הפוסט..."
                             rows={4}
                             value={content}
-                            onChange={(e) => setContent(e.target.value)}
-                            className="w-full text-sm p-3.5 border border-gray-200 rounded-xl focus:outline-none focus:border-[#4F46E5] resize-none"
+                            onChange={(event) => setContent(event.target.value)}
+                            className="w-full resize-none rounded-xl border border-gray-200 p-3.5 text-sm focus:border-[#4F46E5] focus:outline-none"
                         />
                     </div>
 
                     <input type="file" ref={fileInputRef} onChange={handleFileChange} accept={uploadType} className="hidden" />
 
-                    {/* Media Actions Dashboard */}
                     <div className="space-y-3">
-                        <div className="w-full p-3 border border-dashed border-gray-200 rounded-xl bg-gray-50 text-right text-xs font-semibold text-gray-500">
+                        <div className="w-full rounded-xl border border-dashed border-gray-200 bg-gray-50 p-3 text-right text-xs font-semibold text-gray-500">
                             {selectedFile ? (
                                 <span className="text-[#4F46E5]">📎 קובץ נבחר: {selectedFile.name}</span>
                             ) : (
@@ -171,32 +155,33 @@ function NewPostModal({ isOpen, onClose, lockedForumId = null }) {
                             )}
                         </div>
 
-                        <div className="flex gap-2.5 justify-start">
-                            <button type="button" onClick={() => triggerFileSelect(".pdf")} className="flex items-center gap-1.5 bg-indigo-50/60 text-[#4F46E5] px-4 py-2 rounded-xl text-xs font-bold border-none hover:bg-indigo-100 transition-colors cursor-pointer">📄 PDF</button>
-                            <button type="button" onClick={() => triggerFileSelect("image/*")} className="flex items-center gap-1.5 bg-indigo-50/60 text-[#4F46E5] px-4 py-2 rounded-xl text-xs font-bold border-none hover:bg-indigo-100 transition-colors cursor-pointer">🖼️ תמונה</button>
-                            <button type="button" onClick={() => triggerFileSelect("video/*")} className="flex items-center gap-1.5 bg-indigo-50/60 text-[#4F46E5] px-4 py-2 rounded-xl text-xs font-bold border-none hover:bg-indigo-100 transition-colors cursor-pointer">🎥 סרטון</button>
+                        <div className="flex justify-start gap-2.5">
+                            <button type="button" onClick={() => triggerFileSelect('.pdf')} className="flex cursor-pointer items-center gap-1.5 rounded-xl border-none bg-indigo-50/60 px-4 py-2 text-xs font-bold text-[#4F46E5] transition-colors hover:bg-indigo-100">📄 PDF</button>
+                            <button type="button" onClick={() => triggerFileSelect('image/*')} className="flex cursor-pointer items-center gap-1.5 rounded-xl border-none bg-indigo-50/60 px-4 py-2 text-xs font-bold text-[#4F46E5] transition-colors hover:bg-indigo-100">🖼️ תמונה</button>
+                            <button type="button" onClick={() => triggerFileSelect('video/*')} className="flex cursor-pointer items-center gap-1.5 rounded-xl border-none bg-indigo-50/60 px-4 py-2 text-xs font-bold text-[#4F46E5] transition-colors hover:bg-indigo-100">🎥 סרטון</button>
                         </div>
                     </div>
 
-                    {/* Safe Traditional Input Inline Layout Block */}
-                    <div className="text-right pt-2" style={{ textAlign: 'right', display: 'block' }}>
-                        <input 
+                    <div className="pt-2 text-right">
+                        <input
                             type="checkbox"
                             id="saveMaterialsCheckbox"
                             checked={isSavedToMaterials}
-                            onChange={(e) => setIsSavedToMaterials(e.target.checked)}
-                            className="rounded border-gray-300 text-[#4F46E5] focus:ring-[#4F46E5] cursor-pointer"
-                            style={{ width: '20px', height: '20px', verticalAlign: 'middle', marginLeft: '10px', display: 'inline-block' }}
+                            onChange={(event) => setIsSavedToMaterials(event.target.checked)}
+                            className="mr-2 inline-block h-5 w-5 cursor-pointer rounded border-gray-300 text-[#4F46E5] focus:ring-[#4F46E5]"
                         />
-                        <label htmlFor="saveMaterialsCheckbox" className="text-sm font-bold text-gray-600 cursor-pointer select-none" style={{ verticalAlign: 'middle', display: 'inline-block' }}>
+                        <label htmlFor="saveMaterialsCheckbox" className="inline-block cursor-pointer select-none text-sm font-bold text-gray-600">
                             שמור בדאטאבייס של הפורום
                         </label>
                     </div>
 
-                    {/* Form Controls */}
                     <div className="flex gap-3 pt-4">
-                        <button type="submit" disabled={loading} className="flex-1 bg-[#4F46E5] text-white py-3.5 rounded-xl font-bold hover:bg-indigo-700 border-none text-sm cursor-pointer">{loading ? 'מפרסם...' : 'פרסם'}</button>
-                        <button type="button" onClick={handleClose} className="flex-1 bg-gray-100 text-gray-500 py-3.5 rounded-xl font-bold hover:bg-gray-200 border-none text-sm cursor-pointer">ביטול</button>
+                        <button type="submit" disabled={loading} className="flex-1 cursor-pointer rounded-xl border-none bg-[#4F46E5] py-3.5 text-sm font-bold text-white hover:bg-indigo-700">
+                            {loading ? 'מפרסם...' : 'פרסם'}
+                        </button>
+                        <button type="button" onClick={handleClose} className="flex-1 cursor-pointer rounded-xl border-none bg-gray-100 py-3.5 text-sm font-bold text-gray-500 hover:bg-gray-200">
+                            ביטול
+                        </button>
                     </div>
                 </form>
             </div>
