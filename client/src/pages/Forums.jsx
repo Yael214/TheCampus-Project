@@ -10,11 +10,11 @@ import PostContainer from "../components/PostContainer";
 import MaterialsSidebar from "../components/MaterialsSidebar";
 
 /**
- * Courses Component (Forum View)
- * Renders the dedicated forum page for a specific course.
+ * Forums Component (Forum View)
+ * Renders the dedicated forum page for a specific forum.
  * Handles fetching forum metadata, real-time post synchronization, and layout structure.
  */
-function Courses() {
+function Forums() {
   const { currentUser, isAdmin } = useAuth();
   const params = useParams();
   const rawForumId = params.forumId;
@@ -25,7 +25,7 @@ function Courses() {
 
   const safeForumId = rawForumId || "react-programmin";
   const { forums } = useUserForums();
-  const currentCourse = forums
+  const currentForum = forums
     ? forums.find((f) => f.id === safeForumId)
     : null;
 
@@ -90,7 +90,7 @@ function Courses() {
       <header className="mb-8 w-full block text-right">
         <h1 className="text-3xl font-black text-[#2C3E7A] m-0 p-0 block text-right w-full">
           {forumDetails?.forumName ||
-            currentCourse?.name ||
+            currentForum?.name ||
             "פיתוח אפליקציות ב-React"}
         </h1>
         <div className="text-gray-400 text-sm mt-2 font-medium w-full block text-right">
@@ -167,4 +167,4 @@ function Courses() {
   );
 }
 
-export default Courses;
+export default Forums;

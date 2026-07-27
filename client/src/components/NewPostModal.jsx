@@ -16,7 +16,7 @@ function NewPostModal({ isOpen, onClose, lockedForumId = null }) {
     const fileInputRef = useRef(null);
     const [uploadType, setUploadType] = useState('*');
 
-    const { forums: userCourses } = useUserForums();
+    const { forums: userForums } = useUserForums();
 
     const targetForumId = lockedForumId || selectedForumId;
     const { uploadMaterial } = useMaterials(targetForumId);
@@ -25,10 +25,10 @@ function NewPostModal({ isOpen, onClose, lockedForumId = null }) {
     useEffect(() => {
         if (lockedForumId) {
             setSelectedForumId(lockedForumId);
-        } else if (userCourses?.length > 0 && !selectedForumId) {
-            setSelectedForumId(userCourses[0].id);
+        } else if (userForums?.length > 0 && !selectedForumId) {
+            setSelectedForumId(userForums[0].id);
         }
-    }, [userCourses, selectedForumId, lockedForumId]);
+    }, [userForums, selectedForumId, lockedForumId]);
 
     if (!isOpen) return null;
 
@@ -61,7 +61,7 @@ function NewPostModal({ isOpen, onClose, lockedForumId = null }) {
                 }
             }
 
-            const chosenForum = userCourses?.find((forum) => (forum.forumId ?? forum.id) === targetForumId);
+            const chosenForum = userForums?.find((forum) => (forum.forumId ?? forum.id) === targetForumId);
 
             await createPost({
                 title,
@@ -108,11 +108,11 @@ function NewPostModal({ isOpen, onClose, lockedForumId = null }) {
                                 onChange={(event) => setSelectedForumId(event.target.value)}
                                 className="w-full rounded-xl border border-gray-200 bg-gray-50 p-3.5 text-sm font-medium text-gray-700 focus:border-[#4F46E5] focus:outline-none"
                             >
-                                {userCourses?.map((course, index) => {
-                                    const forumId = course.forumId ?? course.id ?? String(index);
+                                {userForums?.map((forum, index) => {
+                                    const forumId = forum.forumId ?? forum.id ?? String(index);
                                     return (
                                         <option key={forumId} value={forumId}>
-                                            {course.forumName || course.name || 'פורום קורס'}
+                                            {forum.forumName || forum.name || 'פורום קורס'}
                                         </option>
                                     );
                                 })}

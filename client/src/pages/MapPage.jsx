@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import "./MapPage.css";
 import PartnerCard from "./PartnerCard.jsx";
-import MapContainer from "../components/map/MapContainer.jsx";
+import MapContainer from "../components/MapContainer.jsx";
 import { useNearbyUsers } from "../hooks/useNearbyUsers";
 import { useAuth } from "../context/AuthContext.jsx";
 import { LocationToggle } from "../components/LocationToggle.jsx";
@@ -210,7 +210,7 @@ function MapPage() {
                 >
                   {(() => {
                     const partnerForums = partner.followedForums || {};
-                    const commonCourses = myForumIds
+                    const commonForums = myForumIds
                       .filter((forumId) => partnerForums[forumId] !== undefined)
                       .map((forumId) => partnerForums[forumId].forumName);
 
@@ -218,10 +218,10 @@ function MapPage() {
                       <PartnerCard
                         name={partner.fullName}
                         distance={partner.distance.toFixed(2)}
-                        sharedCourses={
-                          commonCourses.length > 0
-                            ? commonCourses
-                            : ["אין קורסים משותפים"]
+                        sharedForums={
+                          commonForums.length > 0
+                            ? commonForums
+                            : ["אין פורומים משותפים"]
                         }
                         phone={partner.phone}
                         about={partner.about}

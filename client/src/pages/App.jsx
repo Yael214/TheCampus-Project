@@ -11,7 +11,7 @@ import Success from "./Success.jsx";
 import Feed from "./Feed.jsx";
 import Profile from "./Profile.jsx";
 import MapPage from "./MapPage.jsx";
-import Courses from "./Courses.jsx";
+import Forums from "./Forums.jsx";
 import BlockedScreen from "./BlockedScreen.jsx"; // Added import for the blocked screen
 
 // Layout elements
@@ -64,8 +64,8 @@ function ProtectedLayout() {
             <Route path="/feed" element={<Feed />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/partners" element={<MapPage />} />
-            <Route path="/forum/:forumId" element={<Courses />} />
-            {/* /courses will be here in next sprint */}
+            <Route path="/forum/:forumId" element={<Forums />} />
+            {/* /forums will be here in next sprint */}
             <Route
               path="/admin"
               element={

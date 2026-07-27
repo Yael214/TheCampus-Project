@@ -12,18 +12,18 @@ function Sidebar() {
     const { validateImage, getFileExtension, uploadFileToStorage, loading: imageLoading } = useImageHandler();
     const navigate = useNavigate();
 
-    const [isCoursesOpen, setIsCoursesOpen] = useState(false);
-    const [courseSearch, setCourseSearch] = useState('');
+    const [isForumOpen, setIsForumOpen] = useState(false);
+    const [forumSearch, setForumSearch] = useState('');
     const [isCollapsed, setIsCollapsed] = useState(false);
 
     const { forums, loading: forumsLoading } = useUserForums() || { forums: [], loading: false };
 
     const sortedForums = [...(forums || [])].sort((a, b) => a.forumName.localeCompare(b, 'he'));
-    const filteredForums = sortedForums.filter((forum) => forum?.forumName?.toLowerCase().includes(courseSearch.toLowerCase()));
+    const filteredForums = sortedForums.filter((forum) => forum?.forumName?.toLowerCase().includes(forumSearch.toLowerCase()));
 
     const handleCollapse = () => {
         if (!isCollapsed) {
-            setIsCoursesOpen(false);
+            setIsForumOpen(false);
         }
         setIsCollapsed((value) => !value);
     };
@@ -117,31 +117,31 @@ function Sidebar() {
                 <div className={`w-full ${isCollapsed ? 'flex justify-center' : ''}`}>
                     <button
                         type="button"
-                        onClick={() => !isCollapsed && setIsCoursesOpen((value) => !value)}
+                        onClick={() => !isCollapsed && setIsForumOpen((value) => !value)}
                         title="הפורומים שלי"
-                        className={`flex cursor-pointer items-center rounded-[20px] border-none bg-transparent text-right transition-all ${isCollapsed ? 'h-10 w-10 justify-center p-0' : 'w-full justify-between px-5 py-3.5'} ${isCoursesOpen ? 'border border-white bg-white font-bold text-[#4F46E5] shadow-sm' : 'font-medium text-[#2C3E7A] opacity-80 hover:bg-white/60'}`}
+                        className={`flex cursor-pointer items-center rounded-[20px] border-none bg-transparent text-right transition-all ${isCollapsed ? 'h-10 w-10 justify-center p-0' : 'w-full justify-between px-5 py-3.5'} ${isForumOpen ? 'border border-white bg-white font-bold text-[#4F46E5] shadow-sm' : 'font-medium text-[#2C3E7A] opacity-80 hover:bg-white/60'}`}
                     >
                         <div className={`flex items-center ${isCollapsed ? '' : 'gap-3.5'}`}>
                             <span className="text-xl">📚</span>
                             {!isCollapsed && <span>הפורומים שלי</span>}
                         </div>
-                        {!isCollapsed && <span className={`text-xs transition-transform duration-200 ${isCoursesOpen ? 'rotate-180' : ''}`}>▼</span>}
+                        {!isCollapsed && <span className={`text-xs transition-transform duration-200 ${isForumOpen ? 'rotate-180' : ''}`}>▼</span>}
                     </button>
 
-                    {isCoursesOpen && !isCollapsed && (
+                    {isForumOpen && !isCollapsed && (
                         <div className="mt-2 flex max-h-56 flex-col gap-2 rounded-[20px] border border-white/60 bg-white/80 p-3 shadow-inner">
                             <div className="relative">
                                 <input
                                     type="text"
-                                    placeholder="חפש קורס..."
-                                    value={courseSearch}
-                                    onChange={(event) => setCourseSearch(event.target.value)}
+                                    placeholder="חפש פורום..."
+                                    value={forumSearch}
+                                    onChange={(event) => setForumSearch(event.target.value)}
                                     className="w-full rounded-xl border border-gray-200 bg-white/90 p-2 pl-10 pr-4 text-right text-sm text-[#2C3E7A] focus:border-[#4F46E5] focus:outline-none"
                                 />
                                 <span className="pointer-events-none absolute left-3 top-2.5 text-sm text-gray-400">🔍</span>
                             </div>
                             <div className="flex-1 space-y-1 overflow-y-auto pr-1">
-                                {forumsLoading && <p className="py-2 text-center text-xs text-gray-400">טוען קורסים...</p>}
+                                {forumsLoading && <p className="py-2 text-center text-xs text-gray-400">טוען פורומים...</p>}
                                 {!forumsLoading && filteredForums.map((forum) => (
                                     <NavLink
                                         key={forum.id}
@@ -152,7 +152,7 @@ function Sidebar() {
                                         <span className="truncate">{forum.forumName}</span>
                                     </NavLink>
                                 ))}
-                                {!forumsLoading && filteredForums.length === 0 && <p className="py-2 text-center text-xs text-gray-400">No courses found</p>}
+                                {!forumsLoading && filteredForums.length === 0 && <p className="py-2 text-center text-xs text-gray-400">No forums found</p>}
                             </div>
                         </div>
                     )}

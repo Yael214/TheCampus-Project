@@ -24,7 +24,7 @@ export const AuthProvider = ({ children }) => {
   const { getFileExtension, uploadFileToStorage } = useImageHandler();
 
   // Unified real-time user data listener from Firestore using custom hook
-  const { userData, loading: userDataLoading, error: userDataError, updateCourseStatus, updateUserVisibility, updateUserLocation } = useUserData(authUser?.uid);
+  const { userData, loading: userDataLoading, error: userDataError, updateForumStatus, updateUserVisibility, updateUserLocation } = useUserData(authUser?.uid);
 
   // Merge auth data with Firestore user data into single object
   const currentUser = authUser && userData
@@ -176,7 +176,7 @@ export const AuthProvider = ({ children }) => {
     return signOut(auth);
   };
 
-  const value = { currentUser, loading, loginWithGoogle, isAdmin, signup, login, logout, deleteAccountComplete, updateCourseStatus, updateUserVisibility, updateUserLocation };
+  const value = { currentUser, loading, loginWithGoogle, isAdmin, signup, login, logout, deleteAccountComplete, updateForumStatus, updateUserVisibility, updateUserLocation };
 
   return (
     <AuthContext.Provider value={value}>
