@@ -32,6 +32,7 @@ function MapPage() {
   const [selectedPartner, setSelectedPartner] = useState(null);
   const [selectedGender, setSelectedGender] = useState("הכל");
   const [selectedAge, setSelectedAge] = useState("הכל");
+  const cardsRef = useRef(null); // Reference to the cards container to enable auto-scrolling on search submit
 
   // Track previous isDiscoverable value to detect actual toggles (not just re-renders)
   const prevIsDiscoverableRef = useRef(isDiscoverable);
@@ -77,6 +78,21 @@ function MapPage() {
 
     return matchesGender && matchesAge;
   });
+  // Automatically scrolls the sidebar to the top of the cards section whenever search results finish loading
+  useEffect(() => {
+    // Do not scroll if search hasn't been triggered, radius is null, or data is loading
+    if (!hasSearched || searchRadius === null || loading) {
+      return;
+    }
+
+    // Schedule the scroll operation on the next browser animation frame
+    const frameId = window.requestAnimationFrame(() => {
+      cardsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    // Cleanup function to cancel the animation frame request if dependencies change before execution
+    return () => window.cancelAnimationFrame(frameId);
+  }, [hasSearched, loading, searchRadius, filteredPartners.length]);
 
   const handleSearchSubmit = () => {
     if (!isDiscoverable) {
@@ -182,8 +198,8 @@ function MapPage() {
               </button>
             </div>
           </div>
-
-          <div className="cards">
+          {/* Container for partner cards; attached to cardsRef for automated scrolling */}
+          <div className="cards" ref={cardsRef}>
             {!hasSearched && !isDiscoverable ? (
               <p>⚠️ אנא אשר שיתוף מיקום כדי לחפש שותפים.</p>
             ) : !hasSearched ? null : loading ? (

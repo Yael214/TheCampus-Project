@@ -78,6 +78,7 @@
   height: 100%; /* Matches viewport height exactly */
   overflow-y: auto; /* Enables internal vertical scrolling */
   padding-right: 8px;
+  scroll-behavior: smooth;
 }
 
 .sidebar::-webkit-scrollbar {
