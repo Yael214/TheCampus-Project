@@ -145,12 +145,6 @@ function Login() {
           סטודנט חדש? <Link to="/register">צור חשבון</Link>
         </div>
 
-        <div
-          className="guest-link"
-          style={{ textAlign: "center", marginTop: "8px" }}
-        >
-          <Link to="/feed">כניסה כאורח/ת</Link>
-        </div>
       </div>
     </div>
   );
