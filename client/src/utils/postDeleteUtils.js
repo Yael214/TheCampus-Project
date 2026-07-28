@@ -1,6 +1,7 @@
 /**
  * Utility function for handling post deletion and its attachments.
  */
+
 import { db, storage } from '../firebase/config';
 import { doc, deleteDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { ref, deleteObject } from 'firebase/storage';
@@ -9,6 +10,7 @@ import { ref, deleteObject } from 'firebase/storage';
  * @param {Object} post - The post object
  * @param {boolean} deleteFilesPermanently - Whether to delete files permanently from course materials
  */
+
 export const handleDeletePost = async (post, deleteFilesPermanently = false) => {
   try {
     if (post.attachments && post.attachments.length > 0) {

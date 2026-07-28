@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { collectionGroup, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
-import AdminPanel from './AdminPanel';     // Existing user management component
-import AdminReports from '../pages/AdminReports'; // New reports component
+import AdminPanel from './AdminPanel';     
+import AdminReports from '../pages/AdminReports'; 
 
 function AdminDashboardLayout() {
   const { currentUser } = useAuth();
-  const [activeTab, setActiveTab] = useState('users'); // 'users' or 'reports'
+  const [activeTab, setActiveTab] = useState('users');
   const [pendingReportsCount, setPendingReportsCount] = useState(0);
 
   // General admin permission check

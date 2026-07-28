@@ -4,7 +4,7 @@ import { db } from '../firebase/config';
 import * as geofire from 'geofire-common';
 
 /**
- * Custom hook to manage user profile data and course updates.
+ * Custom hook to manage user profile data and forum updates.
  * Provides synchronized state with Firestore for the "The Campus" project.
  * Uses real-time listeners (onSnapshot) to automatically update when data changes in Firestore.
  */
@@ -69,34 +69,34 @@ export const useUserData = (userId) => {
   }, [userId]);
 
   /**
-   * Updates the status of a specific course in the user's document.
-   * @param {string} courseNumber - The unique ID of the course (e.g., 20594).
+   * Updates the status of a specific forum in the user's document.
+   * @param {string} forumId - The unique ID of the forum (e.g., 20594).
    * @param {string} newStatus - The target status (e.g., 'completed').
    */
-  const updateCourseStatus = async (courseNumber, newStatus) => {
+  const updateForumStatus = async (forumId, newStatus) => {
     if (!userId || !userData) return;
 
     try {
       const userRef = doc(db, "users", userId);
 
-      // Create a modified array of courses with the updated status for the target course
-      const updatedCourses = userData.courses.map(course =>
-        course.courseNumber === courseNumber
-          ? { ...course, status: newStatus } // Update only the matched course
-          : course // Keep other courses unchanged
+      // Create a modified array of forums with the updated status for the target forum
+      const updatedForums = userData.forums.map(forum =>
+        forum.forumId === forumId
+          ? { ...forum, status: newStatus } // Update only the matched forum
+          : forum // Keep other forums unchanged
       );
 
       // Perform the update operation in Cloud Firestore
       await updateDoc(userRef, {
-        courses: updatedCourses
+        forums: updatedForums
       });
 
       // Synchronize local state to reflect changes immediately in the UI without refresh
-      setUserData({ ...userData, courses: updatedCourses });
+      setUserData({ ...userData, forums: updatedForums });
 
       return { success: true };
     } catch (err) {
-      console.error("Error updating course status:", err);
+      console.error("Error updating forum status:", err);
       return { success: false, error: err.message };
     }
   };
@@ -175,5 +175,5 @@ export const useUserData = (userId) => {
   // Exporting state and the update functions
   // Note: No need for manual refetch anymore since onSnapshot provides real-time updates
   return { 
-    userData, loading, error, updateCourseStatus, updateUserVisibility, updateUserLocation };
+    userData, loading, error, updateForumStatus, updateUserVisibility, updateUserLocation };
 };
