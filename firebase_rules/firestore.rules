@@ -23,13 +23,19 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
       );
       
-      // Reports nested inside user documents 
-      match /reports/{reportId} {
-        allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
-        allow create: if request.auth != null && 
-                      request.resource.data.reporterUserId == request.auth.uid && 
-                      !isUserBlocked();
-        allow update, delete: if isAdmin();
+    // Reports nested inside user documents 
+    match /reports/{reportId} {
+       // Allow read if the user is the owner of the profile, an admin, or the one who created the report
+       allow read: if request.auth != null && (
+            request.auth.uid == userId || 
+            isAdmin() || 
+            resource.data.reporterUserId == request.auth.uid
+        );
+        
+       allow create: if request.auth != null && 
+                     request.resource.data.reporterUserId == request.auth.uid && 
+                     !isUserBlocked();
+       allow update, delete: if isAdmin();
       }
     }
       
