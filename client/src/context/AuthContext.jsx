@@ -102,7 +102,7 @@ export const AuthProvider = ({ children }) => {
       studyApproval: studyApprovalUrl,
       role: "user", //Default value
       createdAt: new Date(),
-      idBlocked: false //Default value
+      isBlocked: false //Default value
     });
     // Send initial verification email automatically on signup
     await sendEmailVerification(user);
