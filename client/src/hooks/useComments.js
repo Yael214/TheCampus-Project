@@ -49,10 +49,11 @@ export const useComments = (postId) => {
       const commentsRef = collection(db, 'posts', postId, 'comments');
       
       const newComment = {
-        authorId: user.uid,              // user ID of the commenter
+        postId: postId,                     // the ID of the parent post
+        authorId: user.uid,                 // user ID of the commenter
         authorName: user.fullName || 'אנונימי/ת', // the name of the commenter
-        content: content,                // the text content of the comment
-        createdAt: serverTimestamp(),     // a timestamp of when the comment was created
+        content: content,                   // the text content of the comment
+        createdAt: serverTimestamp(),       // a timestamp of when the comment was created
       };
       
       // parentId is only added to the comment document if it's a reply to another comment. This allows us to later query and display comments in a nested manner if needed.

@@ -1,15 +1,9 @@
-/**
- * @file importCourses.js
- * @description Utility script to parse an HTML course list from The Open University,
- * extract active course details, and populate Firestore 'forums' collection.
- */
-
 const admin = require('firebase-admin');
 const fs = require('fs');
 const path = require('path');
 const { JSDOM } = require('jsdom');
 
-// Initialize Firebase Admin SDK
+// 1. Initialize Firebase Admin
 const serviceAccount = require('./serviceAccountKey.json');
 
 admin.initializeApp({
@@ -18,34 +12,32 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
-/**
- * Reads local HTML file, decodes Windows-1255 encoding, parses course details,
- * and creates corresponding forum documents in Firestore.
- */
 async function parseAndImportCourses() {
   try {
-    // 1. Read the local HTML file as a raw binary buffer
+    // 2. Read the local HTML file as a raw binary buffer
     const fileBuffer = fs.readFileSync(path.join(__dirname, 'Courses_TheOU.html'));
     
-    // 2. Decode the buffer using Windows-1255 encoding for Hebrew characters
+    // 3. Decode the buffer using Windows-1255 encoding for Hebrew
     const decoder = new TextDecoder('windows-1255');
     const htmlContent = decoder.decode(fileBuffer);
     
     const dom = new JSDOM(htmlContent);
     const document = dom.window.document;
 
-    // 3. Select DOM elements sequentially to detect boundary markers accurately
+    // 4. Select elements inside the content container to parse sequentially
+    // We scan rows, list items, and links in order to find our stop text exactly where it appears
     const allElements = document.querySelectorAll('table.links td a, h2, h3, p, b, strong');
     console.log('Scanning page elements sequentially for active courses...');
 
     let importedCount = 0;
     const adminUid = 'XAlLgb97rcPbnsRxMA0OR1s2hPH3';
 
-    // 4. Iterate through extracted elements
+    // 5. Loop through each element sequentially
     for (const element of allElements) {
         const textContent = element.textContent ? element.textContent.trim() : '';
 
-        // Boundary Check: Stop processing once inactive course headers are reached
+        // DANGER ZONE FILTER: Stop IMMEDIATELY when reaching these specific section headers
+        // This stops the script before importing inactive/removed courses at the bottom
         if (
             textContent === 'הוראת הקורס הופסקה זמנית:' || 
             textContent === 'קורסים שאינם מוצעים עוד:' ||
@@ -59,7 +51,7 @@ async function parseAndImportCourses() {
             }
         }
 
-        // 5. Process valid anchor elements containing course code and title
+        // Process only if the current element is a valid link <a>
         if (element.tagName === 'A') {
             const codeSpan = element.querySelector('span[dir="ltr"]');
             const titleSpan = element.querySelector('span[dir="rtl"]');
@@ -71,10 +63,10 @@ async function parseAndImportCourses() {
 
                 if (!courseCode || !courseTitle) continue;
 
-                // Reference Firestore document using course code as ID
+                // 6. Reference to the document using courseCode as Document ID
                 const forumRef = db.collection('forums').doc(courseCode);
 
-                // Populate Firestore document
+                // Insert the document with the exact required fields
                 await forumRef.set({
                     forumID: courseCode,
                     forumName: courseTitle,
@@ -100,5 +92,5 @@ async function parseAndImportCourses() {
   }
 }
 
-// Execute course import
+// Run the script
 parseAndImportCourses();

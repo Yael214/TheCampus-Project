@@ -3,22 +3,29 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import CommentItem from './CommentItem';
 import { useComments } from '../hooks/useComments';
-import { useLikes } from '../hooks/useLikes';
-import { collection, deleteDoc, doc, getDocs, query, where } from 'firebase/firestore';
-import { deleteObject, ref } from 'firebase/storage';
-import { db, storage } from '../firebase/config';
+import { useLikes } from '../hooks/useLikes'; 
+import { db } from '../firebase/config';
+import { collection, addDoc, doc, deleteDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore'; 
+import ReportModal from './ReportModal';
+import { handleDeletePost } from '../utils/postDeleteUtils'; 
 
+// Get the post from forum page
 function PostContainer({ post, showForumLink = true, isAdmin }) {
     const { currentUser: user } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
     const [rootCommentText, setRootCommentText] = useState('');
-    const [liked, setLiked] = useState(Boolean(user && post.likedBy?.includes(user.uid)));
-    const [likesCount, setLikesCount] = useState(post.likesCount || 0);
-    const [showMenu, setShowMenu] = useState(false);
 
+    const isLiked = Boolean(user && post.likedBy?.includes(user.uid));
+    const [liked, setLiked] = useState(isLiked);
+    const [likesCount, setLikesCount] = useState(post.likesCount || 0);
+    
+    // State for the 3 dots menu and report modal
+    const [showMenu, setShowMenu] = useState(false);
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+
+    // Check if current user is the author or an admin to allow deletion
     const isAuthor = user?.uid === post.authorId;
     const canDelete = isAuthor || isAdmin;
-    const isLiked = Boolean(user && post.likedBy?.includes(user.uid));
 
     useEffect(() => {
         setLiked(isLiked);
@@ -35,7 +42,7 @@ function PostContainer({ post, showForumLink = true, isAdmin }) {
 
     const handleLikeClick = async () => {
         if (!user) {
-            alert('היכנס לחשבון כדי לתת לייק');
+            alert("היכנס לחשבון כדי לתת לייק");
             return;
         }
 
@@ -45,52 +52,83 @@ function PostContainer({ post, showForumLink = true, isAdmin }) {
 
         try {
             await useLikes(post.postId, user.uid, newLikedStatus);
-            console.log('Database updated successfully');
+            console.log("Database updated successfully");
         } catch (error) {
             setLiked(!newLikedStatus);
             setLikesCount((currentCount) => (!newLikedStatus ? currentCount + 1 : currentCount - 1));
-            console.error('Failed to update like in database', error);
+            console.error("Failed to update like in database", error);
         }
     };
 
+    // Handle post deletion using centralized utility function
     const handleDelete = async () => {
-        const confirmDelete = window.confirm('האם את בטוחה שברצונך למחוק את הפוסט?');
+        const confirmDelete = window.confirm("האם את בטוחה שברצונך למחוק את הפוסט?");
         if (!confirmDelete) return;
 
+        let deleteFilesPermanently = false;
+        if (post.attachments && post.attachments.length > 0) {
+            deleteFilesPermanently = window.confirm(
+                "האם למחוק גם את הקבצים המצורפים לצמיתות (כולל מחומרי הלימוד של הקורס)?"
+            );
+        }
+
         try {
-            if (post.attachments?.length > 0) {
-                for (const attachment of post.attachments) {
-                    const materialsQuery = query(collection(db, 'materials'), where('fileUrl', '==', attachment.fileUrl));
-                    const materialsSnapshot = await getDocs(materialsQuery);
-
-                    if (materialsSnapshot.empty && attachment.storagePath) {
-                        const fileStorageRef = ref(storage, attachment.storagePath);
-                        await deleteObject(fileStorageRef);
-                        console.log(`File deleted from storage: ${attachment.fileName}`);
-                    } else {
-                        console.log(`File retained in storage because it belongs to materials: ${attachment.fileName}`);
-                    }
-                }
-            }
-
-            const postRef = doc(db, 'posts', post.postId);
-            await deleteDoc(postRef);
-            console.log('Post deleted successfully');
+            await handleDeletePost(post, deleteFilesPermanently);
+            console.log("Post deleted successfully via UI");
         } catch (error) {
-            console.error('Error deleting post:', error);
+            console.error("Error deleting post:", error);
+            alert("שגיאה במחיקת הפוסט");
         }
     };
 
+    // Handle reporting a post
+    const handleReportSubmit = async (selectedReason, customReason) => {
+        try {
+            const reportsRef = collection(db, "users", post.authorId, "reports");
+
+            const q = query(
+                reportsRef, 
+                where("targetId", "==", post.postId), 
+                where("reporterUserId", "==", user.uid)
+            );
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+                alert("כבר דיווחת על פוסט זה בעבר. הדיווח שלך נמצא בבדיקה.");
+                setIsReportModalOpen(false);
+                setShowMenu(false);
+                return;
+            }
+
+            await addDoc(reportsRef, {
+                targetId: post.postId,
+                targetType: "post",
+                reporterUserId: user.uid,
+                details: selectedReason === 'אחר' ? customReason : selectedReason,
+                status: "pending",
+                createdAt: serverTimestamp()
+            });
+
+            alert("הדיווח נשלח בהצלחה למערכת.");
+            setIsReportModalOpen(false);
+            setShowMenu(false);
+        } catch (error) {
+            console.error("Error reporting post:", error);
+            alert("שגיאה בשליחת הדיווח, נסי שוב.");
+        }
+    };
+
+    // Handle comment deletion (Passed down to CommentItem)
     const handleDeleteComment = async (commentId) => {
-        const confirmDelete = window.confirm('האם את בטוחה שברצונך למחוק את התגובה?');
+        const confirmDelete = window.confirm("האם את בטוחה שברצונך למחוק את התגובה?");
         if (!confirmDelete) return;
 
         try {
             const commentRef = doc(db, 'posts', post.postId, 'comments', commentId);
             await deleteDoc(commentRef);
-            console.log('Comment deleted successfully');
+            console.log("Comment deleted successfully");
         } catch (error) {
-            console.error('Error deleting comment:', error);
+            console.error("Error deleting comment:", error);
         }
     };
 
@@ -136,23 +174,31 @@ function PostContainer({ post, showForumLink = true, isAdmin }) {
                     <h2 className="text-base font-semibold leading-6 text-slate-900 md:text-lg">{post.title}</h2>
                 </div>
 
+                {/* 3 Dots Menu Wrapper */}
                 <div className="relative z-10 mr-2">
                     <button
                         onClick={() => setShowMenu((value) => !value)}
                         onBlur={() => setTimeout(() => setShowMenu(false), 200)}
-                        className="px-2 text-xl leading-none text-slate-400 hover:text-slate-600"
+                        className="px-2 text-xl leading-none text-slate-400 hover:text-slate-600 cursor-pointer"
                     >
                         ⋮
                     </button>
 
                     {showMenu && (
-                        <div className="absolute left-0 mt-1 w-32 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg">
-                            {canDelete ? (
-                                <button onClick={handleDelete} className="w-full px-4 py-2 text-right text-sm text-red-600 transition hover:bg-red-50">
+                        <div className="absolute left-0 mt-1 w-32 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg z-20">
+                            {canDelete && (
+                                <button onClick={handleDelete} className="w-full px-4 py-2 text-right text-sm text-red-600 transition hover:bg-red-50 cursor-pointer">
                                     מחק פוסט
                                 </button>
-                            ) : (
-                                <div className="w-full cursor-default px-4 py-2 text-center text-sm text-slate-400">בקרוב...</div>
+                            )}
+
+                            {!isAuthor && user && (
+                                <button 
+                                    onClick={() => setIsReportModalOpen(true)}
+                                    className="w-full px-4 py-2 text-right text-sm text-slate-700 transition hover:bg-slate-50 cursor-pointer"
+                                >
+                                    דווח על פוסט
+                                </button>
                             )}
                         </div>
                     )}
@@ -206,7 +252,7 @@ function PostContainer({ post, showForumLink = true, isAdmin }) {
             </div>
 
             <div className="mt-2 flex items-center justify-between">
-                <button onClick={() => setIsOpen((value) => !value)} className="text-sm font-semibold text-slate-600 hover:text-slate-900">
+                <button onClick={() => setIsOpen((value) => !value)} className="text-sm font-semibold text-slate-600 hover:text-slate-900 cursor-pointer">
                     {isOpen ? 'הסתר תגובות' : `הצג תגובות (${commentCount})`}
                 </button>
             </div>
@@ -235,12 +281,18 @@ function PostContainer({ post, showForumLink = true, isAdmin }) {
                             placeholder="כתוב תגובה פה..."
                             className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
                         />
-                        <button type="submit" className="rounded-xl bg-[#4F46E5] px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-600">
+                        <button type="submit" className="rounded-xl bg-[#4F46E5] px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-600 cursor-pointer">
                             שלח
                         </button>
                     </form>
                 </div>
             )}
+
+            <ReportModal 
+                isOpen={isReportModalOpen}
+                onClose={() => setIsReportModalOpen(false)}
+                onSubmit={handleReportSubmit}
+            />
         </div>
     );
 }

@@ -1,31 +1,19 @@
-/**
- * @file index.js
- * @description Cloud Functions for Firebase. Handles backend functionality such as 
- * custom admin role assignments and automated cascading collection cleanups.
- */
-
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { onDocumentDeleted } = require("firebase-functions/v2/firestore");
 const admin = require("firebase-admin");
 
-// Initialize Firebase Admin SDK
+// Initialize Firebase Admin SDK once at the top of the file
 admin.initializeApp();
 const db = admin.firestore();
 
-/**
- * Assigns an Admin role to a specified user.
- * @param {Object} request - Request object containing authentication details and payload data.
- * @param {string} request.data.email - The email address of the user to promote.
- * @returns {Promise<{message: string}>} A status message indicating success.
- * @throws {HttpsError} If unauthenticated, unauthorized, or if the email is missing/invalid.
- */
+// 1. Function to assign an Admin role to a user
 exports.addAdminRole = onCall({ cors: true }, async (request) => {
-  // Check authentication
+  // Check if the user making the request is authenticated
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "Must be logged in.");
   }
 
-  // Check admin authorization
+  // Check if the user making the request is an admin themselves
   if (request.auth.token.role !== "admin") {
     throw new HttpsError("permission-denied", "Only admins can assign other admins.");
   }
@@ -36,13 +24,13 @@ exports.addAdminRole = onCall({ cors: true }, async (request) => {
   }
 
   try {
-    // Find target user by email
+    // Step 1: Find the target user by their email address
     const user = await admin.auth().getUserByEmail(targetEmail);
 
-    // Assign custom admin claim
+    // Step 2: Set the custom user claim for the admin role
     await admin.auth().setCustomUserClaims(user.uid, { role: "admin" });
 
-    // Synchronize role status in Firestore database
+    // Step 3: Update the user's role inside the Firestore 'users' collection
     await db.collection("users").doc(user.uid).update({
       role: "admin"
     });
@@ -50,25 +38,23 @@ exports.addAdminRole = onCall({ cors: true }, async (request) => {
     return { message: `המשתמש ${targetEmail} מונה לאדמין בהצלחה!` };
   } catch (error) {
     console.error("Error in addAdminRole:", error);
+    // Return a structured error to the client application
     throw new HttpsError("not-found", "המשתמש לא נמצא במערכת");
   }
 });
 
-/**
- * Firestore Trigger: Automatically deletes all associated child comments 
- * when a parent post document is deleted.
- * @param {Object} event - Event context containing document parameters.
- */
+// 2. Background function to delete orphan comments when a post is deleted
+// Configured with safety resource ceilings for future scaling and spam protection
 exports.deletePostComments = onDocumentDeleted({
     document: "posts/{postId}",
-    memory: "512MiB",     // Allocation ceiling for heavy loads
-    timeoutSeconds: 300   // Maximum duration
+    memory: "512MiB",     // Allocation ceiling. Only consumed if needed by heavy loads.
+    timeoutSeconds: 300   // Maximum duration. Shuts down instantly once deletion completes.
 }, async (event) => {
     const postId = event.params.postId;
     const commentsRef = db.collection(`posts/${postId}/comments`);
     
     try {
-        // Recursively delete subcollection
+        // Use recursiveDelete to completely wipe out the subcollection safely
         await db.recursiveDelete(commentsRef);
         console.log(`Successfully deleted all comments for post: ${postId}`);
     } catch (error) {
