@@ -162,17 +162,22 @@ function NewPostModal({ isOpen, onClose, lockedForumId = null }) {
                         </div>
                     </div>
 
-                    <div className="pt-2 text-right">
-                        <input
-                            type="checkbox"
-                            id="saveMaterialsCheckbox"
-                            checked={isSavedToMaterials}
-                            onChange={(event) => setIsSavedToMaterials(event.target.checked)}
-                            className="mr-2 inline-block h-5 w-5 cursor-pointer rounded border-gray-300 text-[#4F46E5] focus:ring-[#4F46E5]"
-                        />
-                        <label htmlFor="saveMaterialsCheckbox" className="inline-block cursor-pointer select-none text-sm font-bold text-gray-600">
-                            שמור בדאטאבייס של הפורום
-                        </label>
+                    <div className="pt-2 w-full flex justify-end -mr-80">
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                id="saveMaterialsCheckbox"
+                                checked={isSavedToMaterials}
+                                onChange={(event) => setIsSavedToMaterials(event.target.checked)}
+                                className="h-5 w-5 cursor-pointer rounded border-gray-300 text-[#4F46E5] focus:ring-[#4F46E5]"
+                            />
+                            <label
+                                htmlFor="saveMaterialsCheckbox"
+                                className="cursor-pointer select-none whitespace-nowrap text-sm font-bold text-gray-600"
+                            >
+                                שמור בדאטאבייס של הפורום
+                            </label>
+                        </div>
                     </div>
 
                     <div className="flex gap-3 pt-4">
