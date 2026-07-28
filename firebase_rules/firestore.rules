@@ -1,0 +1,83 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function isAdmin() {
+      return request.auth != null && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Check if the current user is blocked
+    function isUserBlocked() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isBlocked == true;
+    }
+    
+    // User Profiles
+   match /users/{userId} {
+  
+      allow read: if request.auth != null;
+    
+      allow write: if request.auth != null && (
+        request.auth.uid == userId || 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+      
+      // Reports nested inside user documents 
+      match /reports/{reportId} {
+        allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+        allow create: if request.auth != null && 
+                      request.resource.data.reporterUserId == request.auth.uid && 
+                      !isUserBlocked();
+        allow update, delete: if isAdmin();
+      }
+    }
+      
+    // Global rule for Admin to read all reports via collectionGroup 
+  	match /{path=**}/reports/{reportId} {
+      allow read: if isAdmin();
+    } 
+
+    // Forums
+    match /forums/{forumId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+    
+    // Posts
+    match /posts/{postId} {
+      
+      function isFollowingForum(forumIdToCheck) {
+        return request.auth != null && 
+               forumIdToCheck in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.followedForums;
+      }
+      
+      allow read, list: if request.auth != null;
+      // Allow create only if not blocked
+      allow create: if isFollowingForum(request.resource.data.forumId) && !isUserBlocked();
+      allow update: if request.auth != null && (
+        request.auth.uid == resource.data.authorId || 
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likedBy', 'likesCount'])
+      );
+      allow delete: if request.auth != null && (request.auth.uid == resource.data.authorId || isAdmin());
+        
+      // Comments: Nested inside a post 
+      match /comments/{commentId} {
+        allow read: if request.auth != null;
+        
+        // Allow create only if not blocked
+        allow create: if request.auth != null && !isUserBlocked();
+        allow update: if request.auth != null && request.auth.uid == resource.data.authorId;
+        allow delete: if request.auth != null && (request.auth.uid == resource.data.authorId || request.auth.uid == get(/databases/$(database)/documents/posts/$(postId)).data.authorId || isAdmin());
+      }
+    }
+    
+    // Materials
+    match /materials/{materialId} {
+      allow read: if request.auth != null;
+      // Allow create only if not blocked
+      allow create: if request.auth != null && request.resource.data.uploadedBy == request.auth.uid && !isUserBlocked();
+      allow delete: if request.auth != null && (resource.data.uploadedBy == request.auth.uid || isAdmin());
+    }
+  }
+}
